@@ -7,6 +7,22 @@ recover the exact original ordering.
 The solver reconstructs the network in under 30 seconds, with final
 `MSE = 0.000000000000` (exact reconstruction).
 
+## Paper
+
+This repo also contains a follow-up research note that asks what part of the
+puzzle solution is a property of *that* one network and what is a generic
+property of trained ResNets:
+
+> **Layer Identifiability in Trained Residual Networks: Theory, Robustness,
+> and Forensic Applications.** Rayan Khoury, 2026.
+> [`paper.pdf`](paper.pdf) · source: [`paper.tex`](paper.tex)
+
+Three contributions: (i) a closed-form margin formula and a first-order
+derivation of the Pairing Wall slope; (ii) a multi-architecture sweep showing
+that pairing transfers across trained ResNets but ordering heuristics do not;
+(iii) a forensic application — pair recovery is robust to fine-tuning attacks,
+making the signal a candidate for model fingerprinting and provenance.
+
 ## The Problem
 
 A 48-block Residual Network was trained on a financial dataset. Each block
@@ -199,11 +215,32 @@ FINAL full MSE: 0.000000000000
 ```
 .
 ├── README.md
-├── requirements.txt        # torch, numpy, pandas, scipy
-├── solve.py                # the ~120-line solver
-├── historical_data.csv     # 10,000 × (48 measurements + pred + true)
-└── pieces/
-    └── piece_0.pth … piece_96.pth
+├── requirements.txt              # torch, numpy, pandas, scipy, matplotlib
+├── solve.py                      # ~120-line puzzle solver (Park's pipeline)
+├── historical_data.csv           # 10,000 × (48 measurements + pred + true)
+├── pieces/                       # piece_0.pth … piece_96.pth (puzzle input)
+│
+├── paper.tex                     # Research note (see "Paper" above)
+├── paper.pdf                     # Compiled PDF
+├── figures/                      # Figures used in the paper
+│
+├── paper_experiments.py          # Puzzle-side experiments (pairing matrix,
+├── paper_experiments.json        #   pairing wall, seed proxies)
+├── theory_verify.py              # Numerical verification of Prop 1 + Prop 2
+├── strategies.py, strategies.csv # Four-strategy reassembly comparison
+├── pipeline.py                   # Generalized pipeline implementation
+│
+├── sweep_full.py, sweep_full.csv # 4 (depth,width) × 3 seeds × ~10 ckpts sweep
+├── focused_run.py                # Focused training run (24-block ResNet)
+├── convergence_d24w64.csv        # Mid-training identifiability trajectory
+│
+├── attack.py / attack_fast.py    # Fine-tuning + noise attacks
+├── attack_results.csv            # Pair accuracy under attack
+├── attack_shuffle.py             # Post-fine-tune shuffle robustness
+├── attack_shuffle_results.csv
+│
+├── make_figs.py                  # Generates the main-text figures
+└── make_figs_extra.py            # Theory + sweep + attack figures
 ```
 
 ## License

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.synctex(busy)
+*.nav
+*.snm
+*.vrb
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# Scratch
+draft.pdf
+*.bak
