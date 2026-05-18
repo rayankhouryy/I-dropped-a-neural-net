@@ -111,11 +111,18 @@ across two interleaved permutations.
 
 ### Attempt 3 — First-Order Algebraic Decomposition (failed)
 
-> If block contributions are small, then to first order
-> $\mathrm{pred} \approx \mathrm{LastLayer}\!\left(X + \sum_k \mathrm{contrib}_k(X)\right)$,
-> which is order-invariant. Pairing becomes a clean Hungarian assignment on
-> scalar features
-> $f_{ab}(x) = W_L \cdot \bigl(W_\text{out}^{(b)} \, \mathrm{ReLU}(W_\text{in}^{(a)} x + b_\text{in}^{(a)}) + b_\text{out}^{(b)}\bigr)$.
+If block contributions are small, then to first order
+
+$$
+\mathrm{pred} \;\approx\; \mathrm{LastLayer}\Bigl( X + \sum_k \mathrm{contrib}_k(X) \Bigr),
+$$
+
+which is order-invariant. Pairing becomes a clean Hungarian assignment on the
+scalar features
+
+$$
+f_{ab}(x) \;=\; W_L \cdot \Bigl( W_\text{out}^{(b)} \, \mathrm{ReLU}\bigl(W_\text{in}^{(a)} x + b_\text{in}^{(a)}\bigr) + b_\text{out}^{(b)} \Bigr).
+$$
 
 Elegant in theory, useless in practice: residual contributions in this network
 are *not* small (total cumulative change is roughly $6\times$ the input norm),
