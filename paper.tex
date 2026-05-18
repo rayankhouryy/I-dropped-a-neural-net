@@ -417,6 +417,82 @@ suggests $\hat k\approx 10$ wrong pairings, broadly consistent with
 where joint singular-value methods are reported to fail.
 \end{remark}
 
+\subsection{Null model: the signal requires training}\label{sec:nullmodel}
+
+Proposition~\ref{prop:margin} assumes the trained decomposition
+$M_{ii} = -\varepsilon I + E$ with $\varepsilon = |\mathrm{tr}(M_{ii})|/d > 0$.
+For a randomly initialized network --- before any gradient steps ---
+there is no mechanism producing this negative-diagonal structure: the
+sign of $\mathrm{tr}(W_{\mathrm{out}}^{(i)} W_{\mathrm{in}}^{(i)})$ is
+not constrained, and correctly paired and incorrectly paired products
+are drawn from the same distribution. Corollary~\ref{cor:worst} then
+applies to \emph{every} entry of the score matrix, predicting
+$\mathbb{E}[d(i,j)] \to 1/\sqrt{d}$ uniformly.
+
+\begin{corollary}[Null model]\label{cor:null}
+Suppose $W_{\mathrm{in}}^{(i)}$ and $W_{\mathrm{out}}^{(j)}$ are
+independent random matrices with i.i.d.\ zero-mean entries, with no
+training-induced coupling between corresponding indices. Then for every
+$(i,j)$ (including $i=j$), $d(i,j)$ has the same expectation
+$\mathbb{E}[d(i,j)] = 1/\sqrt{d} + o(1)$, and Hungarian pairing on
+$-d$ recovers correct pairs at chance rate $1/D$ in expectation.
+\end{corollary}
+
+\paragraph{Empirical verification: the training trajectory.} We
+instantiate Corollary~\ref{cor:null} on Park's exact shape (depth $48$,
+hidden $96$), Kaiming-initialized and never trained: pair accuracy is
+$6.25\%$ (chance is $1/D = 2.08\%$; Hungarian over a noisy matrix
+biases upward but stays close to chance), pair separation is $-0.42$,
+and the correct-pair and incorrect-pair score means are
+\emph{statistically indistinguishable} ($0.121$ vs.\ $0.114$). On the
+trained Jane Street network, aligned to its recovered pairing, those
+two means separate by a factor of $\sim 21\times$ and Hungarian
+recovers all $48/48$ pairs.
+
+To make the temporal dependence explicit we then train a single
+ResNet ($D{=}24$, $h{=}64$) from scratch and snapshot the pairing
+matrix at five points along the trajectory. Figure~\ref{fig:nullmodel}
+shows the full picture in one shot.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_null_deepdive.png}
+\caption{\textbf{Null model deep dive.} \emph{Top row:} the
+diagonal-dominance matrix $d(i,j)$ at five training stages of a single
+$24$-block ResNet, from untrained (left) to $300$ epochs (right). At
+initialization there is no visible diagonal; by epoch $5$ the diagonal
+is fully separated. \emph{(b) Identifiability trajectory:} pair
+accuracy jumps from chance ($0.08$, only twice the $1/D=0.042$ floor)
+at epoch $0$ to $1.00$ by epoch $5$; mean correct-pair score rises
+monotonically from $0.19$ to $2.07$ while the mean incorrect-pair score
+stays flat at $\approx 0.16$. \emph{(c) and (d):} densities of
+correct-pair (red) vs.\ incorrect-pair (gray) $d$ scores at the
+untrained and trained endpoints; the two distributions are
+indistinguishable at init and disjoint after training. \emph{(e):} the
+mean diag/off-diag gap, the key quantity in
+Proposition~\ref{prop:margin}, grows from essentially zero to almost
+two.}\label{fig:nullmodel}
+\end{figure}
+
+\paragraph{What this rules out.} The figure rules out three obvious
+``trivial'' alternative explanations a skeptical reader could propose:
+\textbf{(a)} that diagonal dominance is an artifact of compatible
+matrix shapes (it isn't: the untrained matrices have exactly the
+shapes used in the puzzle yet produce a uniform score matrix);
+\textbf{(b)} that the residual connection is what creates the signal
+(it doesn't: a fresh residual network with no training shows no
+diagonal); \textbf{(c)} that the signal could be present at any
+nontrivial loss level (it isn't: at epoch $0$ the train loss is $10.2$
+and the matrix is featureless; the diagonal sharpens monotonically as
+loss decreases). The signal is therefore not topological or
+distributional but a \emph{learned} property, in exact agreement with
+the dynamic-isometry mechanism behind Proposition~\ref{prop:margin}.
+As a bonus, the trajectory recapitulates the non-monotonic
+identifiability of Observation~\ref{obs:nonmono} on a single network:
+pair separation peaks at epoch $25$ ($+0.17$) and drifts back to
+$-0.29$ by epoch $300$ even as pair accuracy stays at $1.00$ and the
+training loss continues to fall.
+
 
 
 \section{Anatomy of the Pairing Signal}\label{sec:pair-anatomy}

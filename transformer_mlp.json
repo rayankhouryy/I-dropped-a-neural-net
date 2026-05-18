@@ -1,0 +1,32 @@
+{
+  "config": {
+    "d_model": 64,
+    "nhead": 4,
+    "dim_ff": 128,
+    "num_layers": 16,
+    "seq_len": 12,
+    "n_epochs": 600,
+    "batch": 128,
+    "norm_first": true,
+    "activation": "relu"
+  },
+  "final_train_loss": 0.02287556417286396,
+  "untrained": {
+    "pair_acc": 1.0,
+    "pair_sep": 0.0,
+    "mean_correct": 0.02376941777765751,
+    "mean_incorrect": 0.02376941777765751,
+    "frac_negative_diag_trace_correct": null,
+    "mean_trace_correct": -0.06292423605918884,
+    "frac_negative_trace_correct": 1.0
+  },
+  "trained": {
+    "pair_acc": 0.0,
+    "pair_sep": -0.04111447185277939,
+    "mean_correct": 0.13639344833791256,
+    "mean_incorrect": 0.13670762687300642,
+    "frac_negative_diag_trace_correct": null,
+    "mean_trace_correct": -0.3611617386341095,
+    "frac_negative_trace_correct": 1.0
+  }
+}

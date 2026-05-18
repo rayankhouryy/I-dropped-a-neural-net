@@ -1,0 +1,24 @@
+{
+  "untrained": {
+    "pair_acc": 0.0625,
+    "pair_sep": -0.4166346495039761,
+    "mean_correct": 0.12058111195801757,
+    "mean_incorrect": 0.11445948117208435
+  },
+  "trained_park": {
+    "pair_acc": 1.0,
+    "pair_sep": 1.3595328330993652,
+    "mean_correct": 2.7848623966177306,
+    "mean_incorrect": 0.13447244547870654
+  },
+  "sweep_epoch0_summary": {
+    "mean_pair_acc": 0.1307,
+    "mean_pair_sep": -0.6801,
+    "expected_chance_pair_acc": 0.0758,
+    "note": "computed from sweep_full.csv rows with epoch=0"
+  },
+  "sweep_trained_summary": {
+    "mean_pair_acc_epoch_geq_5": 0.9128,
+    "mean_pair_sep_epoch_geq_5": -0.3435
+  }
+}
