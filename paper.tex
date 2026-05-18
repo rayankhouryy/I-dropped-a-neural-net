@@ -80,14 +80,15 @@ Rayan Khoury\\
 \maketitle
 
 \begin{abstract}
-Park (2026) recently introduced a beautiful idea: trained residual networks
-satisfy \emph{dynamic isometry}, which leaves a negative-diagonal fingerprint
-on the product $W_{\mathrm{out}} W_{\mathrm{in}}$ of correctly paired block
-weights. He used this signal to reassemble a shuffled 48-block ResNet (Jane
-Street's January 2026 puzzle) to exact MSE = 0 in seconds. The puzzle is now
-solved; we take this as a starting point and ask a question Park
-explicitly left open: \emph{is the diagonal-dominance signal a generic
-property of trained ResNets, or a property of one particular network?}
+Park~(2026) observed that trained residual networks satisfy
+\emph{dynamic isometry}, which leaves a negative-diagonal signature on
+the product $W_{\mathrm{out}} W_{\mathrm{in}}$ of correctly paired
+block weights, and used this signal to reassemble a shuffled 48-block
+ResNet (Jane Street's January 2026 puzzle) to exact MSE = 0 in
+seconds. We take this result as a starting point and address a
+question Park explicitly left open: \emph{is the diagonal-dominance
+signal a generic property of trained ResNets, or a property of one
+particular network?}
 
 We make three contributions. \textbf{(Theory.)} We give a closed-form
 expression for the diagonal-dominance margin of a correctly paired
