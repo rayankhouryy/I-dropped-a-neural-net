@@ -456,22 +456,48 @@ shows the full picture in one shot.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_null_deepdive.png}
-\caption{\textbf{Null model deep dive.} \emph{Top row:} the
-diagonal-dominance matrix $d(i,j)$ at five training stages of a single
-$24$-block ResNet, from untrained (left) to $300$ epochs (right). At
-initialization there is no visible diagonal; by epoch $5$ the diagonal
-is fully separated. \emph{(b) Identifiability trajectory:} pair
-accuracy jumps from chance ($0.08$, only twice the $1/D=0.042$ floor)
-at epoch $0$ to $1.00$ by epoch $5$; mean correct-pair score rises
-monotonically from $0.19$ to $2.07$ while the mean incorrect-pair score
-stays flat at $\approx 0.16$. \emph{(c) and (d):} densities of
-correct-pair (red) vs.\ incorrect-pair (gray) $d$ scores at the
-untrained and trained endpoints; the two distributions are
-indistinguishable at init and disjoint after training. \emph{(e):} the
-mean diag/off-diag gap, the key quantity in
-Proposition~\ref{prop:margin}, grows from essentially zero to almost
-two.}\label{fig:nullmodel}
+\includegraphics[width=\linewidth]{figures/fig_null_a_heatmaps.png}
+\caption{\textbf{(a)} Diagonal-dominance matrix $d(i,j)$ at five
+training stages of a single $24$-block ResNet. At initialization
+there is no visible diagonal; by epoch $5$ the diagonal is fully
+separated. The bright off-diagonal entries at epoch $300$ are not
+structural --- the diagonal still dominates each row.}\label{fig:null_a}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig_null_b_trajectory.png}
+  \caption{Identifiability trajectory. Pair accuracy jumps from chance
+  ($0.08$ at epoch $0$, with $1/D=0.042$) to $1.00$ by epoch $5$. Mean
+  correct-pair score (right axis) rises monotonically from $0.19$ to
+  $2.07$ while the mean incorrect-pair score stays flat at $\approx
+  0.16$. Pair separation peaks at epoch $25$ and drifts back to $-0.29$
+  at epoch $300$ even as pair accuracy stays perfect.}\label{fig:null_b}
+\end{subfigure}\hfill
+\begin{subfigure}{0.48\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig_null_c_histograms.png}
+  \caption{Score distribution overlay. At epoch $0$ the correct (filled
+  red) and incorrect (filled gray) score densities are nearly identical.
+  After $300$ epochs the correct-pair scores (red outline) move out to
+  $1.3$--$2.7$ while the incorrect-pair scores (black outline) stay
+  pinned near zero.}\label{fig:null_c}
+\end{subfigure}
+
+\vspace{0.6em}
+\begin{subfigure}{0.7\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig_null_d_margins.png}
+  \caption{Per-row Hungarian margin distribution. Even when the
+  \emph{global} pair separation $\min_i\big(d(i,i) - \max_{j\neq
+  i}d(i,j)\big)$ is negative, the \emph{per-row} margins are positive
+  at every epoch from $5$ onward --- which is exactly why Hungarian
+  recovers $100\%$ of pairs there, the rescue described in
+  Obs.~\ref{obs:fro}.}\label{fig:null_d}
+\end{subfigure}
+\caption{\textbf{Null model deep dive (continued).}}\label{fig:nullmodel}
 \end{figure}
 
 \paragraph{What this rules out.} The figure rules out three obvious
