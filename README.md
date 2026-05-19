@@ -15,7 +15,7 @@ property of trained ResNets:
 
 > **Layer Identifiability in Trained Residual Networks: Theory, Robustness,
 > and Forensic Applications.** Rayan Khoury, 2026.
-> [`paper.pdf`](paper.pdf) · source: [`paper.tex`](paper.tex)
+> [`paper/paper.pdf`](paper/paper.pdf) · source: [`paper/paper.tex`](paper/paper.tex)
 
 Three contributions: (i) a closed-form margin formula and a first-order
 derivation of the Pairing Wall slope; (ii) a multi-architecture sweep showing
@@ -190,7 +190,7 @@ unambiguous. Hungarian on this metric nails all 48 pairs on the first try.
 
 ```bash
 pip install -r requirements.txt
-python solve.py
+python solutions/solve_dynamic_isometry.py
 ```
 
 ### Expected output
@@ -215,32 +215,48 @@ FINAL full MSE: 0.000000000000
 ```
 .
 ├── README.md
-├── requirements.txt              # torch, numpy, pandas, scipy, matplotlib
-├── solve.py                      # ~120-line puzzle solver (Park's pipeline)
-├── historical_data.csv           # 10,000 × (48 measurements + pred + true)
-├── pieces/                       # piece_0.pth … piece_96.pth (puzzle input)
+├── requirements.txt
 │
-├── paper.tex                     # Research note (see "Paper" above)
-├── paper.pdf                     # Compiled PDF
-├── figures/                      # Figures used in the paper
+├── paper/
+│   ├── paper.tex                 # Research note source
+│   ├── paper.pdf                 # Compiled PDF
+│   └── figures/                  # Figures used in the paper
 │
-├── paper_experiments.py          # Puzzle-side experiments (pairing matrix,
-├── paper_experiments.json        #   pairing wall, seed proxies)
-├── theory_verify.py              # Numerical verification of Prop 1 + Prop 2
-├── strategies.py, strategies.csv # Four-strategy reassembly comparison
-├── pipeline.py                   # Generalized pipeline implementation
+├── puzzle_artifacts/
+│   ├── pieces/                   # piece_0.pth … piece_96.pth (puzzle input)
+│   └── historical_data.csv       # 10,000 × (48 measurements + pred + true)
 │
-├── sweep_full.py, sweep_full.csv # 4 (depth,width) × 3 seeds × ~10 ckpts sweep
-├── focused_run.py                # Focused training run (24-block ResNet)
-├── convergence_d24w64.csv        # Mid-training identifiability trajectory
+├── solutions/
+│   ├── solve_dynamic_isometry.py # Park's diagonal-dominance pipeline
+│   └── solve_annealing.py        # Alternative solver (WIP)
 │
-├── attack.py / attack_fast.py    # Fine-tuning + noise attacks
-├── attack_results.csv            # Pair accuracy under attack
-├── attack_shuffle.py             # Post-fine-tune shuffle robustness
-├── attack_shuffle_results.csv
+├── utils/
+│   ├── __init__.py
+│   ├── data.py                   # load_pieces, load_data, get_piece_groups
+│   └── eval.py                   # eval_mse, build_model_from_blocks
 │
-├── make_figs.py                  # Generates the main-text figures
-└── make_figs_extra.py            # Theory + sweep + attack figures
+└── experiments/
+    ├── data/                     # Experiment configs (JSON)
+    ├── results/                  # Output CSVs
+    │
+    ├── paper_experiments.py      # Puzzle-side experiments (pairing matrix,
+    │                             #   pairing wall, seed proxies)
+    ├── theory_verify.py          # Numerical verification of Prop 1 + Prop 2
+    ├── strategies.py             # Four-strategy reassembly comparison
+    ├── pipeline.py               # Generalized pipeline implementation
+    │
+    ├── sweep_full.py             # 4 (depth,width) × 3 seeds × ~10 ckpts sweep
+    ├── focused_run.py            # Focused training run (24-block ResNet)
+    ├── null_model.py             # Null model verification
+    ├── null_deepdive.py          # Training trajectory analysis
+    │
+    ├── attack.py                 # Fine-tuning + noise attacks
+    ├── attack_fast.py            # Fast attack variant
+    ├── attack_shuffle.py         # Post-fine-tune shuffle robustness
+    │
+    ├── make_figs.py              # Generates the main-text figures
+    ├── make_figs_extra.py        # Theory + sweep + attack figures
+    └── transformer_mlp.py        # Transformer-style MLP experiments
 ```
 
 ## License
