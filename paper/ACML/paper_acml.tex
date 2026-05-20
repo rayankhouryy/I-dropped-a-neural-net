@@ -89,9 +89,9 @@ neural network fingerprinting; dynamic isometry; model provenance; layer identif
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{../../figures/fig_null_a_heatmaps.pdf}\\[0.5em]
+\includegraphics[width=\textwidth]{../figures/fig_null_a_heatmaps.pdf}\\[0.5em]
 {\small (a) Training dynamics: 24-block ResNet}\\[1em]
-\includegraphics[width=\textwidth]{../../figures/fig_modern_vision_pairing.pdf}\\[0.5em]
+\includegraphics[width=\textwidth]{../figures/fig_modern_vision_pairing.pdf}\\[0.5em]
 {\small (b) Modern vision architectures: ViT-B/16 and ConvNeXt-T}
 \caption{Diagonal-dominance matrices $d(i,j)$ reveal training-induced structure. \textbf{(a)} At initialization (epoch 0), no diagonal structure is visible. By epoch 5, the diagonal is fully separated and pair accuracy reaches 100\%. \textbf{(b)} ViT-B/16 (MLP, V/O attention, Q/K attention paths) and ConvNeXt-T all achieve 100\% pairing accuracy with clear diagonal structure.}
 \label{fig:heatmaps}
@@ -190,7 +190,7 @@ The margin formula reveals the geometry of diagonal dominance. The numerator $\s
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{../../figures/fig_margin_theorem.pdf}
+\includegraphics[width=\textwidth]{../figures/fig_margin_theorem.pdf}
 \caption{Proposition~\ref{prop:margin} verification. \textbf{Left:} Predicted $d(i,i)$ from the margin formula vs.\ empirical values for all 48 blocks---points lie on the identity line. \textbf{Right:} Sorted correct-pair margins (blue) vs.\ incorrect-pair baseline (red dashed) and theoretical upper bound $\sqrt{d}$ (grey dotted).}
 \label{fig:margin}
 \end{figure}
@@ -305,7 +305,7 @@ For attention paths, we evaluate both the value-output coupling ($W_O W_V$) and 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{../../figures/fig_gpt2_attention_pairing.pdf}
+\includegraphics[width=\textwidth]{../figures/fig_gpt2_attention_pairing.pdf}
 \caption{Attention path pairing results. Diagonal-dominance matrices for the V/O path (value-to-output projection) and Q/K path (query-key coupling) across GPT-2 model sizes. Both paths achieve 100\% pairing accuracy.}
 \label{fig:attention}
 \end{figure}
@@ -315,7 +315,7 @@ For ResNet Bottleneck blocks (ResNet-50 through ResNet-152), the naive endpoint 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{../../figures/fig_resnet_wrong_vs_correct_factorization.pdf}
+\includegraphics[width=\textwidth]{../figures/fig_resnet_wrong_vs_correct_factorization.pdf}
 \caption{Architecture-aware factorization for Bottleneck ResNets. \textbf{Left:} The naive endpoint product $W_3 W_1$ shows no diagonal structure. \textbf{Right:} The correct triple product $W_3 W_2 W_1$ reveals clear diagonal dominance, enabling perfect pairing.}
 \label{fig:resnet_factorization}
 \end{figure}
@@ -351,7 +351,7 @@ Signal strength \emph{increases} with model size: mean $d(i,i)$ grows from 4.18 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{../../figures/fig_gpt2_mlp_pairing.pdf}
+\includegraphics[width=\textwidth]{../figures/fig_gpt2_mlp_pairing.pdf}
 \caption{GPT-2 MLP pairing results. \textbf{Left:} Diagonal-dominance matrices for GPT-2 (124M, 12 layers) and GPT-2-XL (1.5B, 48 layers)---bright diagonals indicate perfect pairing. \textbf{Center:} Trace values per layer; 81--92\% are negative, consistent with dynamical isometry. \textbf{Right:} Method comparison showing diagonal-dominance achieves 100\% accuracy while Frobenius matching plateaus at 47--67\%.}
 \label{fig:gpt2}
 \end{figure}
@@ -376,7 +376,7 @@ The signal becomes brittle only at approximately \textbf{20\% relative weight no
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{../../figures/fig_attack_robustness.pdf}
+\includegraphics[width=\textwidth]{../figures/fig_attack_robustness.pdf}
 \caption{Identifiability under adversarial conditions. \textbf{Left:} Fine-tuning on the original task at various learning rates and epochs. \textbf{Center:} Fine-tuning on alternative targets. \textbf{Right:} Gaussian weight noise. Pair accuracy remains 100\% across all configurations until noise exceeds ${\sim}20\%$ relative magnitude.}
 \label{fig:attack}
 \end{figure}

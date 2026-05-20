@@ -13,7 +13,7 @@ This repo contains our ACML 2026 submission:
 
 > **Training Leaves Traces: Diagonal Dominance as a Neural Network Fingerprint.**
 > ACML 2026.
-> [`paper/ACML_camera_ready/ACML_camera_ready/acml26_submission_template.pdf`](paper/ACML_camera_ready/ACML_camera_ready/acml26_submission_template.pdf) · source: [`paper/ACML_camera_ready/ACML_camera_ready/acml26_submission_template.tex`](paper/ACML_camera_ready/ACML_camera_ready/acml26_submission_template.tex)
+> [`paper/ACML/paper_acml.pdf`](paper/ACML/paper_acml.pdf) · source: [`paper/ACML/paper_acml.tex`](paper/ACML/paper_acml.tex)
 
 **Abstract:** Verifying the provenance of neural network weights is difficult: existing watermarking schemes must be embedded during training, and can be removed by fine-tuning. We show that training itself leaves an intrinsic fingerprint requiring no such foresight. Residual networks initialized for dynamical isometry develop a distinctive structure: after training, each block's weight product settles near negative identity. This leaves a detectable trace: the diagonal-dominance score of correctly paired weights is high, while incorrect pairings score near zero.
 
