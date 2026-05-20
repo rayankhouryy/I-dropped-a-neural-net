@@ -162,7 +162,7 @@ for correctly paired layers --- a negative-diagonal signature that
 weight-only reassembly method that achieves exact reconstruction in
 seconds, and the dynamic-isometry argument it builds on is a striking
 example of training-theory yielding a practical algorithm. We treat that
-result as a foundation and contribute three pieces that build on top of
+result as a foundation and contribute four pieces that build on top of
 it. \textbf{(i) Theory} (Section~\ref{sec:theory}): an exact closed-form
 margin formula for the diagonal-dominance ratio, and a first-principles
 derivation of the Pairing Wall slope $C\approx 0.003$ in the
@@ -174,9 +174,11 @@ $(\text{depth},\text{width})\times\text{seed}\times\text{checkpoint}$
 sweep, scoring every pipeline component against the ground-truth
 permutation. Pairing transfers; ordering proxies do not.
 \textbf{(iii) Extension to transformers} (Section~\ref{sec:transformers}):
-demonstrating that MLP sublayers of pretrained GPT-2 models exhibit
-the same diagonal-dominance signal, achieving 100\% pairing accuracy
-from 124M to 1.5B parameters.
+the diagonal-dominance signal also identifies MLP sublayers of
+pretrained GPT-2 models, achieving $100\%$ pairing accuracy on every
+member of the GPT-2 family from $124$M to $1.5$B parameters, with
+$81$--$92\%$ of correctly paired products showing the negative trace
+predicted by dynamic isometry.
 \textbf{(iv) Forensic application} (Section~\ref{sec:attack}): using
 Park's network as a stress-test bed for whether weight-only
 identifiability survives a fine-tuning adversary, with implications
@@ -926,12 +928,14 @@ GPT-2-medium & 355M & 24 & \textbf{100\%} & 92\% & $+0.11$ & 5.46 \\
 GPT-2-large & 774M & 36 & \textbf{100\%} & 81\% & $-0.05$ & 6.98 \\
 GPT-2-xl & 1.5B & 48 & \textbf{100\%} & 81\% & $+0.66$ & 7.77 \\
 \midrule
-GPT-2 (random init) & 124M & 12 & 0\% & 50\% & --- & 0.12 \\
+GPT-2 (random init) & 124M & 12 & 17\% & 50\% & --- & 0.12 \\
 \bottomrule
 \end{tabular}
 \caption{MLP block pairing accuracy across the GPT-2 model family.
-Diagonal-dominance achieves 100\% accuracy on all pretrained models.
-The randomly initialized baseline confirms the signal is training-induced.}
+Diagonal-dominance achieves $100\%$ accuracy on every pretrained model.
+The randomly initialized baseline ($\sim$$17\%$ vs.\ $8.3\%$ chance is the
+expected Hungarian-over-noise bias from Section~\ref{sec:nullmodel})
+confirms the signal is training-induced.}
 \label{tab:gpt2}
 \end{table}
 
@@ -945,11 +949,14 @@ MLP pairings} across all four GPT-2 variants, from 12 to 48 layers and
 \subsection{Dynamic Isometry Confirmation}
 
 The trace analysis confirms dynamic isometry in transformer MLP blocks:
-81--92\% of correctly paired products $W_2^{(i)} W_1^{(i)}$ have negative
+$81$--$92\%$ of correctly paired products $W_2^{(i)} W_1^{(i)}$ have negative
 traces, consistent with the $W_2 W_1 \approx -\varepsilon I + E$ structure
 predicted by Proposition~\ref{prop:margin}. On the randomly initialized
-GPT-2, exactly 50\% of traces are negative (consistent with chance),
-and pair accuracy drops to 0\%.
+GPT-2, exactly $50\%$ of traces are negative (consistent with chance),
+mean $|d(i,i)|$ falls below $0.13$, and pair accuracy collapses to the
+chance regime (Hungarian on a noisy uniform matrix recovers $\sim$$17\%$
+vs.\ the $8.3\%$ chance baseline, the same small upward bias documented
+in Section~\ref{sec:nullmodel}).
 
 \begin{figure}[H]
 \centering
@@ -986,7 +993,7 @@ Model & Diag Dom & Frobenius & SV Dist & Random \\
 GPT-2 & 100\% & 67\% & 8\% & 8.3\% \\
 GPT-2-medium & 100\% & 67\% & 0\% & 4.2\% \\
 GPT-2-large & 100\% & 47\% & 8\% & 2.8\% \\
-GPT-2-xl & 100\% & 52\% & 2\% & 2.1\% \\
+GPT-2-xl & 100\% & 52\% & 0\% & 2.1\% \\
 \bottomrule
 \end{tabular}
 \caption{Pairing accuracy by method on GPT-2 models. Diagonal dominance
@@ -1085,6 +1092,134 @@ output by $\epsilon$, the reassembly is no worse than that
 $\epsilon$. There is no ``free lunch'' for the attacker: any amount
 of identifiability erosion comes hand-in-hand with model damage of
 the same scale. This is the forensic property practitioners want.
+
+\subsection{Comparison with existing model-watermarking and
+fingerprinting methods}\label{sec:watermark-compare}
+
+Most published ownership-verification schemes for neural networks fall
+into three families: \emph{embedding-based} watermarks that modify the
+training loss to encode a signature in the weights or activations
+\cite{uchida2017embedding,rouhani2019deepsigns,chen2019deepmarks},
+\emph{backdoor-based} watermarks that train the model on a trigger set
+whose classification reveals ownership
+\cite{adi2018turning,zhang2018protecting}, and
+\emph{decision-boundary} fingerprinting that queries the model on
+carefully chosen (often adversarial) inputs
+\cite{lemerrer2020adversarial,cao2021ipguard,he2019sensitive}. A 2022
+systematization-of-knowledge study showed that, on image
+classification, every one of these families can be removed or bypassed
+by an attacker with realistic compute budgets~\cite{lukas2022deep}.
+
+Our setup is structurally different. Diagonal-dominance pairing does
+not \emph{embed} information into the model --- it reads a fingerprint
+that training itself induces, with no modification to the loss, no
+trigger set, no special inputs at verification time. Table~\ref{tab:wm}
+contrasts the operational profile of the major families with what
+diagonal-dominance offers.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccc}
+\toprule
+Method family
+  & Train-time
+  & Trigger
+  & Verify
+  & Robust to
+  & False-pos.
+  & Validated \\
+  & setup?
+  & data?
+  & cost
+  & fine-tune?
+  & rate
+  & architectures \\
+\midrule
+Embedding watermark \cite{uchida2017embedding,rouhani2019deepsigns}
+  & yes & no
+  & seconds\textsuperscript{*}
+  & partially
+  & tunable
+  & CNN classifiers \\
+Backdoor watermark \cite{adi2018turning,zhang2018protecting}
+  & yes & yes
+  & seconds\textsuperscript{$\diamond$}
+  & no\textsuperscript{\dag}
+  & tunable
+  & CNN classifiers \\
+Adv./decision-boundary FP \cite{lemerrer2020adversarial,cao2021ipguard}
+  & no  & yes\textsuperscript{\ddag}
+  & sec--min\textsuperscript{$\diamond$}
+  & partially
+  & tunable
+  & CNN classifiers \\
+Sensitive-sample FP \cite{he2019sensitive}
+  & no  & yes\textsuperscript{\ddag}
+  & seconds\textsuperscript{$\diamond$}
+  & partially
+  & tunable
+  & CNN classifiers \\
+\midrule
+\textbf{Diagonal-dominance (ours)}
+  & \textbf{no}
+  & \textbf{no}
+  & \textbf{$<$1\,s}\textsuperscript{$\circ$}
+  & \textbf{yes} (Fig.~\ref{fig:attack})
+  & $\approx 0$\textsuperscript{$\star$}
+  & ResNets + GPT-2 (124M--1.5B) \\
+\bottomrule
+\end{tabular}
+\caption{Operational profile of model ownership-verification methods.
+\textsuperscript{*}~Embedding methods compare extracted weight signatures (fast).
+\textsuperscript{$\diamond$}~Methods needing forward passes through the suspect
+model (and, for adversarial methods, gradient access) at verification time.
+\textsuperscript{$\circ$}~Hungarian matching on the $L\times L$ diagonal-dominance
+matrix; $<$1\,s on CPU for $L{=}48$ layers, including weight load. No queries
+to the model.
+\textsuperscript{$\star$}~A false positive would require an independently
+trained model whose entire $L$-dimensional diagonal spectrum coincides with the
+reference within numerical precision --- combinatorially negligible (the
+ground-truth permutation lives in a space of size $(L!)^2$, e.g.\ $10^{122}$
+for the puzzle network).
+\textsuperscript{\dag}~Backdoor watermarks are routinely erased by modest
+fine-tuning of the trigger samples~\cite{lukas2022deep}.
+\textsuperscript{\ddag}~Decision-boundary methods do not require
+training-time triggers, but they require curated adversarial or
+``sensitive'' inputs and gradient access to the model at verification
+time. Our method requires only the weights and runs in milliseconds.}
+\label{tab:wm}
+\end{table}
+
+The two cells that are unique to our method:
+\begin{itemize}[leftmargin=*,itemsep=0pt]
+  \item \emph{No training-time setup.} Every other family in
+        Table~\ref{tab:wm} requires the legitimate owner to instrument
+        the training run --- modify the loss, inject triggers, or
+        precompute sensitive inputs. Diagonal-dominance reads a
+        signature that ordinary training induces in any residual
+        block, so it applies to models that were trained without
+        \emph{any} forethought about provenance --- including all
+        already-deployed pretrained transformers (e.g.\ the GPT-2
+        family in Section~\ref{sec:transformers}).
+  \item \emph{Robust to layer reshuffling.} This is the original
+        threat model the puzzle was built around. Other watermarks
+        bind their signal to specific (layer, channel) coordinates;
+        permute the layers and the signal is destroyed. Our method
+        was \emph{designed} to recover from layer permutations and
+        reaches $100\%$ pair accuracy under arbitrary reorderings.
+\end{itemize}
+
+The complementary weakness is also worth stating: diagonal-dominance
+is a \emph{white-box} fingerprint --- it requires access to the
+weights of the suspect model, not just its outputs. In settings where
+the verifier only has black-box API access, the decision-boundary
+methods in Table~\ref{tab:wm} are the natural choice. For weight-level
+provenance (model leakage, open-weight model attribution, stolen
+checkpoints), our setup is the cheaper option, in both compute and
+data, by orders of magnitude.
 
 % ====================================================================
 \section{Implications}
@@ -1193,7 +1328,21 @@ tasks remains to be done.
 \bibitem{lukas2022deep} Nils Lukas, Edward Jiang, Xinda Li, Florian Kerschbaum.
   \emph{SoK: How Robust is Image Classification Deep Neural Network Watermarking?} S\&P, 2022.
 \bibitem{adi2018turning} Yossi Adi, Carsten Baum, Moustapha Cisse, Benny Pinkas, Joseph Keshet.
-  \emph{Turning Your Weakness into a Strength: Watermarking Deep Neural Networks.} USENIX, 2018.
+  \emph{Turning Your Weakness into a Strength: Watermarking Deep Neural Networks.} USENIX Security, 2018.
+\bibitem{uchida2017embedding} Yusuke Uchida, Yuki Nagai, Shigeyuki Sakazawa, Shin'ichi Satoh.
+  \emph{Embedding Watermarks into Deep Neural Networks.} ICMR, 2017.
+\bibitem{rouhani2019deepsigns} Bita Darvish Rouhani, Huili Chen, Farinaz Koushanfar.
+  \emph{DeepSigns: An End-to-End Watermarking Framework for Ownership Protection of Deep Neural Networks.} ASPLOS, 2019.
+\bibitem{chen2019deepmarks} Huili Chen, Bita Darvish Rouhani, Cheng Fu, Jishen Zhao, Farinaz Koushanfar.
+  \emph{DeepMarks: A Secure Fingerprinting Framework for Digital Rights Management of Deep Learning Models.} ICMR, 2019.
+\bibitem{zhang2018protecting} Jialong Zhang, Zhongshu Gu, Jiyong Jang, Hui Wu, Marc Ph.\ Stoecklin, Heqing Huang, Ian Molloy.
+  \emph{Protecting Intellectual Property of Deep Neural Networks with Watermarking.} AsiaCCS, 2018.
+\bibitem{lemerrer2020adversarial} Erwan Le Merrer, Patrick Perez, Gilles Tr\'edan.
+  \emph{Adversarial Frontier Stitching for Remote Neural Network Watermarking.} Neural Computing and Applications, 2020.
+\bibitem{cao2021ipguard} Xiaoyu Cao, Jinyuan Jia, Neil Zhenqiang Gong.
+  \emph{IPGuard: Protecting Intellectual Property of Deep Neural Networks via Fingerprinting the Classification Boundary.} AsiaCCS, 2021.
+\bibitem{he2019sensitive} Zecheng He, Tianwei Zhang, Ruby B.~Lee.
+  \emph{Sensitive-Sample Fingerprinting of Deep Neural Networks.} CVPR, 2019.
 \end{thebibliography}
 
 \appendix
