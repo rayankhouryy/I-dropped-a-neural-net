@@ -9,20 +9,31 @@ The solver reconstructs the network in under 30 seconds, with final
 
 ## Paper
 
-This repo also contains a follow-up research note that asks what part of the
-puzzle solution is a property of *that* one network and what is a generic
-property of trained neural networks:
+This repo contains our ACML 2026 submission:
 
-> **Layer Identifiability in Trained Neural Networks: From ResNets to
-> Transformers.** Rayan Khoury and Aman Singh Thakur, 2026.
+> **Training Leaves Traces: Diagonal Dominance as a Neural Network Fingerprint.**
+> ACML 2026.
+> [`paper/ACML_camera_ready/ACML_camera_ready/acml26_submission_template.pdf`](paper/ACML_camera_ready/ACML_camera_ready/acml26_submission_template.pdf) · source: [`paper/ACML_camera_ready/ACML_camera_ready/acml26_submission_template.tex`](paper/ACML_camera_ready/ACML_camera_ready/acml26_submission_template.tex)
+
+**Abstract:** Verifying the provenance of neural network weights is difficult: existing watermarking schemes must be embedded during training, and can be removed by fine-tuning. We show that training itself leaves an intrinsic fingerprint requiring no such foresight. Residual networks initialized for dynamical isometry develop a distinctive structure: after training, each block's weight product settles near negative identity. This leaves a detectable trace: the diagonal-dominance score of correctly paired weights is high, while incorrect pairings score near zero.
+
+**Key Results:**
+- **100% accuracy** on GPT-2 (124M–1.5B), ViT-B/16, and ConvNeXt-T
+- **91–100% accuracy** on ImageNet ResNets with architecture-aware factorization
+- **Robust** across 21 attack configurations (fine-tuning, weight noise)
+- Signal scales as **O(√d)** with hidden dimension
+
+We also include the original research note exploring the phenomenon:
+
+> **Layer Identifiability in Trained Neural Networks: From ResNets to Transformers.**
 > [`paper/paper.pdf`](paper/paper.pdf) · source: [`paper/paper.tex`](paper/paper.tex)
 
-Four contributions:
+Key contributions of the research note:
 
 1. **Theory** — a closed-form margin formula for the diagonal-dominance ratio
    and a first-order derivation of the *Pairing Wall* slope; both numerically
    tight on Park's puzzle network. A null-model corollary shows the signal
-   collapses to chance on randomly initialized networks (issue #1).
+   collapses to chance on randomly initialized networks.
 2. **ResNet empirics** — a sweep over depths, widths, and seeds. Pairing
    transfers; ordering proxies do not. Identifiability is non-monotonic
    in training time.
@@ -32,9 +43,7 @@ Four contributions:
    per-head decomposition. See "Generalization beyond the puzzle" below.
 4. **Forensic application** — pair recovery is robust to fine-tuning and
    noise attacks, making the signal a candidate for model fingerprinting
-   and provenance. Section 8.1 of the paper benchmarks it against existing
-   watermarking methods (Adi, Uchida, Zhang, Lukas SoK, IPGuard, sensitive
-   samples) on six operational dimensions.
+   and provenance.
 
 ## Generalization beyond the puzzle
 
