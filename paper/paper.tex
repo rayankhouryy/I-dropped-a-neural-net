@@ -1303,14 +1303,142 @@ object. The result should be interpreted as identifiability of the
 channel-mixing MLP path within ConvNeXt blocks, not necessarily of the
 full block including spatial depthwise filtering.
 
+\subsection{Beyond GPT-style decoders: BERT-base (encoder-only, MLM)}\label{sec:bert}
+
+GPT-2 and ViT are both pretrained with autoregressive or
+classification objectives; the natural question is whether the pairing
+fingerprint is specific to causal language modeling. We test
+\textbf{BERT-base-uncased} ($12$ encoder layers, $d{=}768$, GELU MLP),
+which differs from GPT-2 on three axes simultaneously: encoder-only
+rather than decoder-only, bidirectional attention rather than causal,
+and masked-language-modeling rather than next-token prediction.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lcccc}
+\toprule
+Path & Trained pair acc & Random pair acc (3 seeds) & Trained AUC & Random AUC \\
+\midrule
+MLP  $W_2 W_1$              & \textbf{100\%} & $6\% \pm 5\%$  & $0.970$ & $0.47 \pm 0.04$ \\
+Attention V/O $W_O W_V$     & \textbf{100\%} & $3\% \pm 5\%$  & $\mathbf{1.000}$ & $0.45 \pm 0.06$ \\
+Attention Q/K $W_Q W_K^\top$ & \textbf{100\%} & $6\% \pm 5\%$  & $0.972$ & $0.45 \pm 0.09$ \\
+\bottomrule
+\end{tabular}
+\caption{BERT-base-uncased pairing across all three branches.
+Chance is $1/12 = 8.3\%$; trained recovery is perfect on every path
+and AUC is at least $0.97$. Random-init baselines collapse cleanly
+to chance, confirming the signal is training-induced. The fingerprint
+is not specific to causal language modeling; an MLM-pretrained
+encoder with bidirectional attention exhibits it identically.}
+\label{tab:bert}
+\end{table}
+
+\paragraph{Two refinements to the dynamic-isometry picture.} The BERT
+result also adds finer texture to the relationship between the pairing
+signal and the dynamic-isometry mechanism behind
+Proposition~\ref{prop:margin}. The negative-trace fraction on BERT MLP
+is only $8\%$ (vs.\ $92\%$ on GPT-2 MLPs), and on BERT attention V/O
+it is $58\%$ (vs.\ $33$--$50\%$ on GPT-2 V/O). Yet pair accuracy is
+$100\%$ on every path. This reinforces the conclusion already drawn
+from GPT-2 attention (Section~\ref{sec:transformers}): the
+diagonal-dominance \emph{signal} is more universal than the strict
+negative-diagonal \emph{mechanism} predicted by Proposition~\ref{prop:margin}.
+BERT MLP pairs through a diagonal-dominance ratio whose trace sign is
+predominantly positive --- an alignment between block $i$'s
+intermediate-projection and block $j$'s output-projection that does
+not depend on negative-trace dynamic isometry.
+
+\subsection{Decoder-only with SwiGLU and grouped-query attention: Mistral-7B}\label{sec:mistral}
+
+BERT generalizes the fingerprint along the encoder-only / MLM axis, but
+its block topology --- GELU MLP and full multi-head attention with
+$\mathrm{n\_kv\_heads}{=}\mathrm{n\_heads}$ --- is structurally identical
+to GPT-2. To stress the fingerprint along the \emph{block-structure}
+axis we test \textbf{Mistral-7B-v0.1}~\cite{jiang2023mistral7b}, a
+$32$-layer decoder-only model with $d{=}4096$, $d_{\mathrm{ff}}{=}14336$,
+and three architectural choices that GPT-2 does not have: a SwiGLU MLP,
+grouped-query attention (GQA) with $32$ query heads sharing only $8$
+key/value heads, and sliding-window attention.
+
+A SwiGLU MLP has three input/output matrices,
+$y = W_{\mathrm{down}}\bigl(\mathrm{SiLU}(W_{\mathrm{gate}} x) \odot
+(W_{\mathrm{up}} x)\bigr)$, so the natural ``branch product'' is no
+longer a single $W_2 W_1$. We test all three sensible cross-block
+choices: the value-path product $W_{\mathrm{down}}^{(j)}
+W_{\mathrm{up}}^{(i)}$, the gate-path product $W_{\mathrm{down}}^{(j)}
+W_{\mathrm{gate}}^{(i)}$, and a joint score that averages the two
+diagonal-dominance scores cell-by-cell. For attention, GQA breaks the
+GPT-2 head-for-head correspondence between $W_V/W_K$ and
+$W_O/W_Q$; we re-expand each KV head $4$-fold to match its query-head
+group before forming $W_O W_V$ and $W_Q W_K^\top$. Sliding-window
+attention is a runtime mask, not a weight property, so it does not
+affect the static branch product. All trained scores are compared
+against three random-init seeds.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lcccc}
+\toprule
+Path & Trained pair acc & Random pair acc (3 seeds) & Trained AUC & Random AUC \\
+\midrule
+MLP $W_{\mathrm{down}} W_{\mathrm{up}}$                & \textbf{100\%} & $2\% \pm 2\%$ & $\mathbf{1.000}$ & $0.49 \pm 0.04$ \\
+MLP $W_{\mathrm{down}} W_{\mathrm{gate}}$              & \textbf{100\%} & $2\% \pm 2\%$ & $0.989$          & $0.47 \pm 0.05$ \\
+MLP joint (SwiGLU)                                     & \textbf{100\%} & $2\% \pm 2\%$ & $\mathbf{1.000}$ & $0.46 \pm 0.03$ \\
+Attention V/O $W_O W_V$ (GQA-expanded)                 & \textbf{100\%} & $1\% \pm 2\%$ & $\mathbf{1.000}$ & $0.50 \pm 0.09$ \\
+Attention Q/K $W_Q W_K^\top$ (GQA-expanded)            & \textbf{100\%} & $2\% \pm 4\%$ & $\mathbf{1.000}$ & $0.50 \pm 0.05$ \\
+\bottomrule
+\end{tabular}
+\caption{Mistral-7B-v0.1 pairing across all five architecture-aware
+products. Chance is $1/32 = 3.1\%$; trained recovery is perfect on
+every path. Four of the five paths reach AUC $1.000$, and even the
+weaker $W_{\mathrm{down}} W_{\mathrm{gate}}$ path (AUC $0.989$) still
+pairs exactly. Random-init baselines sit indistinguishably from chance
+on every path.}
+\label{tab:mistral}
+\end{table}
+
+\paragraph{What this rules out.} Several plausible-but-wrong
+explanations for the GPT-2 result are now eliminated:
+$(i)$~\emph{``GELU artifact''} --- Mistral uses SiLU/SwiGLU, not GELU,
+and the gated 3-matrix MLP still pairs perfectly with the same
+diagonal-dominance ratio;
+$(ii)$~\emph{``full-attention artifact''} --- GQA collapses the V and K
+projections to a quarter of the heads, yet GQA-expanded $W_O W_V$ and
+$W_Q W_K^\top$ both pair at AUC $1.000$;
+$(iii)$~\emph{``causal-mask artifact''} --- Mistral's sliding-window
+attention does not weaken the signal, which is consistent with the
+mask being a runtime property of the attention operator while the
+fingerprint lives in the static weights.
+
+\paragraph{Sharpening the picture across BERT and Mistral.} A useful
+side-by-side: BERT MLP has only $8\%$ negative traces, Mistral
+$W_{\mathrm{down}} W_{\mathrm{up}}$ has $12\%$, and Mistral
+$W_{\mathrm{down}} W_{\mathrm{gate}}$ has $38\%$ --- a wide range of
+trace-sign behavior across two transformers that nevertheless all pair
+at $100\%$. The gate-path product is the most informative case: its
+pair separation is slightly negative ($-0.025$), so per-row diagonal
+dominance has \emph{failed}, but Hungarian matching on $-d(i,j)$ still
+recovers the identity permutation exactly. This is the same
+``Hungarian rescue'' regime previously observed in ResNet bottlenecks
+(Section~\ref{sec:order-anatomy}) and GPT-2 attention
+(Section~\ref{sec:transformers}). The training-induced fingerprint
+should therefore be understood as the global diagonal-dominance
+\emph{structure} of $\{d(i,j)\}$ across the layer grid, not as a strict
+per-row condition.
+
 \subsection{Architecture-aware factorizations: master table}
 
 Putting the pieces together, the diagonal-dominance fingerprint has now
 been measured across one synthetic regression task, four GPT-2 model
-sizes, four torchvision ResNet variants, one modern ConvNet, and one
-vision transformer. Table~\ref{tab:archmaster} lists the best
-(largest-$n$) result for each architecture family under its
-architecture-aware branch product.
+sizes, four torchvision ResNet variants, one modern ConvNet, one
+vision transformer, one MLM-pretrained encoder, and one $7$B-parameter
+decoder-only model with SwiGLU MLPs and grouped-query attention.
+Table~\ref{tab:archmaster} lists the best (largest-$n$) result for each
+architecture family under its architecture-aware branch product.
 
 \begin{table}[H]
 \centering
@@ -1338,6 +1466,16 @@ ConvNeXt-T / stage3        & ConvNeXt MLP (LN)   & $W_2 W_1$                    
 ViT-B/16                   & ViT MLP (LN)        & $W_2 W_1$                          & 12 & \textbf{100\%} & $1.000$ & $+0.26$ \\
 ViT-B/16                   & ViT Attention V/O   & $W_O W_V$                          & 12 & \textbf{100\%} & $1.000$ & $+4.84$ \\
 ViT-B/16                   & ViT Attention Q/K   & $W_Q W_K^\top$                     & 12 & \textbf{100\%} & $1.000$ & $+1.42$ \\
+\midrule
+BERT-base (encoder, MLM)   & Transformer MLP     & $W_2 W_1$                          & 12 & \textbf{100\%} & $0.970$ & $-0.06$ \\
+BERT-base                  & Attention V/O       & $W_O W_V$                          & 12 & \textbf{100\%} & $1.000$ & $+0.38$ \\
+BERT-base                  & Attention Q/K       & $W_Q W_K^\top$                     & 12 & \textbf{100\%} & $0.972$ & $-0.05$ \\
+\midrule
+Mistral-7B (SwiGLU, GQA)   & SwiGLU MLP value    & $W_{\mathrm{down}} W_{\mathrm{up}}$   & 32 & \textbf{100\%} & $1.000$ & $+0.51$ \\
+Mistral-7B                 & SwiGLU MLP gate     & $W_{\mathrm{down}} W_{\mathrm{gate}}$ & 32 & \textbf{100\%} & $0.989$ & $-0.02$ \\
+Mistral-7B                 & SwiGLU MLP joint    & joint $d(i,j)$                        & 32 & \textbf{100\%} & $1.000$ & $+0.32$ \\
+Mistral-7B                 & Attention V/O (GQA) & $W_O W_V$                             & 32 & \textbf{100\%} & $1.000$ & $+0.06$ \\
+Mistral-7B                 & Attention Q/K (GQA) & $W_Q W_K^\top$                        & 32 & \textbf{100\%} & $1.000$ & $+0.11$ \\
 \bottomrule
 \end{tabular}
 \caption{Architecture-aware diagonal-dominance pairing across architecture
@@ -1774,6 +1912,12 @@ tasks remains to be done.
   \emph{Sensitive-Sample Fingerprinting of Deep Neural Networks.} CVPR, 2019.
 \bibitem{olsson2022context} Catherine Olsson, Nelson Elhage, Neel Nanda, Nicholas Joseph, Nova DasSarma, Tom Henighan, Ben Mann, Amanda Askell, Yuntao Bai, Anna Chen, Tom Conerly, Dawn Drain, Deep Ganguli, Zac Hatfield-Dodds, Danny Hernandez, Scott Johnston, Andy Jones, Jackson Kernion, Liane Lovitt, Kamal Ndousse, Dario Amodei, Tom Brown, Jack Clark, Jared Kaplan, Sam McCandlish, Chris Olah.
   \emph{In-context Learning and Induction Heads.} Transformer Circuits Thread, 2022.
+
+\bibitem{jiang2023mistral7b} Albert Q.\ Jiang, Alexandre Sablayrolles, Arthur Mensch, Chris Bamford,
+Devendra Singh Chaplot, Diego de las Casas, Florian Bressand, Gianna Lengyel, Guillaume Lample,
+Lucile Saulnier, L\'elio Renard Lavaud, Marie-Anne Lachaux, Pierre Stock, Teven Le Scao,
+Thibaut Lavril, Thomas Wang, Timoth\'ee Lacroix, William El Sayed.
+\emph{Mistral 7B.} arXiv:2310.06825, 2023.
 \end{thebibliography}
 
 \appendix
