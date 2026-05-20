@@ -1,0 +1,118 @@
+%\documentclass[wcp,gray]{jmlr} % test grayscale version
+\documentclass[wcp,draft]{jmlr}
+
+% The following packages will be automatically loaded:
+% amsmath, amssymb, natbib, graphicx, url, algorithm2e
+
+%\usepackage{rotating}% for sideways figures and tables
+\usepackage{longtable}% for long tables
+
+% The booktabs package is used by this sample document
+% (it provides \toprule, \midrule and \bottomrule).
+% Remove the next line if you don't require it.
+\usepackage{booktabs}
+% The siunitx package is used by this sample document
+% to align numbers in a column by their decimal point.
+% Remove the next line if you don't require it.
+%\usepackage[load-configurations=version-1]{siunitx} % newer version
+%\usepackage{siunitx}
+%\usepackage{natbib}
+
+\usepackage{lineno}
+% \linenumbers
+
+% Do not comment the following commands:
+\pagenumbering{gobble}
+\newcommand{\cs}[1]{\texttt{\char`\\#1}}
+\makeatletter
+\let\Ginclude@graphics\@org@Ginclude@graphics 
+\makeatother
+
+%\jmlrvolume{305,}
+\jmlryear{2026}
+\jmlrworkshop{ACML 2026}
+
+\title[Training Leaves Traces]{Training Leaves Traces: Diagonal Dominance as a Neural Network Fingerprint}
+
+ % Use \Name{Author Name} to specify the name.
+ % If the surname contains spaces, enclose the surname
+ % in braces, e.g. \Name{John {Smith Jones}} similarly
+ % if the name has a "von" part, e.g \Name{Jane {de Winter}}.
+ % If the first letter in the forenames is a diacritic
+ % enclose the diacritic in braces, e.g. \Name{{\'E}louise Smith}
+
+ % Two authors with the same address
+ % \author{\Name{Author Name1} \Email{abc@sample.com}\and
+ %  \Name{Author Name2} \Email{xyz@sample.com}\\
+ %  \addr Address}
+
+ % Three or more authors with the same address:
+ % For camera-ready, uncomment the author block below:
+ % \author{\Name{Rayan Khoury} \Email{rkhoury@alum.mit.edu}\\
+ %  \Name{Aman Singh Thakur} \Email{amansinghtha@umass.edu}\\
+ % \addr MIT \& UMass Amherst}
+
+ % For blind review:
+ \author{\Name{Anonymous Authors}\\
+ \addr Anonymous Institution}
+
+
+ % Authors with different addresses:
+%  \author{\Name{Author Name1} \Email{abc@sample.com}\\
+%  \addr Address 1
+%  \AND
+%  \Name{Author Name2} \Email{xyz@sample.com}\\
+% \addr Address 2
+% }
+
+% For camera-ready, uncomment:
+% \editors{Andy Song, Bo Han and Sarah Erfani}
+
+\begin{document}
+
+\makeatletter
+\let \@jmlrpages \@empty
+\makeatother
+
+\maketitle
+
+\begin{abstract}
+Verifying the provenance of neural network weights is difficult: existing watermarking schemes must be embedded during training, and can be removed by fine-tuning. We show that training itself leaves an intrinsic fingerprint requiring no such foresight. Residual networks initialized for dynamical isometry \citep{pennington2017isometry} develop a distinctive structure: after training, each block's weight product settles near negative identity---a consequence of the network maintaining stable gradient flow by keeping layer Jacobians close to orthogonal. This leaves a detectable trace: the diagonal-dominance score \citep{park2026} of correctly paired input and output weights is high, while incorrect pairings score near zero. We show this signal reliably identifies which weights belong to the same block in residual networks and transformers, even when layers are shuffled or the model is subsequently fine-tuned. Because the fingerprint emerges from training rather than being deliberately embedded, it applies retroactively to any already-deployed model. This enables post-hoc verification---reconstructing models from corrupted or unlabeled weights, confirming a deployed model matches a registered checkpoint, or detecting unauthorized derivatives.
+
+In this paper, we formalize the diagonal-dominance fingerprint and stress-test its limits. A closed-form decomposition shows that the gap between correct and incorrect pairs scales with matrix dimension. Benchmarking against alternatives, diagonal-dominance is the only metric achieving perfect layer recovery; Frobenius matching plateaus at 47--67\% on transformers, while singular-value distance performs at chance. The signal transfers to transformers at scale---100\% accuracy on GPT-2 models from 124M to 1.5B parameters (12 to 48 layers), with signal strength increasing at larger model sizes. Robustness holds under adversarial conditions: pairing accuracy stays at 100\% across 21 attack configurations including fine-tuning up to 50 epochs and weight noise, degrading only when perturbations exceed $\sim$20\% relative weight magnitude---at which point model accuracy itself collapses. Vision architectures with BatchNorm remain untested and are left to future work.
+\end{abstract}
+\begin{keywords}
+neural network fingerprinting; dynamic isometry; model provenance; layer identification; transformers
+\end{keywords}
+
+\section{Section Title}
+Main contents here.
+
+\subsection{Subsection Title}
+A figure in Fig.~\ref{fig:spiral}. Please use high quality graphics for your camera-ready submission -- if you can use a vector graphics format such as \texttt{.eps} or \texttt{.pdf}.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width=0.5\textwidth]{spiral.eps}
+\caption{A spiral.}\label{fig:spiral}
+\end{center}
+\end{figure}
+
+An example of citation~\cite{DBLP:conf/acml/2009}.
+
+%\acks{Acknowledgements should go at the end, before appendices and references. You can uncomment this for the camera-ready version on paper acceptance.}
+
+%\bibliographystyle{plain}
+\bibliography{acml26}
+
+\appendix
+
+\section{First Appendix}\label{apd:first}
+
+This is the first appendix.
+
+\section{Second Appendix}\label{apd:second}
+
+This is the second appendix.
+
+
+\end{document}
