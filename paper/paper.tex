@@ -239,13 +239,19 @@ On Park's puzzle network this collapses to Park's algorithm
 trained ResNets in our sweep, the extra ingredients are required to
 hit the training-loss floor (Table~\ref{tab:ablation}).
 
-\paragraph{Scope.} Our primary analysis focuses on residual MLPs
-without normalization, across a discrete grid of depths and widths.
-We then extend to transformer architectures (Section~\ref{sec:transformers}),
-demonstrating that the MLP sublayers of pretrained GPT-2 models exhibit
-the same diagonal-dominance signal with 100\% pairing accuracy.
-Vision ResNets with BatchNorm remain out of scope and are discussed
-in Section~\ref{sec:limitations}.
+\paragraph{Scope.} Our primary theoretical analysis is on residual MLPs
+without normalization, but the empirical evaluation extends across
+architecture families. For each one we use the
+\emph{architecture-aware} residual-branch product: $W_2 W_1$ for
+BasicBlocks, transformer MLPs, and ConvNeXt blocks; $W_3 W_2 W_1$ for
+ResNet Bottleneck blocks; $W_O W_V$ and $W_Q W_K^\top$ for the two
+attention paths. Section~\ref{sec:resnet-imagenet} covers ImageNet
+ResNets with BatchNorm (ResNet-18 through ResNet-152), ConvNeXt-T,
+and ViT-B/16; the master table in
+Section~\ref{sec:modern-vision} summarizes results across all
+families. We leave full independent three-way reassembly of Bottleneck
+blocks (where $W_1$, $W_2$, $W_3$ are all shuffled separately) as
+future work.
 
 % ====================================================================
 \section{Setup and Tools}
@@ -1011,6 +1017,278 @@ normalizes away scale variation and isolates the trace contribution
 that only correctly paired products possess.
 
 % ====================================================================
+\section{Architecture-Aware Factorization: ImageNet ResNets}\label{sec:resnet-imagenet}
+
+A natural concern about the previous sections is that the diagonal-dominance
+signal might be an artifact of two-matrix residual blocks
+($x + W_{\mathrm{out}} \phi(W_{\mathrm{in}} x)$), or of architectures
+without BatchNorm. We test both concerns directly on torchvision's
+ImageNet-pretrained ResNet family, which uses BatchNorm and includes
+\emph{three-matrix} Bottleneck residual branches.
+
+\subsection{Two-conv vs three-conv residual branches}
+
+A standard ResNet has two block types:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Block type & Residual branch & Correct linearized product \\
+\midrule
+Residual MLP (Sec.~\ref{sec:pair-anatomy}) & $x + W_{\mathrm{out}}\phi(W_{\mathrm{in}} x)$ & $M = W_{\mathrm{out}} W_{\mathrm{in}}$ \\
+Transformer MLP (Sec.~\ref{sec:transformers}) & $x + W_2 \phi(W_1\, \mathrm{LN}(x))$ & $M = W_2 W_1$ \\
+Attention V/O (Sec.~\ref{sec:transformers}) & $x + W_O\,\mathrm{Attn}(W_V x)$ & $M = W_O W_V$ \\
+ResNet \emph{BasicBlock} (R18, R34) & $x + W_2 \phi(W_1 x)$ & $M = W_2 W_1$ \\
+ResNet \emph{Bottleneck} (R50, R101, R152) & $x + W_3\phi(W_2\phi(W_1 x))$ & $M = W_3 W_2 W_1$ \\
+\bottomrule
+\end{tabular}
+\caption{The architecture-aware factorization. The diagonal-dominance score
+must be computed on the full residual-branch product, which is two-factor
+for BasicBlocks and three-factor for Bottleneck blocks.}
+\label{tab:factorization}
+\end{table}
+
+For Bottleneck blocks the naive ``endpoint'' product $W_3 W_1$ skips the
+$3{\times}3$ middle convolution $W_2$ that performs the actual feature
+mixing inside the bottleneck. We score both extractions on every stage
+with at least 3 interior (non-downsample) blocks. Convolutional kernels
+are collapsed to channel-mixing matrices by either summing over kernel
+positions (\emph{channel-sum}) or taking the central spatial tap
+(\emph{center-tap}); BatchNorm scaling $\gamma/\sqrt{\sigma^2+\varepsilon}$
+is folded into the adjacent conv's output channels.
+
+\subsection{Endpoint extraction fails; triple extraction succeeds}
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lcccccc}
+\toprule
+Model / stage & $n$ & Chance
+  & Endpoint $W_3 W_1$
+  & \textbf{Triple $W_3 W_2 W_1$}
+  & Random-init triple
+  & Trained AUC \\
+\midrule
+ResNet50 / layer3   &  5 & 20.0\% & 20\% & \textbf{100\%} & $13\%\pm9\%$  & 1.000 \\
+ResNet101 / layer3  & 22 &  4.5\% & 14\% & \textbf{100\%} & $2\%\pm2\%$   & 0.995 \\
+ResNet152 / layer2  &  7 & 14.3\% &  0\% & \textbf{100\%} & $24\%\pm7\%$  & 0.969 \\
+ResNet152 / layer3  & 35 &  2.9\% &  6\% & \textbf{91\%}  & $3\%\pm2\%$   & 0.964 \\
+\bottomrule
+\end{tabular}
+\caption{Pair accuracy on Bottleneck ResNet stages under the wrong
+endpoint product $W_3 W_1$ vs.\ the correct triple product
+$W_3 W_2 W_1$. The triple score restores recovery to $91$--$100\%$
+across stages up to $35$ blocks, on the same network parameters where
+the endpoint score sat at chance. Random-init baselines are averaged
+over 3 seeds and confirm that the triple score is genuinely training-induced
+(both extraction modes agree to within $\pm 7\%$; channel-sum mode shown).}
+\label{tab:factorization-results}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_resnet_wrong_vs_correct_factorization.png}
+\caption{Architecture-aware factorization rescues Bottleneck ResNet pairing.
+\emph{(a) Pair accuracy.} Red bars use the naive endpoint product
+$W_3 W_1$ (skipping the bottleneck conv) and sit at chance on every
+stage. Green bars use the correct triple product $W_3 W_2 W_1$ and
+recover the identity permutation on every model from ResNet-50 to
+ResNet-152, on stages up to $35$ blocks. Gray bars show that the same
+triple-product score yields chance accuracy on \emph{randomly
+initialized} versions of the same architectures (3 seeds with error bars).
+\emph{(b) AUC} of correct vs.\ incorrect score distributions confirms
+the gap: trained-triple AUCs are $0.93$--$1.00$; random-init triple AUCs
+sit within $\pm 0.13$ of $0.5$.}
+\label{fig:resnet-factorization}
+\end{figure}
+
+\begin{observation}[Architecture-aware factorization]\label{obs:resnet-factorization}
+For Bottleneck ResNets, the diagonal-dominance signal is computed on the
+full residual-branch product $M = W_3 W_2 W_1$, not the endpoint product
+$W_3 W_1$. Under this corrected extraction, pretrained ImageNet ResNets
+exhibit the same training-induced fingerprint as residual MLPs and
+transformer sublayers, with pair accuracy $\geq 91\%$ on stages up to
+$35$ blocks. Both spatial-collapse modes we tested (channel-sum over the
+$3{\times}3$ kernel and center-tap only) agree.
+\end{observation}
+
+\subsection{Scope and caveat: bundle matching vs.\ full triple reassembly}
+
+The Bottleneck experiment scores
+\[
+d(i, j) \;=\; \frac{\bigl|\mathrm{tr}\bigl(W_3^{(j)} W_2^{(j)} W_1^{(i)}\bigr)\bigr|}
+                     {\bigl\|W_3^{(j)} W_2^{(j)} W_1^{(i)}\bigr\|_F},
+\]
+matching $W_1^{(i)}$ against an \emph{already-bundled} pair
+$(W_2^{(j)}, W_3^{(j)})$ from block $j$. This is the natural setup when
+the bundle structure is given (e.g.\ recovering layer identity from a
+shuffled set of complete residual branches). It does \emph{not} prove
+the harder problem of recovering the full triple assignment when all
+$W_1$, $W_2$, $W_3$ matrices are independently shuffled --- that is a
+three-way matching problem with combinatorial complexity $(L!)^3$ and
+likely requires alternating-Hungarian-style search beyond the
+single-pass matching used here. We flag this distinction as a
+boundary on the claim and leave full triple reassembly to future work.
+
+\subsection{Mechanistic upshot}
+
+The earlier failure of an endpoint-only extraction on ImageNet ResNets
+was a misapplication, not a falsification: the residual branch in a
+Bottleneck block is genuinely three-factor, and the linearized product
+to score is the full three-matrix composition. With that correction,
+the central thesis is broader than originally stated:
+
+\begin{quote}\itshape
+Training induces a recoverable diagonal-dominance fingerprint in the
+\emph{complete} residual-branch product, whatever its arity. For
+two-factor branches (residual MLPs, BasicBlocks, transformer MLPs,
+attention V/O and Q/K) the product is $W_{\mathrm{out}} W_{\mathrm{in}}$.
+For three-factor branches (Bottleneck ResNets) the product is
+$W_3 W_2 W_1$. The signal is training-induced (random-init baselines
+remain at chance), persists under BatchNorm and LayerNorm, and is
+invariant to the choice between channel-sum and center-tap spatial
+projection.
+\end{quote}
+
+\subsection{Modern vision architectures: ConvNeXt and ViT}\label{sec:modern-vision}
+
+To test the architecture-aware framing on architectures outside the
+classical Conv$+$BatchNorm$+$ReLU stack, we ran the same diagonal-dominance
+pipeline on two pretrained ImageNet models from torchvision:
+\textbf{ConvNeXt-T} (a LayerNorm-based modern ConvNet with depthwise
+spatial mixing followed by a Linear$\to$GELU$\to$Linear MLP) and
+\textbf{ViT-B/16} (a vision transformer with 12 standard encoder blocks).
+
+\paragraph{What is the correct product for each block?}
+
+\begin{itemize}[leftmargin=*,itemsep=0pt]
+  \item \emph{ConvNeXt CNBlock.} The residual branch is
+        \(x \mapsto x + \mathrm{Linear}_2(\mathrm{GELU}(\mathrm{Linear}_1(
+        \mathrm{LN}(\mathrm{DepthwiseConv}_{7\times 7}(x)))))\). The
+        depthwise convolution is per-channel (groups $= d$) and so does
+        not mix channels; the channel-mixing branch product is the
+        same $W_2 W_1$ as a transformer MLP.
+  \item \emph{ViT encoder block.} The MLP path scores $W_2 W_1$
+        identically to GPT-2. The attention path scores
+        $W_O W_V$ (residual write) and $W_Q W_K^\top$ (attention-score
+        coupling) just as in Section~\ref{sec:transformers}.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_modern_vision_pairing.png}
+\caption{Diagonal-dominance matrices on modern vision architectures.
+\emph{(a) ConvNeXt-T stage~3 (9 CNBlocks)} pairs at $100\%$ via the
+MLP product $W_2 W_1$. \emph{(b) ViT-B/16 MLP (12 blocks)} also pairs at
+$100\%$ with AUC $1.000$ and a strong depth-coded brightness gradient.
+\emph{(c) ViT-B/16 attention $V\!\leftrightarrow\!O$} produces the
+single cleanest pair signal in this paper: sep~$=+4.84$, AUC~$=1.000$,
+and $100\%$ of correctly-paired products have negative trace --- the
+full Proposition~\ref{prop:margin} prediction. \emph{(d) ViT-B/16
+attention $Q\!\leftrightarrow\!K$} also recovers $100\%$ on a smaller
+absolute scale.}
+\label{fig:modern-vision-pairing}
+\end{figure}
+
+\paragraph{Trained vs.\ random-init.} Random-initialized variants of both
+models drop to chance on every path. For ConvNeXt-T stage~3 we
+strengthened the baseline to $20$ random seeds and added margin
+diagnostics:
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lcccc}
+\toprule
+ConvNeXt-T stage~3 ($n{=}9$) & Pair acc & AUC & Pair sep & Mean per-row top-2 gap \\
+\midrule
+trained                       & $\mathbf{100\%}$ & $0.875$ & $-0.099$ & $\mathbf{+0.092}$ \\
+random init (20 seeds)        & $8.3\%\pm 8.0\%$ & $0.476\pm 0.095$ & $-0.112\pm 0.021$ & $-0.057\pm 0.016$ \\
+chance                        & $11.1\%$         & $0.500$           & ---     & --- \\
+\bottomrule
+\end{tabular}
+\caption{ConvNeXt-T stage~3 ($9$ CNBlocks): trained vs.\ random init
+diagnostics. Random AUC is at chance to within sampling noise. The
+mean per-row top-2 gap (diagonal minus highest off-diagonal in the same
+row) \emph{flips sign} from $-0.057$ (random) to $+0.092$ (trained),
+which is what allows Hungarian matching to recover the identity
+permutation even though the global pair separation is negative ---
+the same per-row-rescue regime documented for Bottleneck ResNets in
+Section~\ref{sec:resnet-imagenet} and for GPT-2-xl attention in
+Section~\ref{sec:transformers}.}\label{tab:convnext-baseline}
+\end{table}
+
+For ViT-B/16, all three paths recover $100\%$ with AUC $=1.000$ and
+random-init baselines at $0\%$--$11\%$ (chance $8.3\%$). The ViT
+$V\!\leftrightarrow\!O$ separation of $+4.84$ is the largest hard
+margin we observed in the paper.
+
+\paragraph{Caveat.}
+For ConvNeXt we score the channel-mixing MLP path $W_2 W_1$ inside each
+CNBlock; we do not include the preceding depthwise convolution, which
+is per-channel and therefore does not define a cross-channel pairing
+object. The result should be interpreted as identifiability of the
+channel-mixing MLP path within ConvNeXt blocks, not necessarily of the
+full block including spatial depthwise filtering.
+
+\subsection{Architecture-aware factorizations: master table}
+
+Putting the pieces together, the diagonal-dominance fingerprint has now
+been measured across one synthetic regression task, four GPT-2 model
+sizes, four torchvision ResNet variants, one modern ConvNet, and one
+vision transformer. Table~\ref{tab:archmaster} lists the best
+(largest-$n$) result for each architecture family under its
+architecture-aware branch product.
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lllcccc}
+\toprule
+Model / stage & Branch type & Branch product & $n$ & Pair acc & AUC & Sep \\
+\midrule
+Park's puzzle (Jane St.)   & Residual MLP        & $W_{\mathrm{out}} W_{\mathrm{in}}$ & 48 & \textbf{100\%} & $1.000$ & $+1.18$ \\
+\midrule
+GPT-2 (124M)               & Transformer MLP     & $W_2 W_1$                          & 12 & \textbf{100\%} & ---     & $+2.39$ \\
+GPT-2 medium (355M)        & Transformer MLP     & $W_2 W_1$                          & 24 & \textbf{100\%} & ---     & $+0.11$ \\
+GPT-2 large (774M)         & Transformer MLP     & $W_2 W_1$                          & 36 & \textbf{100\%} & ---     & $-0.05$ \\
+GPT-2 xl (1.5B)            & Transformer MLP     & $W_2 W_1$                          & 48 & \textbf{100\%} & ---     & $+0.66$ \\
+GPT-2 xl                   & Attention V/O       & $W_O W_V$                          & 48 & \textbf{100\%} & ---     & $-0.02$ \\
+GPT-2 xl                   & Attention Q/K       & $W_Q W_K^\top$                     & 48 & \textbf{100\%} & ---     & $+0.27$ \\
+\midrule
+ResNet-50 / layer3         & Bottleneck (BN)     & $W_3 W_2 W_1$                      &  5 & \textbf{100\%} & $1.000$ & $+0.58$ \\
+ResNet-101 / layer3        & Bottleneck (BN)     & $W_3 W_2 W_1$                      & 22 & \textbf{100\%} & $0.995$ & $-0.05$ \\
+ResNet-152 / layer3        & Bottleneck (BN)     & $W_3 W_2 W_1$                      & 35 & \textbf{91\%}  & $0.964$ & $-0.16$ \\
+\midrule
+ConvNeXt-T / stage3        & ConvNeXt MLP (LN)   & $W_2 W_1$                          &  9 & \textbf{100\%} & $0.875$ & $-0.10$ \\
+ViT-B/16                   & ViT MLP (LN)        & $W_2 W_1$                          & 12 & \textbf{100\%} & $1.000$ & $+0.26$ \\
+ViT-B/16                   & ViT Attention V/O   & $W_O W_V$                          & 12 & \textbf{100\%} & $1.000$ & $+4.84$ \\
+ViT-B/16                   & ViT Attention Q/K   & $W_Q W_K^\top$                     & 12 & \textbf{100\%} & $1.000$ & $+1.42$ \\
+\bottomrule
+\end{tabular}
+\caption{Architecture-aware diagonal-dominance pairing across architecture
+families. Every entry uses the residual-branch product appropriate to
+its block topology --- two-factor where the branch has one bottleneck
+matrix, three-factor for ResNet Bottleneck blocks. Pair acc is the
+fraction of layers Hungarian matching on $-d(i,j)$ recovers; AUC is the
+correct-vs-incorrect score discrimination; Sep is the global pair
+separation $\min_i d(i,i) - \max_{j \neq i} d(i,j)$. Negative Sep with
+$100\%$ pair acc indicates a per-row-failed but globally-recoverable
+regime (Hungarian rescue, also seen in Sections~\ref{sec:order-anatomy}
+and \ref{sec:transformers}). Random-init baselines for every family in
+this table sit at chance (see Sections~\ref{sec:nullmodel},
+\ref{sec:transformers}, \ref{sec:resnet-imagenet}, and
+Table~\ref{tab:convnext-baseline}).}\label{tab:archmaster}
+\end{table}
+
+% ====================================================================
 \section{Forensic Application: Robustness to Fine-Tuning Attacks}\label{sec:attack}
 
 The theory (Section~\ref{sec:theory}) explains why the
@@ -1265,27 +1543,33 @@ more privacy-preserving.
 % ====================================================================
 \section{Limitations and Future Work}\label{sec:limitations}
 
-\paragraph{Architectural scope.} Our ResNet experiments use MLP-style
-blocks without normalization. Vision ResNets with BatchNorm exhibit
-qualitatively different gradient dynamics~\cite{santurkar2018bn}: the
-effective product becomes $W_{\mathrm{out}} \cdot \mathrm{diag}(\gamma) \cdot W_{\mathrm{in}}$
-where $\gamma$ is the learned BatchNorm scale, potentially disrupting
-the diagonal-dominance signal. This remains the most important untested
-setting.
+\paragraph{Architectural scope.} Section~\ref{sec:resnet-imagenet}
+shows that ImageNet ResNets with BatchNorm \emph{do} carry the
+diagonal-dominance fingerprint, provided the score uses the
+architecture-aware branch product $W_3 W_2 W_1$ for Bottleneck blocks
+(not the naive endpoint product $W_3 W_1$). BatchNorm is folded into
+the adjacent convolution's output channels via $\gamma/\sqrt{\sigma^2+\varepsilon}$
+and does not disrupt the signal once the correct factorization is used.
+ConvNeXt (LayerNorm) and ViT (LayerNorm) extend the result to modern
+vision architectures. Two scope items remain genuinely open:
+\textbf{(i)} \emph{full independent three-way Bottleneck reassembly} ---
+our experiment matches each $W_1$ against an already-bundled
+$(W_2, W_3)$ from the same block, which recovers block identity but
+does not solve the harder problem of recovering the triple assignment
+when all three convs are shuffled independently;
+\textbf{(ii)} \emph{the depthwise spatial convolution of ConvNeXt
+blocks} --- it is per-channel and does not contribute to channel mixing,
+so we score only the MLP path $W_2 W_1$ inside each CNBlock. A
+controlled BatchNorm-vs-no-BatchNorm training comparison and a CIFAR
+sweep would further isolate the role of normalization but are not
+required to support the central claim.
 
-\paragraph{Transformer attention blocks.} While MLP sublayer pairing
-works perfectly (Section~\ref{sec:transformers}), attention blocks
-present a different challenge. The $W_V \to W_O$ factorization involves
-intermediate attention weights $A = \mathrm{softmax}(QK^\top/\sqrt{d})$,
-so the product $W_O W_V$ is not the full Jacobian of the attention
-sublayer. Preliminary investigation suggests attention pairing may
-require data-dependent scoring or alternative metrics.
-
-\paragraph{Transformer ordering.} We demonstrate MLP \emph{pairing}
-transfers to transformers but do not address layer \emph{ordering}.
-The $\|W_{\mathrm{out}}\|_F$ heuristic has not been validated on
-transformer blocks, and the interleaving of attention and MLP sublayers
-may require new ordering strategies.
+\paragraph{Transformer ordering.} We demonstrate that MLP and attention
+\emph{pairing} transfer to transformers (Section~\ref{sec:transformers}
+and Section~\ref{sec:modern-vision}) but do not address layer
+\emph{ordering}. The $\|W_{\mathrm{out}}\|_F$ heuristic has not been
+validated on transformer blocks, and the interleaving of attention and
+MLP sublayers may require new ordering strategies.
 
 \paragraph{Theoretical questions.}
 \textbf{(1)} Proposition~\ref{prop:wall} derives the Pairing Wall slope

@@ -1,0 +1,337 @@
+[
+  {
+    "model": "resnet18",
+    "block_type": "basicblock",
+    "stages": {
+      "layer1": {},
+      "layer2": {},
+      "layer3": {},
+      "layer4": {}
+    }
+  },
+  {
+    "model": "resnet34",
+    "block_type": "basicblock",
+    "stages": {
+      "layer1": {
+        "channel_sum": {
+          "pair": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": -0.049225691705942154,
+            "auc": 0.8333333333333334,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          }
+        },
+        "center_tap": {
+          "pair": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": 0.9394774883985519,
+            "auc": 1.0,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          }
+        }
+      },
+      "layer2": {
+        "channel_sum": {
+          "pair": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": 0.7326716929674149,
+            "auc": 1.0,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          }
+        },
+        "center_tap": {
+          "pair": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": -0.17509117722511292,
+            "auc": 0.7222222222222222,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          }
+        }
+      },
+      "layer3": {
+        "channel_sum": {
+          "pair": {
+            "n": 5,
+            "pair_acc": 0.6,
+            "pair_sep": -0.2834883164614439,
+            "auc": 0.56,
+            "chance": 0.2,
+            "acc_over_chance": 2.9999999999999996
+          }
+        },
+        "center_tap": {
+          "pair": {
+            "n": 5,
+            "pair_acc": 1.0,
+            "pair_sep": 0.210113987326622,
+            "auc": 1.0,
+            "chance": 0.2,
+            "acc_over_chance": 5.0
+          }
+        }
+      },
+      "layer4": {}
+    }
+  },
+  {
+    "model": "resnet50",
+    "block_type": "bottleneck",
+    "stages": {
+      "layer1": {},
+      "layer2": {
+        "channel_sum": {
+          "triple": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": 0.09186387807130814,
+            "auc": 1.0,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          },
+          "endpoints": {
+            "n": 3,
+            "pair_acc": 0.3333333333333333,
+            "pair_sep": -0.08734885975718498,
+            "auc": 0.5,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 1.0
+          }
+        },
+        "center_tap": {
+          "triple": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": 0.07814348861575127,
+            "auc": 1.0,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          },
+          "endpoints": {
+            "n": 3,
+            "pair_acc": 0.3333333333333333,
+            "pair_sep": -0.08734885975718498,
+            "auc": 0.5,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 1.0
+          }
+        }
+      },
+      "layer3": {
+        "channel_sum": {
+          "triple": {
+            "n": 5,
+            "pair_acc": 1.0,
+            "pair_sep": 0.5813911259174347,
+            "auc": 1.0,
+            "chance": 0.2,
+            "acc_over_chance": 5.0
+          },
+          "endpoints": {
+            "n": 5,
+            "pair_acc": 0.2,
+            "pair_sep": -0.07067131530493498,
+            "auc": 0.53,
+            "chance": 0.2,
+            "acc_over_chance": 1.0
+          }
+        },
+        "center_tap": {
+          "triple": {
+            "n": 5,
+            "pair_acc": 1.0,
+            "pair_sep": -0.023549381643533707,
+            "auc": 0.92,
+            "chance": 0.2,
+            "acc_over_chance": 5.0
+          },
+          "endpoints": {
+            "n": 5,
+            "pair_acc": 0.2,
+            "pair_sep": -0.07067131530493498,
+            "auc": 0.53,
+            "chance": 0.2,
+            "acc_over_chance": 1.0
+          }
+        }
+      },
+      "layer4": {}
+    }
+  },
+  {
+    "model": "resnet101",
+    "block_type": "bottleneck",
+    "stages": {
+      "layer1": {},
+      "layer2": {
+        "channel_sum": {
+          "triple": {
+            "n": 3,
+            "pair_acc": 0.3333333333333333,
+            "pair_sep": -0.10452909767627716,
+            "auc": 0.6111111111111112,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 1.0
+          },
+          "endpoints": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": -0.020413292571902275,
+            "auc": 0.8333333333333334,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          }
+        },
+        "center_tap": {
+          "triple": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": -0.014461025595664978,
+            "auc": 0.8888888888888888,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          },
+          "endpoints": {
+            "n": 3,
+            "pair_acc": 1.0,
+            "pair_sep": -0.020413292571902275,
+            "auc": 0.8333333333333334,
+            "chance": 0.3333333333333333,
+            "acc_over_chance": 3.0
+          }
+        }
+      },
+      "layer3": {
+        "channel_sum": {
+          "triple": {
+            "n": 22,
+            "pair_acc": 1.0,
+            "pair_sep": -0.05024164170026779,
+            "auc": 0.9947855175127902,
+            "chance": 0.045454545454545456,
+            "acc_over_chance": 22.0
+          },
+          "endpoints": {
+            "n": 22,
+            "pair_acc": 0.13636363636363635,
+            "pair_sep": -0.1172105185687542,
+            "auc": 0.6191460055096418,
+            "chance": 0.045454545454545456,
+            "acc_over_chance": 2.9999999999999996
+          }
+        },
+        "center_tap": {
+          "triple": {
+            "n": 22,
+            "pair_acc": 1.0,
+            "pair_sep": 0.0076965391635894775,
+            "auc": 0.9982290436835891,
+            "chance": 0.045454545454545456,
+            "acc_over_chance": 22.0
+          },
+          "endpoints": {
+            "n": 22,
+            "pair_acc": 0.13636363636363635,
+            "pair_sep": -0.1172105185687542,
+            "auc": 0.6191460055096418,
+            "chance": 0.045454545454545456,
+            "acc_over_chance": 2.9999999999999996
+          }
+        }
+      },
+      "layer4": {}
+    }
+  },
+  {
+    "model": "resnet152",
+    "block_type": "bottleneck",
+    "stages": {
+      "layer1": {},
+      "layer2": {
+        "channel_sum": {
+          "triple": {
+            "n": 7,
+            "pair_acc": 1.0,
+            "pair_sep": -0.039961375296115875,
+            "auc": 0.9693877551020408,
+            "chance": 0.14285714285714285,
+            "acc_over_chance": 7.0
+          },
+          "endpoints": {
+            "n": 7,
+            "pair_acc": 0.0,
+            "pair_sep": -0.15621300972998142,
+            "auc": 0.5680272108843537,
+            "chance": 0.14285714285714285,
+            "acc_over_chance": 0.0
+          }
+        },
+        "center_tap": {
+          "triple": {
+            "n": 7,
+            "pair_acc": 1.0,
+            "pair_sep": -0.05297749862074852,
+            "auc": 0.9251700680272109,
+            "chance": 0.14285714285714285,
+            "acc_over_chance": 7.0
+          },
+          "endpoints": {
+            "n": 7,
+            "pair_acc": 0.0,
+            "pair_sep": -0.15621300972998142,
+            "auc": 0.5680272108843537,
+            "chance": 0.14285714285714285,
+            "acc_over_chance": 0.0
+          }
+        }
+      },
+      "layer3": {
+        "channel_sum": {
+          "triple": {
+            "n": 35,
+            "pair_acc": 0.9142857142857143,
+            "pair_sep": -0.16446336545050144,
+            "auc": 0.9641776710684273,
+            "chance": 0.02857142857142857,
+            "acc_over_chance": 32.0
+          },
+          "endpoints": {
+            "n": 35,
+            "pair_acc": 0.05714285714285714,
+            "pair_sep": -0.11026515858247876,
+            "auc": 0.5909723889555822,
+            "chance": 0.02857142857142857,
+            "acc_over_chance": 2.0
+          }
+        },
+        "center_tap": {
+          "triple": {
+            "n": 35,
+            "pair_acc": 0.9428571428571428,
+            "pair_sep": -0.09843577118590474,
+            "auc": 0.9520048019207683,
+            "chance": 0.02857142857142857,
+            "acc_over_chance": 33.0
+          },
+          "endpoints": {
+            "n": 35,
+            "pair_acc": 0.05714285714285714,
+            "pair_sep": -0.11026515858247876,
+            "auc": 0.5909723889555822,
+            "chance": 0.02857142857142857,
+            "acc_over_chance": 2.0
+          }
+        }
+      },
+      "layer4": {}
+    }
+  }
+]

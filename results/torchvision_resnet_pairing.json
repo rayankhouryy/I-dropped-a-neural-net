@@ -1,0 +1,440 @@
+{
+  "pretrained": [
+    {
+      "model": "resnet18",
+      "block_type": "basicblock",
+      "stages": []
+    },
+    {
+      "model": "resnet34",
+      "block_type": "basicblock",
+      "stages": [
+        {
+          "stage": "layer1",
+          "n_blocks": 3,
+          "planes": 64,
+          "mid": 64,
+          "skipped_downsample_blocks": 0,
+          "chance": 0.3333333333333333,
+          "diag_dominance": {
+            "pair_acc": 1.0,
+            "pair_sep": -0.049225691705942154,
+            "mean_correct": 1.2334667332470417,
+            "mean_incorrect": 0.04693358638420856,
+            "correct_pairs": 3,
+            "total_pairs": 3,
+            "assignment": [
+              0,
+              1,
+              2
+            ]
+          },
+          "frobenius_pair_acc": 0.3333333333333333,
+          "trace_analysis": {
+            "traces": [
+              17.55207633972168,
+              0.46452856063842773,
+              -21.98410415649414
+            ],
+            "mean_trace": -1.3224997520446777,
+            "frac_negative": 0.3333333333333333
+          }
+        },
+        {
+          "stage": "layer2",
+          "n_blocks": 3,
+          "planes": 128,
+          "mid": 128,
+          "skipped_downsample_blocks": 1,
+          "chance": 0.3333333333333333,
+          "diag_dominance": {
+            "pair_acc": 1.0,
+            "pair_sep": 0.7326716929674149,
+            "mean_correct": 1.512886106967926,
+            "mean_incorrect": 0.09767173168559869,
+            "correct_pairs": 3,
+            "total_pairs": 3,
+            "assignment": [
+              0,
+              1,
+              2
+            ]
+          },
+          "frobenius_pair_acc": 0.0,
+          "trace_analysis": {
+            "traces": [
+              -32.365726470947266,
+              -46.778358459472656,
+              -21.938159942626953
+            ],
+            "mean_trace": -33.69408162434896,
+            "frac_negative": 1.0
+          }
+        },
+        {
+          "stage": "layer3",
+          "n_blocks": 5,
+          "planes": 256,
+          "mid": 256,
+          "skipped_downsample_blocks": 1,
+          "chance": 0.2,
+          "diag_dominance": {
+            "pair_acc": 0.6,
+            "pair_sep": -0.2834883164614439,
+            "mean_correct": 0.4068865362554789,
+            "mean_incorrect": 0.16807416081428528,
+            "correct_pairs": 3,
+            "total_pairs": 5,
+            "assignment": [
+              0,
+              3,
+              2,
+              1,
+              4
+            ]
+          },
+          "frobenius_pair_acc": 0.2,
+          "trace_analysis": {
+            "traces": [
+              -37.69203186035156,
+              0.9203391075134277,
+              -8.580265045166016,
+              -8.394163131713867,
+              -38.699188232421875
+            ],
+            "mean_trace": -18.48906183242798,
+            "frac_negative": 0.8
+          }
+        }
+      ]
+    },
+    {
+      "model": "resnet50",
+      "block_type": "bottleneck",
+      "stages": [
+        {
+          "stage": "layer2",
+          "n_blocks": 3,
+          "planes": 512,
+          "mid": 128,
+          "skipped_downsample_blocks": 1,
+          "chance": 0.3333333333333333,
+          "diag_dominance": {
+            "pair_acc": 0.3333333333333333,
+            "pair_sep": -0.08734885975718498,
+            "mean_correct": 0.06491715336839358,
+            "mean_incorrect": 0.05536780824574331,
+            "correct_pairs": 1,
+            "total_pairs": 3,
+            "assignment": [
+              0,
+              2,
+              1
+            ]
+          },
+          "frobenius_pair_acc": 1.0,
+          "trace_analysis": {
+            "traces": [
+              1.5833091735839844,
+              0.6060936450958252,
+              2.1612253189086914
+            ],
+            "mean_trace": 1.450209379196167,
+            "frac_negative": 0.0
+          }
+        },
+        {
+          "stage": "layer3",
+          "n_blocks": 5,
+          "planes": 1024,
+          "mid": 256,
+          "skipped_downsample_blocks": 1,
+          "chance": 0.2,
+          "diag_dominance": {
+            "pair_acc": 0.2,
+            "pair_sep": -0.07067131530493498,
+            "mean_correct": 0.07226888407021761,
+            "mean_incorrect": 0.06182992379181087,
+            "correct_pairs": 1,
+            "total_pairs": 5,
+            "assignment": [
+              2,
+              4,
+              0,
+              3,
+              1
+            ]
+          },
+          "frobenius_pair_acc": 0.2,
+          "trace_analysis": {
+            "traces": [
+              -0.2239733636379242,
+              4.214125633239746,
+              1.5073572397232056,
+              5.456429958343506,
+              2.963210105895996
+            ],
+            "mean_trace": 2.783429914712906,
+            "frac_negative": 0.2
+          }
+        }
+      ]
+    },
+    {
+      "model": "resnet101",
+      "block_type": "bottleneck",
+      "stages": [
+        {
+          "stage": "layer2",
+          "n_blocks": 3,
+          "planes": 512,
+          "mid": 128,
+          "skipped_downsample_blocks": 1,
+          "chance": 0.3333333333333333,
+          "diag_dominance": {
+            "pair_acc": 1.0,
+            "pair_sep": -0.020413292571902275,
+            "mean_correct": 0.06975493269662063,
+            "mean_incorrect": 0.021742262062616646,
+            "correct_pairs": 3,
+            "total_pairs": 3,
+            "assignment": [
+              0,
+              1,
+              2
+            ]
+          },
+          "frobenius_pair_acc": 1.0,
+          "trace_analysis": {
+            "traces": [
+              0.9175211191177368,
+              0.45344114303588867,
+              2.237039089202881
+            ],
+            "mean_trace": 1.2026671171188354,
+            "frac_negative": 0.0
+          }
+        },
+        {
+          "stage": "layer3",
+          "n_blocks": 22,
+          "planes": 1024,
+          "mid": 256,
+          "skipped_downsample_blocks": 1,
+          "chance": 0.045454545454545456,
+          "diag_dominance": {
+            "pair_acc": 0.13636363636363635,
+            "pair_sep": -0.1172105185687542,
+            "mean_correct": 0.05702154385984282,
+            "mean_incorrect": 0.038967674131853806,
+            "correct_pairs": 3,
+            "total_pairs": 22,
+            "assignment": [
+              14,
+              0,
+              2,
+              5,
+              18,
+              11,
+              19,
+              7,
+              13,
+              4,
+              6,
+              10,
+              20,
+              15,
+              12,
+              17,
+              16,
+              1,
+              21,
+              3,
+              9,
+              8
+            ]
+          },
+          "frobenius_pair_acc": 0.0,
+          "trace_analysis": {
+            "traces": [
+              -0.46416985988616943,
+              -0.7286339998245239,
+              1.7481359243392944,
+              0.04091563820838928,
+              -2.300039768218994,
+              0.6254417300224304,
+              0.506743848323822,
+              0.618944525718689,
+              -0.6589741110801697,
+              2.8656742572784424,
+              0.35802003741264343,
+              1.957914113998413,
+              -0.9007977843284607,
+              1.3733810186386108,
+              0.15415054559707642,
+              3.2908921241760254,
+              3.4346156120300293,
+              1.2046809196472168,
+              1.8378946781158447,
+              -3.2728309631347656,
+              -1.2954206466674805,
+              0.922271192073822
+            ],
+            "mean_trace": 0.5144913196563721,
+            "frac_negative": 0.3181818181818182
+          }
+        }
+      ]
+    },
+    {
+      "model": "resnet152",
+      "block_type": "bottleneck",
+      "stages": [
+        {
+          "stage": "layer2",
+          "n_blocks": 7,
+          "planes": 512,
+          "mid": 128,
+          "skipped_downsample_blocks": 1,
+          "chance": 0.14285714285714285,
+          "diag_dominance": {
+            "pair_acc": 0.0,
+            "pair_sep": -0.15621300972998142,
+            "mean_correct": 0.057242420102868764,
+            "mean_incorrect": 0.0511753864120692,
+            "correct_pairs": 0,
+            "total_pairs": 7,
+            "assignment": [
+              5,
+              0,
+              3,
+              1,
+              2,
+              6,
+              4
+            ]
+          },
+          "frobenius_pair_acc": 0.0,
+          "trace_analysis": {
+            "traces": [
+              -0.4270392656326294,
+              -0.3757181763648987,
+              -1.1168640851974487,
+              -0.6689133048057556,
+              0.8248953819274902,
+              0.042307496070861816,
+              1.7369295358657837
+            ],
+            "mean_trace": 0.0022282259804861887,
+            "frac_negative": 0.5714285714285714
+          }
+        },
+        {
+          "stage": "layer3",
+          "n_blocks": 35,
+          "planes": 1024,
+          "mid": 256,
+          "skipped_downsample_blocks": 1,
+          "chance": 0.02857142857142857,
+          "diag_dominance": {
+            "pair_acc": 0.05714285714285714,
+            "pair_sep": -0.11026515858247876,
+            "mean_correct": 0.043394002371600696,
+            "mean_incorrect": 0.03418294055225472,
+            "correct_pairs": 2,
+            "total_pairs": 35,
+            "assignment": [
+              27,
+              0,
+              6,
+              2,
+              32,
+              19,
+              3,
+              11,
+              16,
+              9,
+              28,
+              33,
+              21,
+              8,
+              18,
+              34,
+              14,
+              23,
+              25,
+              29,
+              1,
+              12,
+              24,
+              22,
+              13,
+              26,
+              17,
+              4,
+              5,
+              31,
+              30,
+              20,
+              15,
+              10,
+              7
+            ]
+          },
+          "frobenius_pair_acc": 0.08571428571428572,
+          "trace_analysis": {
+            "traces": [
+              0.6260819435119629,
+              -0.013693466782569885,
+              0.7894959449768066,
+              0.8769495487213135,
+              -0.5578694343566895,
+              -0.8787630200386047,
+              1.399817943572998,
+              -0.09059733152389526,
+              -0.19621136784553528,
+              2.818006992340088,
+              -0.6805117726325989,
+              -0.5181682109832764,
+              0.23524129390716553,
+              -0.49490565061569214,
+              0.617776095867157,
+              -0.9628583192825317,
+              -1.5414068698883057,
+              -0.24510866403579712,
+              0.9960415959358215,
+              0.15312877297401428,
+              -0.7409974932670593,
+              -0.48809999227523804,
+              0.9450398683547974,
+              0.455059289932251,
+              1.814445972442627,
+              0.6731595396995544,
+              0.830109179019928,
+              0.7658115029335022,
+              0.14545832574367523,
+              -2.041144371032715,
+              -1.881805181503296,
+              -1.61812424659729,
+              1.5208187103271484,
+              0.24467994272708893,
+              1.084341287612915
+            ],
+            "mean_trace": 0.11546281022684915,
+            "frac_negative": 0.45714285714285713
+          }
+        }
+      ]
+    }
+  ],
+  "random_init_baseline": {
+    "model": "resnet50-random-init",
+    "stage": "layer3",
+    "pair_acc": 0.2,
+    "pair_sep": -0.03839496895670891,
+    "frac_negative": 0.4,
+    "mean_correct": 0.02171757919713855,
+    "mean_incorrect": 0.02527518676361069,
+    "n_blocks": 5
+  }
+}

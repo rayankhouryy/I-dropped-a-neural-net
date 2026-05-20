@@ -1,0 +1,20 @@
+\begin{tabular}{lllcccc}
+\toprule
+Model / stage & Branch type & Branch product & $n$ & Pair acc & AUC & Sep \\
+\midrule
+Park's puzzle (Jane St.)        & Residual MLP        & $W_{\mathrm{out}} W_{\mathrm{in}}$ & 48 & \textbf{100\%} & 1.000 & $+1.18$ \\
+GPT-2 (124M)                         & Transformer MLP     & $W_2 W_1$                         & 12 & \textbf{100%} & -- & $+2.390$ \\
+GPT-2 medium (355M)                  & Transformer MLP     & $W_2 W_1$                         & 24 & \textbf{100%} & -- & $+0.106$ \\
+GPT-2 large (774M)                   & Transformer MLP     & $W_2 W_1$                         & 36 & \textbf{100%} & -- & $-0.051$ \\
+GPT-2 xl (1.5B)                      & Transformer MLP     & $W_2 W_1$                         & 48 & \textbf{100%} & -- & $+0.659$ \\
+GPT-2 xl Attn V/O                    & Attn V/O           & $W_O W_V$                         & 48 & \textbf{100%} & -- & $-0.024$ \\
+GPT-2 xl Attn Q/K                    & Attn Q/K           & $W_Q W_K^\top$                    & 48 & \textbf{100%} & -- & $+0.269$ \\
+ResNet-50 / layer3                   & Bottleneck         & $W_3 W_2 W_1$                     &  5 & \textbf{100%} & 1.000 & $+0.581$ \\
+ResNet-101 / layer3                  & Bottleneck         & $W_3 W_2 W_1$                     & 22 & \textbf{100%} & 0.995 & $-0.050$ \\
+ResNet-152 / layer3                  & Bottleneck         & $W_3 W_2 W_1$                     & 35 & \textbf{91%} & 0.964 & $-0.164$ \\
+ConvNeXt-T / stage3                  & ConvNeXt MLP       & $W_2 W_1$                         &  9 & \textbf{100%} & 0.875 & $-0.099$ \\
+ViT-B/16 MLP                         & ViT MLP            & $W_2 W_1$                         & 12 & \textbf{100%} & 1.000 & $+0.257$ \\
+ViT-B/16 Attn V/O                    & Attn V/O           & $W_O W_V$                         & 12 & \textbf{100%} & 1.000 & $+4.843$ \\
+ViT-B/16 Attn Q/K                    & Attn Q/K           & $W_Q W_K^\top$                    & 12 & \textbf{100%} & 1.000 & $+1.417$ \\
+\bottomrule
+\end{tabular}
