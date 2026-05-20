@@ -24,28 +24,42 @@ Path("figures").mkdir(exist_ok=True)
 Path("results").mkdir(exist_ok=True)
 
 
-def extract_mlp_weights(model_name):
-    """Extract MLP W_1 (c_fc) and W_2 (c_proj) from GPT-2."""
-    from transformers import GPT2LMHeadModel
+def extract_mlp_weights(model_name, dtype=None):
+    """Extract MLP W_1 (c_fc) and W_2 (c_proj) from GPT-2.
 
-    print(f"  Loading {model_name}...")
-    model = GPT2LMHeadModel.from_pretrained(model_name)
+    Memory-conscious: we load with low_cpu_mem_usage, optionally in fp16,
+    extract weights into float32 numpy, and drop the model immediately.
+    """
+    from transformers import GPT2LMHeadModel
+    import gc
+
+    kwargs = {'low_cpu_mem_usage': True}
+    if dtype is not None:
+        kwargs['torch_dtype'] = dtype
+    print(f"  Loading {model_name}"
+          f"{' (fp16)' if dtype == torch.float16 else ''}...")
+    model = GPT2LMHeadModel.from_pretrained(model_name, **kwargs)
     model.eval()
+    cfg = model.config
 
     W1s, W2s = [], []
     for block in model.transformer.h:
         # HuggingFace Conv1D stores weights as (in_features, out_features)
-        # c_fc: input d_model -> output 4*d_model, stored as (d_model, 4*d_model)
-        # c_proj: input 4*d_model -> output d_model, stored as (4*d_model, d_model)
+        # c_fc:   input d_model    -> output 4*d_model, stored as (d_model, 4*d_model)
+        # c_proj: input 4*d_model  -> output d_model,   stored as (4*d_model, d_model)
         # For matrix multiply we need:
         #   W_1: (4*d_model, d_model) to expand
         #   W_2: (d_model, 4*d_model) to contract
-        W1 = block.mlp.c_fc.weight.detach().cpu().numpy().T    # (4*d, d)
-        W2 = block.mlp.c_proj.weight.detach().cpu().numpy().T  # (d, 4*d)
+        # Cast to float32 for the trace/Frobenius math (avoid fp16 underflow).
+        W1 = block.mlp.c_fc.weight.detach().float().cpu().numpy().T    # (4*d, d)
+        W2 = block.mlp.c_proj.weight.detach().float().cpu().numpy().T  # (d, 4*d)
         W1s.append(W1)
         W2s.append(W2)
 
-    return W1s, W2s, model.config
+    # Free the model -- the MLP weights are now copied into numpy arrays.
+    del model
+    gc.collect()
+    return W1s, W2s, cfg
 
 
 def diag_dominance_matrix(W1s, W2s):
@@ -145,13 +159,13 @@ def analyze_trace_signs(W1s, W2s):
     }
 
 
-def run_experiment(model_name):
+def run_experiment(model_name, dtype=None):
     """Run the full pairing experiment on a GPT-2 model."""
     print(f"\n{'='*60}")
     print(f"Analyzing {model_name}")
     print('='*60)
 
-    W1s, W2s, config = extract_mlp_weights(model_name)
+    W1s, W2s, config = extract_mlp_weights(model_name, dtype=dtype)
     n_layers = len(W1s)
     d_model = config.n_embd
 
@@ -176,6 +190,7 @@ def run_experiment(model_name):
         'model': model_name,
         'n_layers': n_layers,
         'd_model': d_model,
+        'load_dtype': str(dtype) if dtype is not None else 'float32',
         'diag_dominance': evaluate_pairing(M_diag, minimize=False),
         'frobenius': evaluate_pairing(M_frob, minimize=True),
         'sv_distance': evaluate_pairing(M_sv, minimize=True),
@@ -195,13 +210,18 @@ def run_experiment(model_name):
     print(f"  Mean trace:       {ta['mean_trace']:.2f}")
     print(f"  Std trace:        {ta['std_trace']:.2f}")
     print(f"  Frac negative:    {ta['frac_negative']:.1%}")
-    print(f"  ε = |tr|/d:       {ta['epsilon']:.4f}")
+    print(f"  epsilon=|tr|/d:   {ta['epsilon']:.4f}")
 
     print(f"\n  === SEPARATION ===")
     print(f"  Diag dom separation:  {results['diag_dominance']['pair_sep']:.4f}")
     print(f"  Mean correct:         {results['diag_dominance']['mean_correct']:.4f}")
     print(f"  Mean incorrect:       {results['diag_dominance']['mean_incorrect']:.4f}")
 
+    # Drop weights eagerly before returning -- the caller only needs the
+    # matrices for plotting, and the largest matrices are tiny (~24KB max).
+    import gc
+    del W1s, W2s
+    gc.collect()
     return results, M_diag, M_frob, M_sv
 
 
@@ -300,17 +320,32 @@ def run_random_init_baseline(model_name='gpt2'):
 
 
 if __name__ == '__main__':
-    MODELS = ['gpt2', 'gpt2-medium']
+    # (model_name, load_dtype). For the larger models we load in fp16 to fit
+    # the 4-6GB free-RAM budget on a typical laptop; the trace/Frobenius
+    # math is upcast to float32 inside extract_mlp_weights.
+    MODEL_SPECS = [
+        ('gpt2',         None),            # 124M  -> fp32 fine
+        ('gpt2-medium',  None),            # 355M  -> fp32 fine
+        ('gpt2-large',   torch.float16),   # 774M  -> fp16 to stay under RAM
+        ('gpt2-xl',      torch.float16),   # 1.5B  -> fp16 mandatory
+    ]
 
     all_results = []
     all_matrices = []
 
-    for model_name in MODELS:
-        results, M_diag, M_frob, M_sv = run_experiment(model_name)
+    for model_name, dtype in MODEL_SPECS:
+        results, M_diag, M_frob, M_sv = run_experiment(model_name, dtype=dtype)
         all_results.append(results)
         all_matrices.append((M_diag, M_frob, M_sv))
 
-    # Run random init baseline
+        # Save incrementally in case a later model OOMs.
+        with open('results/gpt2_mlp_pairing.json', 'w') as f:
+            json.dump({
+                'pretrained': all_results,
+                'random_init_baseline': None,  # filled in at the end
+            }, f, indent=2)
+
+    # Run random init baseline (use the smallest model so it's cheap)
     random_baseline = run_random_init_baseline('gpt2')
 
     # Save results
