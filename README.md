@@ -11,17 +11,69 @@ The solver reconstructs the network in under 30 seconds, with final
 
 This repo also contains a follow-up research note that asks what part of the
 puzzle solution is a property of *that* one network and what is a generic
-property of trained ResNets:
+property of trained neural networks:
 
-> **Layer Identifiability in Trained Residual Networks: Theory, Robustness,
-> and Forensic Applications.** Rayan Khoury, 2026.
+> **Layer Identifiability in Trained Neural Networks: From ResNets to
+> Transformers.** Rayan Khoury and Aman Singh Thakur, 2026.
 > [`paper/paper.pdf`](paper/paper.pdf) · source: [`paper/paper.tex`](paper/paper.tex)
 
-Three contributions: (i) a closed-form margin formula and a first-order
-derivation of the Pairing Wall slope; (ii) a multi-architecture sweep showing
-that pairing transfers across trained ResNets but ordering heuristics do not;
-(iii) a forensic application — pair recovery is robust to fine-tuning attacks,
-making the signal a candidate for model fingerprinting and provenance.
+Four contributions:
+
+1. **Theory** — a closed-form margin formula for the diagonal-dominance ratio
+   and a first-order derivation of the *Pairing Wall* slope; both numerically
+   tight on Park's puzzle network. A null-model corollary shows the signal
+   collapses to chance on randomly initialized networks (issue #1).
+2. **ResNet empirics** — a sweep over depths, widths, and seeds. Pairing
+   transfers; ordering proxies do not. Identifiability is non-monotonic
+   in training time.
+3. **Transformers** — the diagonal-dominance signal also identifies layers
+   in the **full GPT-2 family** (124M → 1.5B parameters): 100% pair accuracy
+   on MLP sublayers, attention sublayers (both V↔O and Q↔K paths), and the
+   per-head decomposition. See "Generalization beyond the puzzle" below.
+4. **Forensic application** — pair recovery is robust to fine-tuning and
+   noise attacks, making the signal a candidate for model fingerprinting
+   and provenance. Section 8.1 of the paper benchmarks it against existing
+   watermarking methods (Adi, Uchida, Zhang, Lukas SoK, IPGuard, sensitive
+   samples) on six operational dimensions.
+
+## Generalization beyond the puzzle
+
+The Jane Street puzzle solved itself the moment we noticed the diagonal-
+dominance pattern. The interesting question is whether the pattern is
+specific to that one network — and it is not. We measured it on every
+GPT-2 size that HuggingFace ships, on both the MLP sublayer and the
+attention sublayer:
+
+| Model | Layers | MLP (W₂·W₁) | Attention V↔O | Attention Q↔K | Random init |
+|---|---|---|---|---|---|
+| gpt2 (124M) | 12 | **12/12** | **12/12** | **12/12** | 1–2/12 (chance) |
+| gpt2-medium (355M) | 24 | **24/24** | **24/24** | **24/24** | — |
+| gpt2-large (774M) | 36 | **36/36** | **36/36** | **36/36** | — |
+| gpt2-xl (1.5B) | 48 | **48/48** | **48/48** | **48/48** | — |
+
+All recovered by the same one-line Hungarian-on-`|tr|/‖·‖_F` pipeline that
+solves the original puzzle. The signal-to-noise ratio (mean correct /
+mean incorrect score) grows monotonically with model size: 68× → 122×
+for MLP; 144× → 255× for attention. Reproducible via:
+
+```bash
+python experiments/gpt2_mlp_pairing.py        # full family, ~30 min on CPU
+python experiments/gpt2_attention_pairing.py  # full family, ~10 min on CPU
+```
+
+A few non-trivial side findings (full discussion in the paper):
+
+- **Attention pairing is ~2× sharper than MLP pairing**, consistently across
+  the entire family. Likely because W_V and W_O are tied through the head
+  structure and therefore more tightly co-trained.
+- **Attention V→O traces sign-flip with depth** — early layers have negative
+  traces (dynamic isometry holds) and late layers have positive traces.
+  MLP traces grow monotonically *more* negative with depth. The two
+  sublayer types specialise in opposite directions during training.
+- **The pairing signal does not require dynamic isometry.** Attention has
+  ~50% negative traces (chance) but 100% pair accuracy — so the diagonal-
+  dominance ratio captures a more universal property than the negative-
+  trace theorem that originally motivated it.
 
 ## The Problem
 
@@ -219,7 +271,7 @@ FINAL full MSE: 0.000000000000
 │
 ├── paper/
 │   ├── paper.tex                 # Research note source
-│   ├── paper.pdf                 # Compiled PDF
+│   ├── paper.pdf                 # Compiled PDF (22 pages)
 │   └── figures/                  # Figures used in the paper
 │
 ├── puzzle_artifacts/
@@ -228,16 +280,22 @@ FINAL full MSE: 0.000000000000
 │
 ├── solutions/
 │   ├── solve_dynamic_isometry.py # Park's diagonal-dominance pipeline
-│   └── solve_annealing.py        # Alternative solver (WIP)
+│   └── solve_annealing.py        # Alternative solver (stub, see issue #2)
 │
 ├── utils/
 │   ├── __init__.py
 │   ├── data.py                   # load_pieces, load_data, get_piece_groups
 │   └── eval.py                   # eval_mse, build_model_from_blocks
 │
+├── results/                      # GPT-2 family results (JSON)
+│   ├── gpt2_mlp_pairing.json     # MLP pairing across 4 GPT-2 sizes
+│   └── gpt2_attention_pairing.json
+│
+├── figures/                      # Working copies of generated figures
+│
 └── experiments/
-    ├── data/                     # Experiment configs (JSON)
-    ├── results/                  # Output CSVs
+    ├── data/                     # Pre-computed configs (JSON)
+    ├── results/                  # Output CSVs from sweeps and attacks
     │
     ├── paper_experiments.py      # Puzzle-side experiments (pairing matrix,
     │                             #   pairing wall, seed proxies)
@@ -247,16 +305,23 @@ FINAL full MSE: 0.000000000000
     │
     ├── sweep_full.py             # 4 (depth,width) × 3 seeds × ~10 ckpts sweep
     ├── focused_run.py            # Focused training run (24-block ResNet)
-    ├── null_model.py             # Null model verification
-    ├── null_deepdive.py          # Training trajectory analysis
+    │
+    ├── null_model.py             # Untrained-network baseline (issue #1)
+    ├── null_deepdive.py          # Training trajectory of the pairing signal
+    │
+    ├── gpt2_mlp_pairing.py       # GPT-2 MLP layer pairing
+    │                             #   (gpt2, medium, large, xl; issue #8)
+    ├── gpt2_attention_pairing.py # GPT-2 attention block pairing
+    │                             #   (V↔O, Q↔K, per-head; issue #9)
+    ├── transformer_mlp.py        # Earlier from-scratch transformer
+    │                             #   (superseded by gpt2_*_pairing.py)
     │
     ├── attack.py                 # Fine-tuning + noise attacks
     ├── attack_fast.py            # Fast attack variant
     ├── attack_shuffle.py         # Post-fine-tune shuffle robustness
     │
     ├── make_figs.py              # Generates the main-text figures
-    ├── make_figs_extra.py        # Theory + sweep + attack figures
-    └── transformer_mlp.py        # Transformer-style MLP experiments
+    └── make_figs_extra.py        # Theory + sweep + attack figures
 ```
 
 ## License
