@@ -1140,20 +1140,87 @@ The earlier failure of an endpoint-only extraction on ImageNet ResNets
 was a misapplication, not a falsification: the residual branch in a
 Bottleneck block is genuinely three-factor, and the linearized product
 to score is the full three-matrix composition. With that correction,
-the central thesis is broader than originally stated:
+the central thesis tightens:
 
 \begin{quote}\itshape
-Training induces a recoverable diagonal-dominance fingerprint in the
-\emph{complete} residual-branch product, whatever its arity. For
-two-factor branches (residual MLPs, BasicBlocks, transformer MLPs,
-attention V/O and Q/K) the product is $W_{\mathrm{out}} W_{\mathrm{in}}$.
-For three-factor branches (Bottleneck ResNets) the product is
-$W_3 W_2 W_1$. The signal is training-induced (random-init baselines
-remain at chance), persists under BatchNorm and LayerNorm, and is
-invariant to the choice between channel-sum and center-tap spatial
-projection.
+For the \emph{cross-factor pairing problem} --- matching block $i$'s
+input-side piece against block $j$'s output-side stream --- training
+induces a recoverable diagonal-dominance fingerprint whenever the
+score's composition matches the trained input-to-output residual
+flow. For two-factor branches (residual MLPs, BasicBlocks,
+transformer MLPs, attention $V/O$ and $Q/K$) the product is
+$W_{\mathrm{out}} W_{\mathrm{in}}$. For three-factor branches
+(Bottleneck ResNets) the product is $W_3 W_2 W_1$; partial endpoints
+such as $W_3 W_1$ skip the bridging factor and collapse to chance
+(Section~\ref{sec:factor-ablation}). The signal is training-induced
+(random-init cross-factor baselines remain at chance), persists under
+BatchNorm and LayerNorm, and is invariant to the choice between
+channel-sum and center-tap spatial projection.
 \end{quote}
 
+\subsection{Factor ablation: which composition is necessary?}\label{sec:factor-ablation}
+
+A precise scientific claim requires distinguishing two kinds of test
+on a Bottleneck stage. \emph{Cross-factor pairing} mixes pieces from
+two different blocks: $d(i,j)$ is computed by composing block $i$'s
+input-side piece (e.g.\ $W_1^{(i)}$) with block $j$'s output-side
+piece (e.g.\ $W_3^{(j)} W_2^{(j)}$). This is the meaningful matching
+test --- it asks whether block $i$'s $W_1$ ``fits'' the input
+expected by block $j$'s output stream. \emph{Self-similarity}, by
+contrast, compares each matrix to itself: $W_k^{(j)} (W_k^{(i)})^\top$
+for some factor $k$. Random matrices are trivially unique to
+themselves, so self-similarity scores recover identity even at
+random initialization; they are identity controls, not pairing
+evidence.
+
+Table~\ref{tab:resnet-factor-ablation} and
+Figure~\ref{fig:resnet-factor-ablation} run both kinds of test on
+ResNet-101 layer3 (22 Bottleneck blocks) and compare trained weights
+to a $5$-seed random-init baseline.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{lcccc}
+\toprule
+Score & Test type & Trained pair acc & Random-init pair acc & Trained AUC \\
+\midrule
+$W_3 W_2 W_1$              & \textbf{cross-factor (full triple)} & \textbf{100\%}    & $1\% \pm 2\%$   & $0.995$ \\
+$W_3 W_1$                  & cross-factor (endpoint)            & $14\%$            & $5\% \pm 5\%$   & $0.619$ \\
+\midrule
+$W_1 W_1^\top$             & self-similarity (control)          & $100\%$           & $100\% \pm 0\%$ & $1.000$ \\
+$W_2 W_2^\top$             & self-similarity (control)          & $100\%$           & $100\% \pm 0\%$ & $1.000$ \\
+$W_3 W_3^\top$             & self-similarity (control)          & $100\%$           & $100\% \pm 0\%$ & $1.000$ \\
+$(W_2 W_1)(W_2 W_1)^\top$  & self-similarity (control)          & $100\%$           & $100\% \pm 0\%$ & $1.000$ \\
+$(W_3 W_2)(W_3 W_2)^\top$  & self-similarity (control)          & $100\%$           & $100\% \pm 0\%$ & $1.000$ \\
+\bottomrule
+\end{tabular}
+\caption{ResNet-101 layer3 factor ablation ($n = 22$, chance
+$1/22 = 4.5\%$). Cross-factor pairing requires the architecture-aware
+full branch product: $W_3 W_2 W_1$ recovers $100\%$ on trained weights
+and only $1\%$ at random init, while the endpoint shortcut $W_3 W_1$
+collapses to chance under both. Self-similarity scores also recover
+$100\%$ on trained weights, but they recover $100\%$ at random init
+too --- so they prove only that same-pool matrices are individually
+distinguishable, not that training induces cross-factor coupling.}
+\label{tab:resnet-factor-ablation}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_deepdive_resnet_factors.png}
+\caption{ResNet-101 layer3 factor ablation. \emph{Left of the dashed
+divider:} cross-factor pairing. Only the full branch product
+$W_3 W_2 W_1$ shows a trained-vs-random gap (100\% vs 1\%); the
+endpoint $W_3 W_1$ sits at chance under both. \emph{Right of the
+divider:} self-similarity scores ($W_k^{(j)} (W_k^{(i)})^\top$, and
+analogously for pairwise compositions). These hit 100\% pair accuracy
+and AUC $1.000$ regardless of training, confirming they are identity
+controls rather than fingerprint tests. The training-induced
+fingerprint lives in the full cross-factor product, not in any
+individual factor.}\label{fig:resnet-factor-ablation}
+\end{figure}
 \subsection{Modern vision architectures: ConvNeXt and ViT}\label{sec:modern-vision}
 
 To test the architecture-aware framing on architectures outside the
@@ -1287,6 +1354,84 @@ this table sit at chance (see Sections~\ref{sec:nullmodel},
 \ref{sec:transformers}, \ref{sec:resnet-imagenet}, and
 Table~\ref{tab:convnext-baseline}).}\label{tab:archmaster}
 \end{table}
+
+\subsection{Per-head redundancy in ViT attention}\label{sec:vit-perhead}
+
+The full $W_O W_V$ attention product in Section~\ref{sec:modern-vision}
+could in principle be driven by a small number of ``specialist'' heads,
+with the remaining heads contributing little to layer identity. We test
+this directly by splitting ViT-B/16's attention into its $12$ heads:
+for each head $h$, we score
+\[
+  d(i, j;\, h) \;=\; \frac{\bigl|\mathrm{tr}\bigl(W_O^{(j)}[:,\,h_{\mathrm{slab}}]\;
+  W_V^{(i)}[h_{\mathrm{slab}},\,:]\bigr)\bigr|}
+  {\bigl\|W_O^{(j)}[:,\,h_{\mathrm{slab}}]\;W_V^{(i)}[h_{\mathrm{slab}},\,:]\bigr\|_F},
+\]
+where $h_{\mathrm{slab}}$ selects head $h$'s $d_{\mathrm{head}}{=}64$
+slice. Each head is then evaluated on its own $12\times 12$ score
+matrix.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_deepdive_vit_perhead.png}
+\caption{ViT-B/16 attention: every head independently recovers all $12$
+layer pairings. \emph{(a)} per-head self score $d(i,i;\,h)$ across the
+$12\times 12$ (layer, head) grid; \emph{(b)} Hungarian pair accuracy
+when restricted to one head only; \emph{(c)} per-head AUC. All $12$
+heads achieve pair acc $=100\%$ and AUC $=1.000$, with mean correct
+score in the narrow band $2.78$--$3.59$. The pairing fingerprint is
+\emph{redundantly distributed} across heads --- not localized to a
+small subset of specialist heads.}\label{fig:vit-perhead}
+\end{figure}
+
+\begin{observation}[Per-head redundancy]\label{obs:vit-perhead}
+On ViT-B/16, every one of the $12$ attention heads independently
+recovers the full layer permutation with $100\%$ pair accuracy and
+AUC $=1.000$. Head-level mean-correct $d(i,i;h)$ values lie in
+$[2.78, 3.59]$ across heads with mean-incorrect $\approx 0.03$
+uniformly. Thus the attention fingerprint is carried by every head,
+not by a subset --- a property that differs sharply from the head
+specialization typically reported in mechanistic
+interpretability~\cite{olsson2022context}.
+\end{observation}
+
+\subsection{Cross-architecture margin scaling}\label{sec:margin-scaling}
+
+Proposition~\ref{prop:margin} gives a closed-form bound:
+$d(i,i) = \sqrt{d}\,/\,\sqrt{1 + \alpha^2}$, where
+$\alpha = \|E\|_F\,/\,(\varepsilon\sqrt{d})$ measures the
+off-diagonal energy relative to the scaled-identity component. We use
+the inverted form $\alpha = \sqrt{d / d(i,i)^2 - 1}$ to compute, for
+each architecture and branch path, how close it sits to the
+``ideal'' $-\varepsilon I$ regime where $\alpha \to 0$ and $d(i,i)$
+saturates at $\sqrt{d}$.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_deepdive_margin_scaling.png}
+\caption{Cross-architecture margin scaling. \emph{(a)} Fraction of the
+$\sqrt{d}$ bound achieved by $\overline{d(i,i)}$ for each
+architecture/path. \emph{(b)} The implied off-diagonal-energy ratio
+$\alpha$. Three regimes emerge: high-isometry (Park puzzle MLP and
+ViT-B $W_O W_V$ at $36$--$40\%$ of the bound, $\alpha\approx 2.5$);
+mid-isometry (GPT-2 MLP family, ViT-B MLP at $15$--$19\%$); low-isometry
+(GPT-2 attention $V/O$ and $Q/K$ at $7$--$13\%$, with $\alpha$ in
+$[7, 14]$). ConvNeXt-T sits in an extreme regime
+($\alpha\!\gtrsim\!50$) where the absolute $d$ values are small but
+Hungarian pairing still recovers $100\%$ via per-row rescue
+(Table~\ref{tab:convnext-baseline}).}\label{fig:margin-scaling}
+\end{figure}
+
+\begin{observation}[Scale-invariant per-family margin]\label{obs:scale-invariant}
+Within the GPT-2 family, the fraction of the $\sqrt{d}$ bound
+achieved is essentially constant across model sizes: MLP sits at
+$15$--$19\%$ from $124$M to $1.5$B, attention $V/O$ at
+$12$--$13\%$, attention $Q/K$ at $7$--$8\%$. Thus the off-diagonal
+energy scales proportionally with $\varepsilon\sqrt{d}$ as the model
+grows --- the ``shape'' of the trained branch product is a fixed
+property of the training objective $+$ architecture, not of parameter
+count.
+\end{observation}
 
 % ====================================================================
 \section{Forensic Application: Robustness to Fine-Tuning Attacks}\label{sec:attack}
@@ -1627,6 +1772,8 @@ tasks remains to be done.
   \emph{IPGuard: Protecting Intellectual Property of Deep Neural Networks via Fingerprinting the Classification Boundary.} AsiaCCS, 2021.
 \bibitem{he2019sensitive} Zecheng He, Tianwei Zhang, Ruby B.~Lee.
   \emph{Sensitive-Sample Fingerprinting of Deep Neural Networks.} CVPR, 2019.
+\bibitem{olsson2022context} Catherine Olsson, Nelson Elhage, Neel Nanda, Nicholas Joseph, Nova DasSarma, Tom Henighan, Ben Mann, Amanda Askell, Yuntao Bai, Anna Chen, Tom Conerly, Dawn Drain, Deep Ganguli, Zac Hatfield-Dodds, Danny Hernandez, Scott Johnston, Andy Jones, Jackson Kernion, Liane Lovitt, Kamal Ndousse, Dario Amodei, Tom Brown, Jack Clark, Jared Kaplan, Sam McCandlish, Chris Olah.
+  \emph{In-context Learning and Induction Heads.} Transformer Circuits Thread, 2022.
 \end{thebibliography}
 
 \appendix

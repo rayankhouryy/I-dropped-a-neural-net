@@ -1,0 +1,202 @@
+[
+  {
+    "family": "Park puzzle",
+    "arch": "Residual MLP",
+    "d_model": 48,
+    "n": 48,
+    "mean_d": 2.785,
+    "bound": 6.928203230275509,
+    "frac_of_bound": 0.401980124923277,
+    "alpha": 2.277844938070595
+  },
+  {
+    "family": "gpt2",
+    "arch": "Transformer MLP",
+    "d_model": 768,
+    "n": 12,
+    "mean_d": 4.1771000623703,
+    "bound": 27.712812921102035,
+    "frac_of_bound": 0.15072811534009348,
+    "alpha": 6.558665269554271
+  },
+  {
+    "family": "gpt2-medium",
+    "arch": "Transformer MLP",
+    "d_model": 1024,
+    "n": 24,
+    "mean_d": 5.456890137245257,
+    "bound": 32.0,
+    "frac_of_bound": 0.1705278167889143,
+    "alpha": 5.7782529624027
+  },
+  {
+    "family": "gpt2-large",
+    "arch": "Transformer MLP",
+    "d_model": 1280,
+    "n": 36,
+    "mean_d": 6.975799797723691,
+    "bound": 35.77708763999664,
+    "frac_of_bound": 0.19497953181424318,
+    "alpha": 5.030309090977182
+  },
+  {
+    "family": "gpt2-xl",
+    "arch": "Transformer MLP",
+    "d_model": 1600,
+    "n": 48,
+    "mean_d": 7.767303028454383,
+    "bound": 40.0,
+    "frac_of_bound": 0.19418257571135958,
+    "alpha": 5.051768430624689
+  },
+  {
+    "family": "gpt2",
+    "arch": "Attn V<->O",
+    "d_model": 768,
+    "n": 12,
+    "mean_d": 3.660041570663452,
+    "bound": 27.712812921102035,
+    "frac_of_bound": 0.1320703741292353,
+    "alpha": 7.505395126446283
+  },
+  {
+    "family": "gpt2",
+    "arch": "Attn Q<->K",
+    "d_model": 768,
+    "n": 12,
+    "mean_d": 1.9076451895137627,
+    "bound": 27.712812921102035,
+    "frac_of_bound": 0.0688362164802541,
+    "alpha": 14.49277757274451
+  },
+  {
+    "family": "gpt2-medium",
+    "arch": "Attn V<->O",
+    "d_model": 1024,
+    "n": 24,
+    "mean_d": 3.865620560012758,
+    "bound": 32.0,
+    "frac_of_bound": 0.12080064250039868,
+    "alpha": 8.217479370302414
+  },
+  {
+    "family": "gpt2-medium",
+    "arch": "Attn Q<->K",
+    "d_model": 1024,
+    "n": 24,
+    "mean_d": 2.3079414727787175,
+    "bound": 32.0,
+    "frac_of_bound": 0.07212317102433492,
+    "alpha": 13.829061019250771
+  },
+  {
+    "family": "gpt2-large",
+    "arch": "Attn V<->O",
+    "d_model": 1280,
+    "n": 36,
+    "mean_d": 4.803715429372257,
+    "bound": 35.77708763999664,
+    "frac_of_bound": 0.13426792805801196,
+    "alpha": 7.380355682579341
+  },
+  {
+    "family": "gpt2-large",
+    "arch": "Attn Q<->K",
+    "d_model": 1280,
+    "n": 36,
+    "mean_d": 2.637999987307315,
+    "bound": 35.77708763999664,
+    "frac_of_bound": 0.07373434120328423,
+    "alpha": 13.5252841800079
+  },
+  {
+    "family": "gpt2-xl",
+    "arch": "Attn V<->O",
+    "d_model": 1600,
+    "n": 48,
+    "mean_d": 5.2420641271552695,
+    "bound": 40.0,
+    "frac_of_bound": 0.13105160317888173,
+    "alpha": 7.564772379879601
+  },
+  {
+    "family": "gpt2-xl",
+    "arch": "Attn Q<->K",
+    "d_model": 1600,
+    "n": 48,
+    "mean_d": 2.9033297977099815,
+    "bound": 40.0,
+    "frac_of_bound": 0.07258324494274954,
+    "alpha": 13.740944738486272
+  },
+  {
+    "family": "convnext_tiny/stage1",
+    "arch": "ConvNeXt MLP",
+    "d_model": 96,
+    "n": 3,
+    "mean_d": 0.09721001175542672,
+    "bound": 9.797958971132712,
+    "frac_of_bound": 0.009921455278781247,
+    "alpha": 100.78670447569283
+  },
+  {
+    "family": "convnext_tiny/stage2",
+    "arch": "ConvNeXt MLP",
+    "d_model": 192,
+    "n": 3,
+    "mean_d": 0.27628861864407855,
+    "bound": 13.856406460551018,
+    "frac_of_bound": 0.019939413543523576,
+    "alpha": 50.14195567731874
+  },
+  {
+    "family": "convnext_tiny/stage3",
+    "arch": "ConvNeXt MLP",
+    "d_model": 384,
+    "n": 9,
+    "mean_d": 0.1926954479681121,
+    "bound": 19.595917942265423,
+    "frac_of_bound": 0.009833448401643755,
+    "alpha": 101.68880840522603
+  },
+  {
+    "family": "convnext_tiny/stage4",
+    "arch": "ConvNeXt MLP",
+    "d_model": 768,
+    "n": 3,
+    "mean_d": 0.1462154562274615,
+    "bound": 27.712812921102035,
+    "frac_of_bound": 0.005276095813288052,
+    "alpha": 189.53144838482953
+  },
+  {
+    "family": "vit_b_16",
+    "arch": "ViT MLP",
+    "d_model": 768,
+    "n": 12,
+    "mean_d": 5.0943435952067375,
+    "bound": 27.712812921102035,
+    "frac_of_bound": 0.183826290377316,
+    "alpha": 5.3472152611284836
+  },
+  {
+    "family": "vit_b_16",
+    "arch": "ViT V<->O",
+    "d_model": 768,
+    "n": 12,
+    "mean_d": 10.072425842285156,
+    "bound": 27.712812921102035,
+    "frac_of_bound": 0.3634573607147424,
+    "alpha": 2.5631915464847173
+  },
+  {
+    "family": "vit_b_16",
+    "arch": "ViT Q<->K",
+    "d_model": 768,
+    "n": 12,
+    "mean_d": 2.16366117199262,
+    "bound": 27.712812921102035,
+    "frac_of_bound": 0.07807439750531753,
+    "alpha": 12.76919921654596
+  }
+]
