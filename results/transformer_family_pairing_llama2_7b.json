@@ -1,0 +1,38 @@
+{
+  "model": "NousResearch/Llama-2-7b-hf",
+  "family": "llama2",
+  "arch": "decoder-only, causal LM, SwiGLU MLP, full MHA (no GQA), RMSNorm",
+  "n_layers": 32,
+  "d_model": 4096,
+  "n_heads": 32,
+  "n_kv_heads": 32,
+  "d_ff": 11008,
+  "paths_tested": ["mlp_down_up", "mlp_down_gate", "mlp_joint", "attn_WO_WV", "attn_WQ_WK"],
+  "_partial": true,
+  "_partial_note": "Slim JSON reconstructed from run log; trained-paths and 1 random-init seed only. Full per-layer trace arrays / mean_correct / mean_incorrect not persisted. Run was killed mid-seed-1 after >24h wall time on a 32GB laptop with heavy paging; trained results are exact, seed-0 random results are exact.",
+  "trained": {
+    "mlp_down_up":   {"n": 32, "pair_acc": 1.0, "auc": 1.000, "pair_sep":  0.628, "trace": {"frac_negative": 0.25}},
+    "mlp_down_gate": {"n": 32, "pair_acc": 1.0, "auc": 0.966, "pair_sep": -0.025, "trace": {"frac_negative": 0.62}},
+    "mlp_joint":     {"n": 32, "pair_acc": 1.0, "auc": 1.000, "pair_sep":  0.366},
+    "attn_WO_WV":    {"n": 32, "pair_acc": 1.0, "auc": 1.000, "pair_sep":  0.141, "trace": {"frac_negative": 0.72}},
+    "attn_WQ_WK":    {"n": 32, "pair_acc": 1.0, "auc": 1.000, "pair_sep":  0.209, "trace": {"frac_negative": 0.19}},
+    "_meta": {"gqa_expanded": false, "n_heads": 32, "n_kv_heads": 32}
+  },
+  "random_per_seed": [
+    {
+      "_seed": 0,
+      "mlp_down_up":   {"n": 32, "pair_acc": 0.06, "auc": 0.47},
+      "mlp_down_gate": {"n": 32, "pair_acc": 0.03, "auc": 0.58},
+      "mlp_joint":     {"n": 32, "pair_acc": 0.09, "auc": 0.53},
+      "attn_WO_WV":    {"n": 32, "pair_acc": 0.09, "auc": 0.51},
+      "attn_WQ_WK":    {"n": 32, "pair_acc": 0.06, "auc": 0.56}
+    }
+  ],
+  "random_aggregate": {
+    "mlp_down_up":   {"mean_pair_acc": 0.06, "mean_auc": 0.47, "std_pair_acc": null, "std_auc": null},
+    "mlp_down_gate": {"mean_pair_acc": 0.03, "mean_auc": 0.58, "std_pair_acc": null, "std_auc": null},
+    "mlp_joint":     {"mean_pair_acc": 0.09, "mean_auc": 0.53, "std_pair_acc": null, "std_auc": null},
+    "attn_WO_WV":    {"mean_pair_acc": 0.09, "mean_auc": 0.51, "std_pair_acc": null, "std_auc": null},
+    "attn_WQ_WK":    {"mean_pair_acc": 0.06, "mean_auc": 0.56, "std_pair_acc": null, "std_auc": null}
+  }
+}

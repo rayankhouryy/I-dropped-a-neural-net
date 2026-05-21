@@ -285,7 +285,7 @@ def run_bert(seeds_random=3):
         random_per_seed.append(scores_r)
         print(f"    seed {s}: " + "  ".join(
             f"{p}={scores_r[p]['pair_acc']:.0%}/AUC={scores_r[p]['auc']:.2f}"
-            for p in ['mlp_W2W1', 'attn_WO_WV', 'attn_WQ_WK']))
+            for p in ['mlp_W2W1', 'attn_WO_WV', 'attn_WQ_WK']), flush=True)
 
     return {
         'model':           'bert-base-uncased',
@@ -342,7 +342,7 @@ def run_mistral(seeds_random=3, model_name='mistralai/Mistral-7B-v0.1',
         random_per_seed.append(scores_r)
         print(f"      " + "  ".join(
             f"{p}={scores_r[p]['pair_acc']:.0%}/AUC={scores_r[p]['auc']:.2f}"
-            for p in paths))
+            for p in paths), flush=True)
 
     return {
         'model':           model_name,
