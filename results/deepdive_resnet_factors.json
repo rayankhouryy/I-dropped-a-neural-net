@@ -1,0 +1,54 @@
+{
+  "n": 22,
+  "results": [
+    {
+      "subset": "W_3 W_2 W_1 (full triple)",
+      "pair_acc": 1.0,
+      "auc": 0.9947855175127902,
+      "mean_correct": 1.2528514804487878,
+      "mean_incorrect": 0.047896614252269376
+    },
+    {
+      "subset": "W_3 W_1 (endpoint, no W_2)",
+      "pair_acc": 0.13636363636363635,
+      "auc": 0.6191460055096418,
+      "mean_correct": 0.05702154385984282,
+      "mean_incorrect": 0.038967674131853806
+    },
+    {
+      "subset": "W_1 alone (self-similarity)",
+      "pair_acc": 1.0,
+      "auc": 1.0,
+      "mean_correct": 10.358359596946023,
+      "mean_incorrect": 0.15229684897815382
+    },
+    {
+      "subset": "W_2 alone (self-similarity)",
+      "pair_acc": 1.0,
+      "auc": 1.0,
+      "mean_correct": 8.683653354644775,
+      "mean_incorrect": 0.21865568999039792
+    },
+    {
+      "subset": "W_3 alone (self-similarity)",
+      "pair_acc": 1.0,
+      "auc": 1.0,
+      "mean_correct": 9.578318379142068,
+      "mean_incorrect": 0.11058536026368797
+    },
+    {
+      "subset": "W_2 W_1 self-sim (no W_3)",
+      "pair_acc": 1.0,
+      "auc": 1.0,
+      "mean_correct": 6.648027983578769,
+      "mean_incorrect": 0.2267667308411444
+    },
+    {
+      "subset": "W_3 W_2 self-sim (no W_1)",
+      "pair_acc": 1.0,
+      "auc": 1.0,
+      "mean_correct": 6.016640966588801,
+      "mean_incorrect": 0.13068486650442115
+    }
+  ]
+}

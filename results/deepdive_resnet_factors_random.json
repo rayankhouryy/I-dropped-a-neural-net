@@ -1,0 +1,285 @@
+{
+  "n_seeds": 5,
+  "n_blocks": 22,
+  "chance": 0.045454545454545456,
+  "aggregate": {
+    "W_3 W_2 W_1 (full triple)": {
+      "mean_pair_acc": 0.00909090909090909,
+      "std_pair_acc": 0.020327890704543543,
+      "mean_auc": 0.5173947264856356,
+      "std_auc": 0.05477981149345992,
+      "mean_correct": 0.025155454709998925,
+      "mean_incorrect": 0.025054874963694858
+    },
+    "W_3 W_1 (endpoint)": {
+      "mean_pair_acc": 0.045454545454545456,
+      "std_pair_acc": 0.045454545454545456,
+      "mean_auc": 0.4741046831955923,
+      "std_auc": 0.042167948672028624,
+      "mean_correct": 0.023080445468341083,
+      "mean_incorrect": 0.024913757518696247
+    },
+    "W_1 self-sim": {
+      "mean_pair_acc": 1.0,
+      "std_pair_acc": 0.0,
+      "mean_auc": 1.0,
+      "std_auc": 0.0,
+      "mean_correct": 14.305470033125445,
+      "mean_incorrect": 0.050984947075684316
+    },
+    "W_2 self-sim": {
+      "mean_pair_acc": 1.0,
+      "std_pair_acc": 0.0,
+      "mean_auc": 1.0,
+      "std_auc": 0.0,
+      "mean_correct": 11.300763364271685,
+      "mean_incorrect": 0.048525457709832534
+    },
+    "W_3 self-sim": {
+      "mean_pair_acc": 1.0,
+      "std_pair_acc": 0.0,
+      "mean_auc": 1.0,
+      "std_auc": 0.0,
+      "mean_correct": 14.306583378531716,
+      "mean_incorrect": 0.02610810995549668
+    },
+    "W_2 W_1 self-sim": {
+      "mean_pair_acc": 1.0,
+      "std_pair_acc": 0.0,
+      "mean_auc": 1.0,
+      "std_auc": 0.0,
+      "mean_correct": 10.652175547859887,
+      "mean_incorrect": 0.050923947372276415
+    },
+    "W_3 W_2 self-sim": {
+      "mean_pair_acc": 1.0,
+      "std_pair_acc": 0.0,
+      "mean_auc": 1.0,
+      "std_auc": 0.0,
+      "mean_correct": 10.651501525532115,
+      "mean_incorrect": 0.02567049755276512
+    }
+  },
+  "per_seed": [
+    {
+      "W_3 W_2 W_1 (full triple)": {
+        "pair_acc": 0.0,
+        "auc": 0.5681818181818182,
+        "mean_correct": 0.028283855644986033,
+        "mean_incorrect": 0.024949515553042194
+      },
+      "W_3 W_1 (endpoint)": {
+        "pair_acc": 0.045454545454545456,
+        "auc": 0.4669421487603306,
+        "mean_correct": 0.02305695851365189,
+        "mean_incorrect": 0.026546085585634493
+      },
+      "W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.302611914548008,
+        "mean_incorrect": 0.05268563887647285
+      },
+      "W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 11.298705317757346,
+        "mean_incorrect": 0.050762737447545093
+      },
+      "W_3 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.309871586886318,
+        "mean_incorrect": 0.02704377170168095
+      },
+      "W_2 W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.642006527293812,
+        "mean_incorrect": 0.051069027679190956
+      },
+      "W_3 W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.645895524458451,
+        "mean_incorrect": 0.027607042973385357
+      }
+    },
+    {
+      "W_3 W_2 W_1 (full triple)": {
+        "pair_acc": 0.0,
+        "auc": 0.5522432113341205,
+        "mean_correct": 0.027748470559758556,
+        "mean_incorrect": 0.025925321695034483
+      },
+      "W_3 W_1 (endpoint)": {
+        "pair_acc": 0.09090909090909091,
+        "auc": 0.487012987012987,
+        "mean_correct": 0.023767870559822768,
+        "mean_incorrect": 0.024067720574638577
+      },
+      "W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.304953011599453,
+        "mean_incorrect": 0.04939118681921653
+      },
+      "W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 11.30355015668002,
+        "mean_incorrect": 0.04859484652839944
+      },
+      "W_3 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.308011921969326,
+        "mean_incorrect": 0.02634789900335243
+      },
+      "W_2 W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.653226679021662,
+        "mean_incorrect": 0.0498808660109063
+      },
+      "W_3 W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.660867907784201,
+        "mean_incorrect": 0.025152125904427034
+      }
+    },
+    {
+      "W_3 W_2 W_1 (full triple)": {
+        "pair_acc": 0.045454545454545456,
+        "auc": 0.5487996851633216,
+        "mean_correct": 0.027876344181343236,
+        "mean_incorrect": 0.025212579762595364
+      },
+      "W_3 W_1 (endpoint)": {
+        "pair_acc": 0.0,
+        "auc": 0.5074773711137347,
+        "mean_correct": 0.022086216634224085,
+        "mean_incorrect": 0.0238759269498772
+      },
+      "W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.305385849692605,
+        "mean_incorrect": 0.048916138828597515
+      },
+      "W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 11.30018984187733,
+        "mean_incorrect": 0.05010391528316516
+      },
+      "W_3 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.305009668523615,
+        "mean_incorrect": 0.025205211614172787
+      },
+      "W_2 W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.654543963345615,
+        "mean_incorrect": 0.050669322109345785
+      },
+      "W_3 W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.651632655750621,
+        "mean_incorrect": 0.024047013330637444
+      }
+    },
+    {
+      "W_3 W_2 W_1 (full triple)": {
+        "pair_acc": 0.0,
+        "auc": 0.47255017709563163,
+        "mean_correct": 0.02058540623296391,
+        "mean_incorrect": 0.024287130353344632
+      },
+      "W_3 W_1 (endpoint)": {
+        "pair_acc": 0.09090909090909091,
+        "auc": 0.5046241637150728,
+        "mean_correct": 0.027398160433883524,
+        "mean_incorrect": 0.024247611723741964
+      },
+      "W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.304370923475785,
+        "mean_incorrect": 0.04858922723577926
+      },
+      "W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 11.299805337732488,
+        "mean_incorrect": 0.04476920780574431
+      },
+      "W_3 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.307196443731135,
+        "mean_incorrect": 0.026447336040543685
+      },
+      "W_2 W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.65086100318215,
+        "mean_incorrect": 0.0522271310877825
+      },
+      "W_3 W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.65127979625355,
+        "mean_incorrect": 0.02604005514917864
+      }
+    },
+    {
+      "W_3 W_2 W_1 (full triple)": {
+        "pair_acc": 0.0,
+        "auc": 0.44519874065328613,
+        "mean_correct": 0.021283196930942886,
+        "mean_incorrect": 0.0248998274544576
+      },
+      "W_3 W_1 (endpoint)": {
+        "pair_acc": 0.0,
+        "auc": 0.40446674537583627,
+        "mean_correct": 0.01909302120012316,
+        "mean_incorrect": 0.025831442759589
+      },
+      "W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.310028466311367,
+        "mean_incorrect": 0.05534254361835542
+      },
+      "W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 11.301566167311234,
+        "mean_incorrect": 0.048396581484308684
+      },
+      "W_3 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 14.302827271548184,
+        "mean_incorrect": 0.025496331417733536
+      },
+      "W_2 W_1 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.660239566456188,
+        "mean_incorrect": 0.05077338997415652
+      },
+      "W_3 W_2 self-sim": {
+        "pair_acc": 1.0,
+        "auc": 1.0,
+        "mean_correct": 10.647831743413752,
+        "mean_incorrect": 0.025506250406197147
+      }
+    }
+  ]
+}
