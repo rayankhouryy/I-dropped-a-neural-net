@@ -23,27 +23,7 @@ This repo contains our ACML 2026 submission:
 - **Robust** across 21 attack configurations (fine-tuning, weight noise)
 - Signal scales as **O(√d)** with hidden dimension
 
-We also include the original research note exploring the phenomenon:
-
-> **Layer Identifiability in Trained Neural Networks: From ResNets to Transformers.**
-> [`paper/paper.pdf`](paper/paper.pdf) · source: [`paper/paper.tex`](paper/paper.tex)
-
-Key contributions of the research note:
-
-1. **Theory** — a closed-form margin formula for the diagonal-dominance ratio
-   and a first-order derivation of the *Pairing Wall* slope; both numerically
-   tight on Park's puzzle network. A null-model corollary shows the signal
-   collapses to chance on randomly initialized networks.
-2. **ResNet empirics** — a sweep over depths, widths, and seeds. Pairing
-   transfers; ordering proxies do not. Identifiability is non-monotonic
-   in training time.
-3. **Transformers** — the diagonal-dominance signal also identifies layers
-   in the **full GPT-2 family** (124M → 1.5B parameters): 100% pair accuracy
-   on MLP sublayers, attention sublayers (both V↔O and Q↔K paths), and the
-   per-head decomposition. See "Generalization beyond the puzzle" below.
-4. **Forensic application** — pair recovery is robust to fine-tuning and
-   noise attacks, making the signal a candidate for model fingerprinting
-   and provenance.
+The original research note is archived at [`paper/deprecated/paper.pdf`](paper/deprecated/paper.pdf).
 
 ## Generalization beyond the puzzle
 
@@ -279,8 +259,12 @@ FINAL full MSE: 0.000000000000
 ├── requirements.txt
 │
 ├── paper/
-│   ├── paper.tex                 # Research note source
-│   ├── paper.pdf                 # Compiled PDF (22 pages)
+│   ├── ACML/
+│   │   ├── paper_acml.tex        # ACML 2026 submission source
+│   │   └── paper_acml.pdf        # Compiled PDF
+│   ├── deprecated/
+│   │   ├── paper.tex             # Original research note (archived)
+│   │   └── paper.pdf             # Compiled PDF
 │   └── figures/                  # Figures used in the paper
 │
 ├── puzzle_artifacts/
