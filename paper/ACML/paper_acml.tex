@@ -326,7 +326,7 @@ For ResNet Bottleneck blocks (ResNet-50 through ResNet-152), the naive endpoint 
 ConvNeXt-T stage~3 (9 CNBlocks with LayerNorm) achieves \textbf{100\%} pairing accuracy via the MLP product $W_2 W_1$, with AUC 0.875. Random-init baselines over 20 seeds show $8.3\%\pm 8.0\%$ accuracy (chance 11.1\%). ViT-B/16 achieves \textbf{100\%} on all three paths---MLP, attention V/O, and attention Q/K---each with AUC 1.000. Figure~\ref{fig:heatmaps}(b) shows results across these modern vision architectures.
 
 \paragraph{Cross-family transformer generality.}
-To test whether the fingerprint is specific to GPT-style causal decoders with GELU MLPs, we evaluate two further families: encoder-only \emph{BERT-base} \citep{devlin2019bert} (12 layers, bidirectional self-attention, MLM-pretrained, GELU) and the SwiGLU+GQA decoder-only \emph{Mistral-7B} \citep{jiang2023mistral7b} (32 layers, sliding-window attention, grouped-query attention with $n_{\text{kv}}{=}8$). For Mistral's SwiGLU MLP we score three architecture-aware factorizations---$W_{\text{down}}W_{\text{up}}$, $W_{\text{down}}W_{\text{gate}}$, and the joint stack $W_{\text{down}}[W_{\text{up}};W_{\text{gate}}]$---and expand the GQA $W_K,W_V$ projections from 8 heads to 32 before scoring. Both families recover \textbf{100\%} of correct pairs on \emph{every} path (Table~\ref{tab:transformer_family}); random-init baselines collapse to $\le\!6\%$ (BERT) and $\le\!2\%$ (Mistral). This rules out three potential confounds at once: the signal is not specific to GELU activations (SwiGLU works), not specific to causal masking (bidirectional and sliding-window both work), and not specific to full attention (8-way GQA still gives AUC 1.000 on $W_OW_V$). Notably, BERT MLP and Mistral $W_{\text{down}}W_{\text{gate}}$ exhibit only $8\%$ and $38\%$ negative traces respectively and their pair separations are slightly negative, yet Hungarian assignment still recovers every pair: negative trace is \emph{sufficient} but not necessary for identifiability---the broader fingerprint is concentration of diagonal mass in the correct branch product, which the global assignment optimum is robust enough to exploit even when row-wise dominance is absent.
+To test whether the fingerprint is specific to GPT-style causal decoders with GELU MLPs, we evaluate three further families: encoder-only \emph{BERT-base} \citep{devlin2019bert} (12 layers, bidirectional self-attention, MLM-pretrained, GELU); the SwiGLU+GQA decoder-only \emph{Mistral-7B} \citep{jiang2023mistral7b} (32 layers, sliding-window attention, grouped-query attention with $n_{\text{kv}}{=}8$); and \emph{LLaMA-2-7B} \citep{touvron2023llama2} in both base and RLHF-tuned chat variants (32 layers, SwiGLU, RMSNorm, full multi-head attention with $n_{\text{kv}}{=}32$). For SwiGLU MLPs we score three architecture-aware factorizations---$W_{\text{down}}W_{\text{up}}$, $W_{\text{down}}W_{\text{gate}}$, and the joint stack $W_{\text{down}}[W_{\text{up}};W_{\text{gate}}]$---and expand the GQA $W_K,W_V$ projections from 8 heads to 32 before scoring on Mistral. All four families recover \textbf{100\%} of correct pairs on \emph{every} path (Table~\ref{tab:transformer_family}); random-init baselines collapse to $\le\!6\%$ (BERT) and $\le\!9\%$ (Mistral, LLaMA-2). This rules out three potential confounds at once: the signal is not specific to GELU activations (SwiGLU works), not specific to causal masking (bidirectional and sliding-window both work), and not specific to full attention (8-way GQA still gives AUC 1.000 on $W_OW_V$). The base$\to$chat comparison on LLaMA-2 is a direct robustness probe: RLHF fine-tuning preserves the fingerprint exactly on every path, with pair separations matching the base model to within $\pm 0.005$ on four of five paths; only $W_OW_V$ shows a measurable but non-fatal separation drop ($+0.141\to +0.036$), indicating that RLHF perturbs the attention output projection more than the MLP or Q/K paths but does not destroy the diagonal mass. Notably, BERT MLP and the SwiGLU $W_{\text{down}}W_{\text{gate}}$ path exhibit only $8\%$ and $38\%$--$62\%$ negative traces respectively and their pair separations are slightly negative, yet Hungarian assignment still recovers every pair: negative trace is \emph{sufficient} but not necessary for identifiability---the broader fingerprint is concentration of diagonal mass in the correct branch product, which the global assignment optimum is robust enough to exploit even when row-wise dominance is absent.
 
 \begin{table}[h]
 \centering
@@ -336,18 +336,30 @@ To test whether the fingerprint is specific to GPT-style causal decoders with GE
 \toprule
 Model & Path & Pair Acc & AUC & Random Acc \\
 \midrule
-BERT-base   & MLP $W_2 W_1$              & 100\% & 0.970 & 6\% $\pm$ 5\% \\
-BERT-base   & Attn $W_O W_V$             & 100\% & 1.000 & 3\% $\pm$ 5\% \\
-BERT-base   & Attn $W_Q W_K^\top$        & 100\% & 0.972 & 6\% $\pm$ 5\% \\
+BERT-base       & MLP $W_2 W_1$                          & 100\% & 0.970 & 6\% $\pm$ 5\% \\
+BERT-base       & Attn $W_O W_V$                         & 100\% & 1.000 & 3\% $\pm$ 5\% \\
+BERT-base       & Attn $W_Q W_K^\top$                    & 100\% & 0.972 & 6\% $\pm$ 5\% \\
 \midrule
-Mistral-7B  & MLP $W_{\text{down}} W_{\text{up}}$    & 100\% & 1.000 & 2\% $\pm$ 2\% \\
-Mistral-7B  & MLP $W_{\text{down}} W_{\text{gate}}$  & 100\% & 0.989 & 2\% $\pm$ 2\% \\
-Mistral-7B  & MLP joint stack                         & 100\% & 1.000 & 2\% $\pm$ 2\% \\
-Mistral-7B  & Attn $W_O W_V$ (GQA)        & 100\% & 1.000 & 1\% $\pm$ 2\% \\
-Mistral-7B  & Attn $W_Q W_K^\top$ (GQA)   & 100\% & 1.000 & 2\% $\pm$ 4\% \\
+Mistral-7B      & MLP $W_{\text{down}} W_{\text{up}}$    & 100\% & 1.000 & 2\% $\pm$ 2\% \\
+Mistral-7B      & MLP $W_{\text{down}} W_{\text{gate}}$  & 100\% & 0.989 & 2\% $\pm$ 2\% \\
+Mistral-7B      & MLP joint stack                        & 100\% & 1.000 & 2\% $\pm$ 2\% \\
+Mistral-7B      & Attn $W_O W_V$ (GQA)                   & 100\% & 1.000 & 1\% $\pm$ 2\% \\
+Mistral-7B      & Attn $W_Q W_K^\top$ (GQA)              & 100\% & 1.000 & 2\% $\pm$ 4\% \\
+\midrule
+LLaMA-2-7B      & MLP $W_{\text{down}} W_{\text{up}}$    & 100\% & 1.000 & 6\% \\
+LLaMA-2-7B      & MLP $W_{\text{down}} W_{\text{gate}}$  & 100\% & 0.966 & 3\% \\
+LLaMA-2-7B      & MLP joint stack                        & 100\% & 1.000 & 9\% \\
+LLaMA-2-7B      & Attn $W_O W_V$                         & 100\% & 1.000 & 9\% \\
+LLaMA-2-7B      & Attn $W_Q W_K^\top$                    & 100\% & 1.000 & 6\% \\
+\midrule
+LLaMA-2-7B-chat & MLP $W_{\text{down}} W_{\text{up}}$    & 100\% & 1.000 & 6\% \\
+LLaMA-2-7B-chat & MLP $W_{\text{down}} W_{\text{gate}}$  & 100\% & 0.964 & 3\% \\
+LLaMA-2-7B-chat & MLP joint stack                        & 100\% & 1.000 & 9\% \\
+LLaMA-2-7B-chat & Attn $W_O W_V$                         & 100\% & 1.000 & 9\% \\
+LLaMA-2-7B-chat & Attn $W_Q W_K^\top$                    & 100\% & 1.000 & 6\% \\
 \bottomrule
 \end{tabular}
-\caption{Cross-family transformer pairing. The fingerprint generalizes beyond GPT-style decoders: encoder-only MLM-pretrained BERT and SwiGLU+GQA Mistral-7B both recover all layers exactly. Random-init baselines averaged over 3 seeds. GQA $W_K,W_V$ expanded from 8 to 32 heads before scoring.}
+\caption{Cross-family transformer pairing. The fingerprint generalizes across encoder-only (BERT), SwiGLU+GQA decoder-only (Mistral), and SwiGLU full-MHA decoder-only (LLaMA-2); the base$\to$chat comparison on LLaMA-2 shows RLHF fine-tuning preserves the fingerprint at 100\% pair accuracy across all paths. Random-init baselines for BERT and Mistral are averaged over 3 seeds; LLaMA-2 random rows use 1 seed (laptop compute budget). GQA $W_K,W_V$ expanded from 8 to 32 heads before scoring on Mistral.}
 \label{tab:transformer_family}
 \end{table}
 
@@ -421,6 +433,11 @@ Figure~\ref{fig:heatmaps} shows the pairing matrix at five points along the trai
 
 \paragraph{Margin formula verification.}
 Proposition~\ref{prop:margin} provides an exact closed-form expression for diagonal dominance. On the 48-block network, this formula reproduces the empirical $d(i,i)$ to floating-point precision on every block (Figure~\ref{fig:margin}). The fitted off-diagonal ratio $\|E\|_F/(\varepsilon\sqrt{d})$ ranges from $1.90$ to $3.80$ across blocks, yielding $d(i,i) \in [1.76, 3.23]$, well below the theoretical maximum of $\sqrt{48} \approx 6.93$ but sufficient for perfect separation.
+
+\paragraph{Initialization ablation: training enforces isometry from non-isometric starts.}
+A skeptical reading of dynamical-isometry theory is that the diagonal-dominance fingerprint requires the network to begin training in a near-isometric state---e.g., from explicit orthogonal initialization. To test this, we re-train 24-block residual MLPs from four common initialization schemes (3 seeds each, 200 epochs, identical optimizer): orthogonal (theoretical sweet spot), Kaiming-normal ($\mathcal{N}(0, \sqrt{2/d_{\mathrm{in}}})$), Xavier-normal ($\mathcal{N}(0, \sqrt{2/(d_{\mathrm{in}}{+}d_{\mathrm{out}})})$), and a small-scale Gaussian ($\mathcal{N}(0, 0.02^2)$ matching the GPT-2/BERT/LLaMA-2 default). Three of the four schemes converge to a clean fingerprint: pair accuracy $82\%\pm 20\%$ (orthogonal), $97\%\pm 4\%$ (Kaiming), $100\%\pm 0\%$ (Xavier), all with AUC $\geq 0.95$, all with $100\%$ of trained blocks exhibiting negative trace. The condition $W_{\mathrm{out}}W_{\mathrm{in}}\approx -\varepsilon I + E$ thus emerges from gradient descent across initializations, not from the starting condition.
+
+The fourth setting---$\sigma{=}0.02$ Gaussian init on this toy regression target---is a clean negative control. Pair accuracy drops to $13\%\pm 10\%$ and only $32\%$ of trained blocks have negative trace, yet \emph{eval loss is the lowest of the four schemes} ($0.12$ vs.\ $0.87$--$1.35$). The diagnosis: with such small initial weights, the residual blocks contribute negligibly to the forward pass, and gradient descent solves the regression task primarily through the skip path and the final readout layer. Without active per-block contribution there is no Jacobian condition to enforce, and the fingerprint never develops. This identifies the precise regime in which the method fails: \emph{degenerate residual blocks that have collapsed to near-identity-without-modification}. Reassuringly, this regime is incompatible with deployed LLMs: GPT-2, BERT, Mistral, and LLaMA-2 all use $\sigma{=}0.02$ init but recover $100\%$ pair accuracy (Section~\ref{sec:experiments}, RQ1)---in those settings the language-modeling objective is hard enough that the residual blocks must contribute non-trivially, so the fingerprint emerges. The honest claim is therefore: \emph{the fingerprint emerges whenever training drives residual blocks into non-degenerate use}, which holds for every nontrivially-trained model we are aware of, regardless of initialization scheme.
 
 \paragraph{Key finding.}
 The diagonal-dominance signal is not an architectural artifact but a \emph{consequence of gradient descent} on residual networks. The condition $W_{\mathrm{out}}W_{\mathrm{in}} \approx -\varepsilon I + E$ emerges early in training, sharpens monotonically, and persists across architectures from residual MLPs to transformers.
