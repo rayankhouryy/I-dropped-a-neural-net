@@ -426,7 +426,27 @@ The signal becomes brittle only at approximately \textbf{20\% relative weight no
 Understanding the \emph{mechanism} behind diagonal dominance establishes whether the signal is a fundamental consequence of residual-block training. We address this through three complementary analyses.
 
 \paragraph{Null model: the signal requires training.}
-Corollary~\ref{cor:null-model} predicts that randomly initialized networks should exhibit no diagonal structure. We verify this on a network with depth 48 and hidden dimension 96 under Kaiming initialization. Pair accuracy is $6.25\%$ (chance is $2.08\%$), pair separation is $-0.42$, and the correct-pair versus incorrect-pair score means are statistically indistinguishable. In contrast, the trained network achieves $100\%$ pair accuracy, separation $+1.18$, and a $21\times$ ratio between correct and incorrect pair means. This rules out the hypothesis that diagonal dominance is an artifact of matrix shapes or residual connections---the signal is \emph{learned}.
+Corollary~\ref{cor:null-model} predicts that randomly initialized networks should exhibit no diagonal structure. We verify this across seven initialization schemes---Kaiming (uniform and normal), Xavier (uniform and normal), Gaussian, uniform, and orthogonal---on a network with depth 48 and hidden dimension 96. Critically, \emph{orthogonal initialization} is of particular interest: it provides dynamical isometry at initialization by construction, so if the diagonal-dominance signal were an artifact of near-orthogonal Jacobians rather than learned structure, orthogonal init should show elevated pair accuracy even before training. Table~\ref{tab:init_ablation} shows that all seven schemes achieve ${\leq}2.1\%$ pair accuracy at initialization (chance is $2.08\%$), including orthogonal init at exactly $0\%$. After training, all schemes rise to $75$--$100\%$ accuracy. This rules out the hypothesis that the fingerprint is an initialization artifact: even when dynamical isometry is present at initialization, the diagonal-dominance \emph{pairing} signal emerges only through gradient descent.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Initialization & Untrained & Trained \\
+\midrule
+Kaiming uniform & 2.1\% & 98.6\% \\
+Kaiming normal & 2.1\% & 97.2\% \\
+Xavier uniform & 2.1\% & 100\% \\
+Xavier normal & 2.1\% & 98.6\% \\
+Gaussian & 2.1\% & 75.0\% \\
+Uniform & 2.1\% & 93.8\% \\
+Orthogonal & 0.0\% & 100\% \\
+\bottomrule
+\end{tabular}
+\caption{Initialization scheme ablation. Pair accuracy before and after training across seven initialization schemes. All schemes show chance-level accuracy (${\leq}2.1\%$) at initialization, rising to $75$--$100\%$ after training. Orthogonal initialization---which provides dynamical isometry at init---shows \emph{zero} correct pairs before training, confirming the signal is learned.}
+\label{tab:init_ablation}
+\end{table}
 
 \paragraph{Training dynamics: emergence by epoch 5.}
 Figure~\ref{fig:heatmaps} shows the pairing matrix at five points along the training trajectory. At initialization, no diagonal structure is visible. By epoch 5, the diagonal is fully separated and Hungarian matching recovers $100\%$ of correct pairs. The mean correct-pair score rises monotonically from $0.19$ at epoch 0 to $2.07$ at epoch 300, while the mean incorrect-pair score remains flat at ${\approx}0.16$.
