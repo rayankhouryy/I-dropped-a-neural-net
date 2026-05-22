@@ -1,0 +1,146 @@
+{
+  "config": {
+    "depth": 24,
+    "hidden": 64,
+    "in_dim": 24,
+    "epochs": 200,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "resnet_lr": 0.001,
+    "plainnet_lr": 0.0001
+  },
+  "resnet": {
+    "per_run": [
+      {
+        "seed": 0,
+        "n": 24,
+        "pair_acc": 1.0,
+        "pair_sep": 0.0050506633633745635,
+        "auc": 0.9940368357487923,
+        "mean_correct": 1.1681067362469646,
+        "mean_incorrect": 0.16562379592205484,
+        "trace": {
+          "frac_negative": 1.0,
+          "mean_trace": -9.907114009097041
+        },
+        "init_loss": 25296369107.370667,
+        "final_loss": 0.13847938497861226,
+        "eval_loss": 1.1438181400299072
+      },
+      {
+        "seed": 1,
+        "n": 24,
+        "pair_acc": 1.0,
+        "pair_sep": -0.31049993480148197,
+        "auc": 0.9735809178743962,
+        "mean_correct": 1.1005150625789615,
+        "mean_incorrect": 0.1519335863485472,
+        "trace": {
+          "frac_negative": 1.0,
+          "mean_trace": -9.518951020829912
+        },
+        "init_loss": 34493110778.77333,
+        "final_loss": 0.5317364411354065,
+        "eval_loss": 1.6645220518112183
+      },
+      {
+        "seed": 2,
+        "n": 24,
+        "pair_acc": 1.0,
+        "pair_sep": -0.18773457770953472,
+        "auc": 0.9842240338164251,
+        "mean_correct": 1.2412755707846446,
+        "mean_incorrect": 0.16053327909725823,
+        "trace": {
+          "frac_negative": 1.0,
+          "mean_trace": -10.723566732377469
+        },
+        "init_loss": 12780264586.266666,
+        "final_loss": 0.11456569441159566,
+        "eval_loss": 1.2535134553909302
+      }
+    ],
+    "summary": {
+      "mean_pair_acc": 1.0,
+      "std_pair_acc": 0.0,
+      "mean_auc": 0.9839472624798712,
+      "std_auc": 0.008353386371229472,
+      "mean_pair_sep": -0.16439461638254738,
+      "std_pair_sep": 0.12987586469807402,
+      "mean_frac_negative": 1.0,
+      "mean_correct": 1.16996578987019,
+      "mean_incorrect": 0.15936355378928677,
+      "mean_eval_loss": 1.3539512157440186
+    }
+  },
+  "plainnet": {
+    "per_run": [
+      {
+        "seed": 0,
+        "n": 24,
+        "pair_acc": 0.0,
+        "pair_sep": -0.5606753761776352,
+        "auc": 0.4702596618357488,
+        "mean_correct": 0.14408585813314032,
+        "mean_incorrect": 0.1610992055169773,
+        "trace": {
+          "frac_negative": 0.5416666666666666,
+          "mean_trace": -0.06269550019890473
+        },
+        "init_loss": 8.473380393981934,
+        "final_loss": 0.4101658174196879,
+        "eval_loss": 1.4315654039382935
+      },
+      {
+        "seed": 1,
+        "n": 24,
+        "pair_acc": 0.08333333333333333,
+        "pair_sep": -0.5990723297302101,
+        "auc": 0.5902022946859904,
+        "mean_correct": 0.1909168570871984,
+        "mean_incorrect": 0.15057730860846566,
+        "trace": {
+          "frac_negative": 0.5416666666666666,
+          "mean_trace": -0.003535355920265104
+        },
+        "init_loss": 5.6840613733927405,
+        "final_loss": 0.3838812913099925,
+        "eval_loss": 2.178354501724243
+      },
+      {
+        "seed": 2,
+        "n": 24,
+        "pair_acc": 0.0,
+        "pair_sep": -0.5221168299926635,
+        "auc": 0.47018417874396135,
+        "mean_correct": 0.1444231042445052,
+        "mean_incorrect": 0.16152723606234956,
+        "trace": {
+          "frac_negative": 0.3333333333333333,
+          "mean_trace": 0.2373351095011974
+        },
+        "init_loss": 5.675621673583985,
+        "final_loss": 0.2558079506556193,
+        "eval_loss": 1.0693644285202026
+      }
+    ],
+    "summary": {
+      "mean_pair_acc": 0.027777777777777776,
+      "std_pair_acc": 0.039283710065919304,
+      "mean_auc": 0.5102153784219002,
+      "std_auc": 0.05655929929141167,
+      "mean_pair_sep": -0.5606215119668363,
+      "std_pair_sep": 0.03141697429711934,
+      "mean_frac_negative": 0.47222222222222215,
+      "mean_correct": 0.15980860648828132,
+      "mean_incorrect": 0.15773458339593083,
+      "mean_eval_loss": 1.5597614447275798
+    }
+  },
+  "elapsed_seconds": 39.86127591133118,
+  "hypothesis_confirmed": true,
+  "conclusion": "ResNet achieves 100% pair accuracy while PlainNet achieves 3% (chance=4.2%). Confirmed: diagonal-dominance fingerprint requires residual connections."
+}
