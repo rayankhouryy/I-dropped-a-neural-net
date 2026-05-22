@@ -179,6 +179,108 @@ def extract_llama_like_streaming(model):
     return W
 
 
+def extract_from_safetensors(model_name, hf_cache_root=None):
+    """Direct safetensors extractor — bypasses ``AutoModelForCausalLM.from_pretrained``.
+
+    Needed for models whose weights are stored as ``bfloat16`` (e.g. Qwen2.5),
+    which trigger native crashes in ``torch_cpu.dll`` on Windows when HF tries
+    to cast to fp16 during ``from_pretrained``. Reads safetensors shards
+    directly, casts bf16 -> fp32 -> fp16 via PyTorch, and yields the same
+    ``W`` dict layout as :func:`extract_llama_like_streaming`.
+
+    ``model_name`` is the HF hub repo id (e.g. ``'Qwen/Qwen2.5-7B'``).
+    """
+    import json
+    from pathlib import Path
+    from safetensors import safe_open
+
+    if hf_cache_root is None:
+        hf_cache_root = Path(os.environ.get('HF_HOME',
+                                            Path.home() / '.cache' / 'huggingface')) / 'hub'
+    else:
+        hf_cache_root = Path(hf_cache_root)
+
+    repo_dir = hf_cache_root / f"models--{model_name.replace('/', '--')}"
+    snap_root = repo_dir / 'snapshots'
+    if not snap_root.exists():
+        raise FileNotFoundError(
+            f"No HF cache at {snap_root}; pre-download with `hf download {model_name}`")
+    snap = next(snap_root.iterdir())
+
+    cfg = json.loads((snap / 'config.json').read_text())
+    n_layers = cfg['num_hidden_layers']
+    print(f"  (safetensors-direct path; snap={snap.name[:8]}...)", flush=True)
+    print(f"  Extracting {n_layers} layers from safetensors shards...", flush=True)
+
+    idx_file = snap / 'model.safetensors.index.json'
+    if idx_file.exists():
+        idx = json.loads(idx_file.read_text())['weight_map']
+    else:
+        single = snap / 'model.safetensors'
+        if not single.exists():
+            raise FileNotFoundError(f"No safetensors index or single-file at {snap}")
+        idx = None
+        # build a fake idx pointing every weight at the single shard
+        with safe_open(str(single), framework='pt') as f:
+            idx = {k: 'model.safetensors' for k in f.keys()}
+
+    # Group keys by shard so we open each shard at most once.
+    shard_to_keys = {}
+    for k, shard in idx.items():
+        shard_to_keys.setdefault(shard, []).append(k)
+
+    def _to_fp16_np(t):
+        # bf16 / fp16 / fp32 -> fp32 -> fp16 numpy
+        return t.to(torch.float32).to(torch.float16).numpy()
+
+    W = {key: [None] * n_layers
+         for key in ['W_Q', 'W_K', 'W_V', 'W_O', 'W_gate', 'W_up', 'W_down']}
+
+    suffix_to_pool = {
+        'self_attn.q_proj.weight':  'W_Q',
+        'self_attn.k_proj.weight':  'W_K',
+        'self_attn.v_proj.weight':  'W_V',
+        'self_attn.o_proj.weight':  'W_O',
+        'mlp.gate_proj.weight':     'W_gate',
+        'mlp.up_proj.weight':       'W_up',
+        'mlp.down_proj.weight':     'W_down',
+    }
+
+    extracted = 0
+    for shard, keys in shard_to_keys.items():
+        # Filter to layer weights we care about
+        wanted = [k for k in keys
+                  if k.startswith('model.layers.')
+                  and any(k.endswith(suf) for suf in suffix_to_pool)]
+        if not wanted:
+            continue
+        with safe_open(str(snap / shard), framework='pt') as f:
+            for k in wanted:
+                # k looks like: model.layers.{i}.self_attn.q_proj.weight
+                parts = k.split('.')
+                i = int(parts[2])
+                suf = '.'.join(parts[3:])
+                pool = suffix_to_pool[suf]
+                W[pool][i] = _to_fp16_np(f.get_tensor(k))
+                extracted += 1
+        gc.collect()
+        print(f"    {shard}: cumulative {extracted}/{7*n_layers} weights", flush=True)
+
+    # Sanity-check: every layer has all 7 weights
+    for pool, lst in W.items():
+        if any(x is None for x in lst):
+            missing = [i for i, x in enumerate(lst) if x is None]
+            raise RuntimeError(f"Missing {pool} weights for layers {missing}")
+
+    W['n_layers']   = n_layers
+    W['d_model']    = cfg['hidden_size']
+    W['n_heads']    = cfg['num_attention_heads']
+    W['n_kv_heads'] = cfg.get('num_key_value_heads', cfg['num_attention_heads'])
+    W['head_dim']   = cfg['hidden_size'] // cfg['num_attention_heads']
+    W['d_ff']       = cfg['intermediate_size']
+    return W
+
+
 def random_init_llama_like(cfg, seed):
     """Cheap random baseline: directly generate fp16 N(0, init_range)
     arrays matching Mistral's _init_weights. Avoids loading the full
@@ -302,16 +404,23 @@ def run_bert(seeds_random=3):
 
 
 def run_mistral(seeds_random=3, model_name='mistralai/Mistral-7B-v0.1',
-                family='Mistral'):
+                family='Mistral', use_safetensors_direct=False):
     from transformers import AutoModelForCausalLM, AutoConfig
     print(f"\n=== {family} ({model_name}) ===")
-    print("  Loading model (fp16, low_cpu_mem_usage)...", flush=True)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16,
-    )
-    model.eval()
-    W = extract_llama_like_streaming(model)
-    del model; gc.collect()
+    if use_safetensors_direct:
+        # Direct safetensors path: avoids HF from_pretrained crashes on
+        # bfloat16-stored weights (Qwen2/Qwen2.5 on Windows).
+        print("  Loading via safetensors-direct (bypassing HF from_pretrained)...",
+              flush=True)
+        W = extract_from_safetensors(model_name)
+    else:
+        print("  Loading model (fp16, low_cpu_mem_usage)...", flush=True)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name, low_cpu_mem_usage=True, torch_dtype=torch.float16,
+        )
+        model.eval()
+        W = extract_llama_like_streaming(model)
+        del model; gc.collect()
     print(f"  layers: {W['n_layers']}, d_model: {W['d_model']}, "
           f"n_heads: {W['n_heads']}, n_kv_heads: {W['n_kv_heads']}, "
           f"head_dim: {W['head_dim']}, d_ff: {W['d_ff']}")
@@ -377,7 +486,7 @@ def aggregate_random(per_seed, paths):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', default='bert-base',
-                    choices=['bert-base', 'mistral-7b', 'llama2-7b', 'llama2-7b-chat', 'tinyllama'],
+                    choices=['bert-base', 'mistral-7b', 'llama2-7b', 'llama2-7b-chat', 'tinyllama', 'qwen2.5-7b'],
                     help='which model to evaluate')
     ap.add_argument('--seeds-random', type=int, default=3)
     args = ap.parse_args()
@@ -407,6 +516,12 @@ def main():
                           model_name='TinyLlama/TinyLlama-1.1B-Chat-v1.0',
                           family='TinyLlama')
         out_key = 'tinyllama'
+    elif args.model == 'qwen2.5-7b':
+        out = run_mistral(args.seeds_random,
+                          model_name='Qwen/Qwen2.5-7B',
+                          family='Qwen2.5',
+                          use_safetensors_direct=True)
+        out_key = 'qwen2_5_7b'
 
     out_path = f'results/transformer_family_pairing_{out_key}.json'
     with open(out_path, 'w') as f:
