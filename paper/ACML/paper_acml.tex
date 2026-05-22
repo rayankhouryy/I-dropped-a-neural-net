@@ -21,6 +21,7 @@
 \usepackage{lineno}
 \usepackage{enumitem}
 \usepackage{float}
+\usepackage{xcolor}
 % \linenumbers
 
 % Do not comment the following commands:
@@ -34,7 +35,7 @@
 \jmlryear{2026}
 \jmlrworkshop{ACML 2026}
 
-\title[Training Leaves Traces]{Training Leaves Traces: Diagonal Dominance as a Neural Network Fingerprint}
+\title[Training Leaves Traces]{Training Leaves Traces: Diagonal Dominance as a Residual Network Fingerprint}
 
  % Use \Name{Author Name} to specify the name.
  % If the surname contains spaces, enclose the surname
@@ -79,12 +80,12 @@
 \maketitle
 
 \begin{abstract}
-Verifying the provenance of neural network weights is difficult: existing watermarking schemes must be embedded during training, and can be removed by fine-tuning. We show that training itself leaves an intrinsic fingerprint requiring no such foresight. Residual networks initialized for dynamical isometry \citep{pennington2017isometry} develop a distinctive structure: after training, each block's weight product settles near negative identity, consistent with the network maintaining stable gradient flow by keeping layer Jacobians close to orthogonal. This leaves a detectable trace: the diagonal-dominance score \citep{park2026} of correctly paired input and output weights is high, while incorrect pairings score near zero. We show this signal reliably identifies which weights belong to the same block in residual networks and transformers, even when layers are shuffled or the model is subsequently fine-tuned. Because the fingerprint emerges from residual training dynamics rather than being deliberately embedded, it applies retroactively to any already-deployed model; non-residual networks trained on the same task show no signal, confirming the skip connection is essential. This enables post-hoc verification---reconstructing models from corrupted or unlabeled weights, confirming a deployed model matches a registered checkpoint, or detecting unauthorized derivatives.
+Training a deep residual network leaves a precise trace in its weights: the input projection $W_{\text{in}}$ and output projection $W_{\text{out}}$ within each block evolve so that their product approximates a negative scaled identity, $W_{\text{out}} W_{\text{in}} \approx -\varepsilon I$. This structure emerges from gradient descent enforcing dynamical isometry along the residual path. We formalize it with a closed-form margin showing that the diagonal-dominance score $s(i,j) = |\mathrm{tr}(M)| / \|M\|_F$, computed on the full residual branch product $M = W_K \cdots W_1$ of depth $K$, separates correctly paired blocks at $\Theta(\sqrt{d})$ from incorrect pairs at the $\Theta(1/\sqrt{d})$ random baseline---a signal-to-noise gap that grows linearly with hidden dimension $d$. Using $s(i,j)$ to pair input and output projections from unlabeled weight matrices, we recover {\color{red}[X--Y]}\% of original block correspondences across nine architecture families with $K=2$ branches: language (GPT, BERT, LLaMA, Mistral, Qwen, DeepSeek-R1, Gemma), vision (ViT), and audio (Whisper). Applying the same procedure to GPT-2 across scales, mean $s(i,i)$ rises from {\color{red}X} ($d=768$, 124M) to {\color{red}Y} ($d=1600$, 1.5B), matching the predicted $\sqrt{d}$ scaling. On ImageNet Bottleneck blocks ($K=3$), the score recovers {\color{red}[X--Y]}\% of pairings.
 
-We formalize the diagonal-dominance fingerprint and stress-test its limits. A closed-form decomposition shows that the gap between correct and incorrect pairs scales as $O(\sqrt{d})$ with matrix dimension $d$. Benchmarking against alternatives, diagonal-dominance is the only metric achieving perfect layer recovery; Frobenius matching plateaus at 47--67\% on transformers, while singular-value distance performs at chance. The signal transfers across architectures: 100\% accuracy on GPT-2 models from 124M to 1.5B parameters across MLP and attention paths, with signal strength increasing at larger model sizes. Vision Transformers (ViT-B/16) achieve 100\% accuracy on all paths, with attention showing the strongest separation. The fingerprint also generalizes across transformer \emph{families}: encoder-only BERT-base (bidirectional, MLM-pretrained) and SwiGLU+GQA Mistral-7B both recover 100\% on every MLP and attention path, ruling out GELU, causal masking, and full attention as architectural confounds. ImageNet ResNets with BatchNorm achieve 91--100\% accuracy using architecture-aware factorization. Modern ConvNets (ConvNeXt-T) also achieve 100\% accuracy. Robustness holds under adversarial conditions: pairing accuracy stays at 100\% across 21 attack configurations including fine-tuning up to 50 epochs and weight noise, degrading only when perturbations exceed ${\sim}20\%$ relative weight magnitude---at which point classification accuracy drops below 50\%.
+The fingerprint is robust to realistic post-training modifications. Pair recovery stays at {\color{red}[X--Y]}\% under fine-tuning, pruning, quantization, weight noise, and function-preserving attacks like per-block orthogonal rotations---degrading only when perturbations grow large enough to destroy the model itself. Knowledge distillation, by contrast, erases the signal: the score reads weight-level rather than function-level identity. Unlike a watermark, the fingerprint emerges from optimization itself—its robustness is intrinsic to the model, not added by design.
 \end{abstract}
 \begin{keywords}
-neural network fingerprinting; dynamic isometry; model provenance; layer identification; transformers
+diagonal dominance; residual networks; dynamical isometry; model provenance; intrinsic fingerprinting
 \end{keywords}
 
 \begin{figure}[H]
@@ -93,11 +94,13 @@ neural network fingerprinting; dynamic isometry; model provenance; layer identif
 {\small (a) Training dynamics: 24-block ResNet}\\[1em]
 \includegraphics[width=\textwidth]{../figures/fig_modern_vision_pairing.pdf}\\[0.5em]
 {\small (b) Modern vision architectures: ViT-B/16 and ConvNeXt-T}
-\caption{Diagonal-dominance matrices $d(i,j)$ reveal training-induced structure. \textbf{(a)} At initialization (epoch 0), no diagonal structure is visible. By epoch 5, the diagonal is fully separated and pair accuracy reaches 100\%. \textbf{(b)} ViT-B/16 (MLP, V/O attention, Q/K attention paths) and ConvNeXt-T all achieve 100\% pairing accuracy with clear diagonal structure.}
+\caption{Diagonal-dominance matrices $s(i,j)$ reveal training-induced structure. \textbf{(a)} At initialization (epoch 0), no diagonal structure is visible. By epoch 5, the diagonal is fully separated and pair accuracy reaches 100\%. \textbf{(b)} ViT-B/16 (MLP, V/O attention, Q/K attention paths) and ConvNeXt-T all achieve 100\% pairing accuracy with clear diagonal structure.}
 \label{fig:heatmaps}
 \end{figure}
 
 \section{Introduction}\label{sec:intro}
+
+{\color{red}\textbf{[TODO: Out of sync with abstract -- Need to update -- Require strong story]}}
 
 Establishing the provenance of neural network weights has become critical for intellectual property protection, model auditing, and supply chain verification. The dominant approach---embedding watermarks during training---suffers from two fundamental limitations: it requires foresight (the watermark must be inserted before training concludes) and it lacks robustness (fine-tuning or pruning can remove the signal). Post-hoc verification methods based on Frobenius distance or singular value comparison perform little better than chance on standard benchmarks.
 
@@ -109,11 +112,13 @@ Unlike watermarking, our method opens new possibilities for auditing deployed mo
 
 \section{Background and Related Work}\label{sec:background}
 
+{\color{red}\textbf{[TODO: Out of sync with abstract -- Need to update -- Maybe reduce size]}}
+
 \subsection{Watermarking and Ownership Verification}
 
 Verifying ownership of neural network weights has become critical as models represent significant intellectual property. Existing approaches fall into three families, each embedding information during or after training.
 
-\textbf{Embedding-based watermarks} modify the training loss to encode a signature directly into the weights. \citet{uchida2017embedding} pioneered this approach by adding a regularization term that projects a binary string into a subset of convolutional filters. DeepSigns~\citep{rouhani2019deepsigns} extended this to activation maps, while DeepMarks~\citep{chen2019deepmarks} embedded fingerprints that survive model compression.
+\textbf{Embedding-based watermarks} modify the training loss to encode a fingerprint directly into the weights. \citet{uchida2017embedding} pioneered this approach by adding a regularization term that projects a binary string into a subset of convolutional filters. DeepSigns~\citep{rouhani2019deepsigns} extended this to activation maps, while DeepMarks~\citep{chen2019deepmarks} embedded fingerprints that survive model compression.
 
 \textbf{Backdoor-based watermarks} train the network to produce specific outputs on a secret trigger set. \citet{adi2018turning} demonstrated that a model can memorize arbitrary input-output pairs without degrading accuracy on the primary task. \citet{zhang2018protecting} showed similar results across architectures, treating the trigger set as a cryptographic key.
 
@@ -121,7 +126,7 @@ Verifying ownership of neural network weights has become critical as models repr
 
 A critical limitation unifies all three families: they can be removed or bypassed. \citet{lukas2022sok} systematically evaluated watermarking schemes on image classification and found that fine-tuning, pruning, or model extraction significantly degrades or removes watermarks across all tested methods within realistic compute budgets. This motivates our structurally different approach: rather than embedding information, we read a fingerprint that training itself induces.
 
-\textbf{Comparison with broader model-attribution attacks.} Related lines of work in adversarial machine learning serve adjacent goals but address fundamentally different questions. \emph{Membership inference attacks}~\citep{shokri2017membership} ask whether a particular training example was used to train a model, given black-box query access; they target dataset provenance, not weight provenance. \emph{Model-extraction / knockoff attacks}~\citep{tramer2016stealing, orekondy2019knockoff} reconstruct a functional copy of a target model from query-response pairs, but the resulting student has fresh randomly-initialized weights that bear no structural relation to the teacher. Distillation defenses similarly do not preserve weight-level identity. Our setting is orthogonal: we assume white-box weight access (Section~\ref{sec:background}, threat model) and verify weight-level identity by reading the structural signature that training itself imprints on the residual-branch products. The diagonal-dominance fingerprint therefore complements query-based attribution---it provides the white-box verification step that membership inference and model extraction leave open.
+\textbf{Comparison with broader model-attribution attacks.} Related lines of work in adversarial machine learning serve adjacent goals but address fundamentally different questions. \emph{Membership inference attacks}~\citep{shokri2017membership} ask whether a particular training example was used to train a model, given black-box query access; they target dataset provenance, not weight provenance. \emph{Model-extraction / knockoff attacks}~\citep{tramer2016stealing, orekondy2019knockoff} reconstruct a functional copy of a target model from query-response pairs, but the resulting student has fresh randomly-initialized weights that bear no structural relation to the teacher. Distillation defenses similarly do not preserve weight-level identity. Our setting is orthogonal: we assume white-box weight access (Section~\ref{sec:background}, threat model) and verify weight-level identity by reading the structural fingerprint that training itself imprints on the residual-branch products. The diagonal-dominance fingerprint therefore complements query-based attribution---it provides the white-box verification step that membership inference and model extraction leave open.
 
 \textbf{Threat model.} We assume white-box verification: the verifier has full access to the model weights. The adversary may fine-tune, prune, permute weight indices, or add noise to the weights, but cannot fundamentally alter the residual architecture without retraining from scratch. This setting matches scenarios where a model is suspected to be stolen and the original owner seeks to prove provenance.
 
@@ -143,19 +148,23 @@ Recent work has explored fingerprints that emerge from training without explicit
 
 DeepIPR~\citep{fan2019rethinking} introduced passport layers that gate activations, achieving stronger verification but requiring architectural modification. \citet{szyller2021dawn} proposed DAWN for fingerprinting machine-learning-as-a-service APIs, though this targets black-box settings distinct from weight-level verification.
 
-Our approach requires no modification to architecture, loss function, or training procedure. The diagonal-dominance score emerges as a byproduct of dynamical isometry: correctly paired weight matrices from the same residual block exhibit high diagonal dominance in their product, while incorrect pairings score near zero. Crucially, diagonal dominance captures \emph{relational} structure between paired matrices---how they jointly encode the near-identity mapping---rather than aggregate properties of individual matrices. This relational signature is preserved under fine-tuning and noise addition because it reflects the functional constraint that the residual block must approximate, providing robustness against the attacks that defeat embedded watermarks and statistical fingerprints.
+Our approach requires no modification to architecture, loss function, or training procedure. The diagonal-dominance score emerges as a byproduct of dynamical isometry: correctly paired weight matrices from the same residual block exhibit high diagonal dominance in their product, while incorrect pairings score near zero. Crucially, diagonal dominance captures \emph{relational} structure between paired matrices---how they jointly encode the near-identity mapping---rather than aggregate properties of individual matrices. This relational fingerprint is preserved under fine-tuning and noise addition because it reflects the functional constraint that the residual block must approximate, providing robustness against the attacks that defeat embedded watermarks and statistical fingerprints.
 
 \section{Theory}\label{sec:theory}
 
 \subsection{The Diagonal-Dominance Fingerprint}\label{sec:dd-score}
 
-Given input projection $W_{\mathrm{in}}^{(i)} \in \mathbb{R}^{h \times d}$ and output projection $W_{\mathrm{out}}^{(j)} \in \mathbb{R}^{d \times h}$, the diagonal-dominance score is
-\begin{equation}\label{eq:dd-score}
-  d(i,j) \;=\; \frac{|\mathrm{tr}(W_{\mathrm{out}}^{(j)} W_{\mathrm{in}}^{(i)})|}{\|W_{\mathrm{out}}^{(j)} W_{\mathrm{in}}^{(i)}\|_F}.
-\end{equation}
-The numerator is the absolute trace of the $d \times d$ product matrix $M := W_{\mathrm{out}}^{(j)} W_{\mathrm{in}}^{(i)}$; the denominator is its Frobenius norm. The ratio measures what fraction of the matrix's total energy concentrates on the diagonal.
+{\color{red}\textbf{[TODO: Needs more work]}}
 
-Why a ratio rather than the raw trace or Frobenius norm? The trace $|\mathrm{tr}(M)|$ scales with both the intrinsic diagonal structure and the overall magnitude of the weight matrices, which varies across blocks for reasons unrelated to pairing. The Frobenius norm $\|M\|_F$ similarly conflates scale with structure. Their ratio normalizes away scale and isolates the structural signature: a matrix with energy uniformly spread has $d(i,j) = O(1/\sqrt{d})$, while a matrix proportional to the identity achieves the maximum $d(i,j) = \sqrt{d}$. This $\sqrt{d}$ dynamic range is what makes correct pairs distinguishable from incorrect ones.
+Training a residual network imprints a characteristic structure on its weights: within each block, the input and output projections evolve so that their product approximates a negative scaled identity, $W_{\mathrm{out}} W_{\mathrm{in}} \approx -\varepsilon I$. This emerges from gradient descent enforcing dynamical isometry along the residual path. We formalize this structure with the \emph{diagonal-dominance score}.
+
+For a residual branch of depth $K$ with weight matrices $W_1, \ldots, W_K$, we compute the full branch product $M = W_K \cdots W_1 \in \mathbb{R}^{d \times d}$ and define
+\begin{equation}\label{eq:dd-score}
+  s(i,j) \;=\; \frac{|\mathrm{tr}(M)|}{\|M\|_F}.
+\end{equation}
+The numerator captures the diagonal mass; the denominator normalizes by total matrix energy. This ratio isolates structural fingerprint from scale: a matrix with energy uniformly spread has $s(i,j) = \Theta(1/\sqrt{d})$, while a matrix proportional to the identity achieves $s(i,j) = \sqrt{d}$.
+
+The key insight is that correctly paired blocks---where all $K$ matrices come from the same residual branch---score at $\Theta(\sqrt{d})$, while incorrect pairings remain at the $\Theta(1/\sqrt{d})$ random baseline. This yields a signal-to-noise gap that grows linearly with hidden dimension $d$, making correct pairs increasingly separable in wider networks.
 
 \subsection{Margin Analysis}\label{sec:margin-analysis}
 
@@ -170,7 +179,7 @@ where $\varepsilon := |\mathrm{tr}(M)|/d > 0$ captures the diagonal strength and
 \begin{proposition}[Margin Formula]\label{prop:margin}
 Let $M = -\varepsilon I + E$ with $\varepsilon = |\mathrm{tr}(M)|/d$ and $\mathrm{tr}(E) = 0$. Then the diagonal-dominance score satisfies
 \begin{equation}\label{eq:margin-formula}
-  d(i,i) \;=\; \frac{\sqrt{d}}{\sqrt{1 + \|E\|_F^2 / (\varepsilon^2 d)}} \;\leq\; \sqrt{d},
+  s(i,i) \;=\; \frac{\sqrt{d}}{\sqrt{1 + \|E\|_F^2 / (\varepsilon^2 d)}} \;\leq\; \sqrt{d},
 \end{equation}
 with equality if and only if $E = 0$, i.e., $M = -\varepsilon I$.
 \end{proposition}
@@ -183,26 +192,26 @@ By construction, $|\mathrm{tr}(M)| = \varepsilon d$. For the Frobenius norm, exp
 \end{align*}
 where the last step uses $\mathrm{tr}(E) = 0$. Substituting into \eqref{eq:dd-score}:
 \[
-  d(i,i) = \frac{\varepsilon d}{\sqrt{\varepsilon^2 d + \|E\|_F^2}} = \frac{\sqrt{d}}{\sqrt{1 + \|E\|_F^2/(\varepsilon^2 d)}}.
+  s(i,i) = \frac{\varepsilon d}{\sqrt{\varepsilon^2 d + \|E\|_F^2}} = \frac{\sqrt{d}}{\sqrt{1 + \|E\|_F^2/(\varepsilon^2 d)}}.
 \]
-The bound $d(i,i) \leq \sqrt{d}$ follows immediately, with equality iff $\|E\|_F = 0$.
+The bound $s(i,i) \leq \sqrt{d}$ follows immediately, with equality iff $\|E\|_F = 0$.
 \end{proof}
 
-The margin formula reveals the geometry of diagonal dominance. The numerator $\sqrt{d}$ is the score achievable by a perfect negative-scalar identity; the denominator penalizes deviation from this ideal via the dimensionless ratio $\|E\|_F^2/(\varepsilon^2 d)$. For typical trained blocks in \citet{park2026}'s puzzle network, $\|E\|_F/(\varepsilon\sqrt{d}) \in [1.9, 3.8]$, yielding $d(i,i) \in [1.76, 3.23]$---well above the baseline but below the theoretical maximum of $\sqrt{48} \approx 6.93$. Figure~\ref{fig:margin} verifies that the formula reproduces empirical scores to floating-point precision.
+The margin formula reveals the geometry of diagonal dominance. The numerator $\sqrt{d}$ is the score achievable by a perfect negative-scalar identity; the denominator penalizes deviation from this ideal via the dimensionless ratio $\|E\|_F^2/(\varepsilon^2 d)$. For typical trained blocks in \citet{park2026}'s puzzle network, $\|E\|_F/(\varepsilon\sqrt{d}) \in [1.9, 3.8]$, yielding $s(i,i) \in [1.76, 3.23]$---well above the baseline but below the theoretical maximum of $\sqrt{48} \approx 6.93$. Figure~\ref{fig:margin} verifies that the formula reproduces empirical scores to floating-point precision.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{../figures/fig_margin_theorem.pdf}
-\caption{Proposition~\ref{prop:margin} verification. \textbf{Left:} Predicted $d(i,i)$ from the margin formula vs.\ empirical values for all 48 blocks---points lie on the identity line. \textbf{Right:} Sorted correct-pair margins (blue) vs.\ incorrect-pair baseline (red dashed) and theoretical upper bound $\sqrt{d}$ (grey dotted).}
+\caption{Proposition~\ref{prop:margin} verification. \textbf{Left:} Predicted $s(i,i)$ from the margin formula vs.\ empirical values for all 48 blocks---points lie on the identity line. \textbf{Right:} Sorted correct-pair margins (blue) vs.\ incorrect-pair baseline (red dashed) and theoretical upper bound $\sqrt{d}$ (grey dotted).}
 \label{fig:margin}
 \end{figure}
 
 \begin{corollary}[Signal-to-Baseline Ratio]\label{cor:baseline}
 Suppose $(W_{\mathrm{in}}^{(i)}, W_{\mathrm{out}}^{(j)})$ with $i \neq j$ are independent random matrices with i.i.d.\ zero-mean entries. Then
 \begin{equation}\label{eq:baseline}
-  \mathbb{E}[d(i,j)^2] = \frac{1}{d}.
+  \mathbb{E}[s(i,j)^2] = \frac{1}{d}.
 \end{equation}
-Consequently, the expected score for incorrect pairs is $\mathbb{E}[d(i,j)] \approx 1/\sqrt{d}$, while correct pairs score $d(i,i) = O(\sqrt{d})$ by Proposition~\ref{prop:margin}. The signal-to-baseline ratio scales as $d$.
+Consequently, the expected score for incorrect pairs is $\mathbb{E}[s(i,j)] \approx 1/\sqrt{d}$, while correct pairs score $s(i,i) = O(\sqrt{d})$ by Proposition~\ref{prop:margin}. The signal-to-baseline ratio scales as $d$.
 \end{corollary}
 
 The corollary explains why diagonal-dominance pairing succeeds: correct pairs achieve scores of order $\sqrt{d}$ (diminished from the maximum only by off-diagonal energy $\|E\|_F$), while incorrect pairs score at the random baseline $1/\sqrt{d}$. The gap grows with dimension, providing increasingly robust separation for deeper or wider networks.
@@ -212,7 +221,7 @@ The corollary explains why diagonal-dominance pairing succeeds: correct pairs ac
 \begin{corollary}[Null Model]\label{cor:null-model}
 For randomly initialized weights with no training, all pairs---correct and incorrect---satisfy
 \begin{equation}\label{eq:null}
-  \mathbb{E}[d(i,j)] = \frac{1}{\sqrt{d}} + o(1)
+  \mathbb{E}[s(i,j)] = \frac{1}{\sqrt{d}} + o(1)
 \end{equation}
 uniformly in $(i,j)$. Hungarian matching on $-d$ recovers correct pairs at the chance rate $1/D$.
 \end{corollary}
@@ -231,7 +240,7 @@ This section describes the practical procedure for recovering layer pairings fro
 
 Given $L$ input projections $\{W_{\mathrm{in}}^{(i)}\}_{i=1}^L$ and $L$ output projections $\{W_{\mathrm{out}}^{(j)}\}_{j=1}^L$ with unknown correspondence, we recover the pairing as follows.
 
-\paragraph{Step 1: Score matrix.} For each pair $(i,j) \in [L] \times [L]$, compute the diagonal-dominance score $d(i,j)$ via \eqref{eq:dd-score}, yielding an $L \times L$ matrix $D$. By Proposition~\ref{prop:margin}, correctly paired blocks satisfy $d(i,i) = O(\sqrt{d})$ while incorrect pairs have $\mathbb{E}[d(i,j)] = O(1/\sqrt{d})$.
+\paragraph{Step 1: Score matrix.} For each pair $(i,j) \in [L] \times [L]$, compute the diagonal-dominance score $s(i,j)$ via \eqref{eq:dd-score}, yielding an $L \times L$ matrix $D$. By Proposition~\ref{prop:margin}, correctly paired blocks satisfy $s(i,i) = O(\sqrt{d})$ while incorrect pairs have $\mathbb{E}[s(i,j)] = O(1/\sqrt{d})$.
 
 \paragraph{Step 2: Hungarian matching.} Run the Hungarian algorithm on the cost matrix $-D$ (negated because Hungarian minimizes). The output is a permutation $\hat\pi$ assigning input $i$ to output $\hat\pi(i)$. Ground truth is the identity permutation.
 
@@ -298,7 +307,7 @@ We organize our experiments around five research questions that systematically v
 
 \subsection{RQ1: Core Method Validation}
 
-The central methodological question is whether the diagonal-dominance signature reliably recovers layer ordering across different neural network architectures. We validate this across five architecture families: residual MLPs, Transformers (GPT-2 and ViT), ImageNet ResNets with BatchNorm, modern ConvNets, and a cross-family transformer sweep (BERT, Mistral-7B).
+The central methodological question is whether the diagonal-dominance fingerprint reliably recovers layer ordering across different neural network architectures. We validate this across five architecture families: residual MLPs, Transformers (GPT-2 and ViT), ImageNet ResNets with BatchNorm, modern ConvNets, and a cross-family transformer sweep (BERT, Mistral-7B).
 
 \paragraph{Transformers.}
 On pretrained GPT-2 models spanning 124M to 1.5B parameters (12--48 layers), diagonal-dominance Hungarian matching achieves \textbf{100\% pairing accuracy} on MLP blocks across all four model sizes. The signal strength increases with model scale: mean correct-pair score rises from $4.18$ (GPT-2) to $7.77$ (GPT-2-xl). Between 81--92\% of correctly paired products exhibit negative traces, consistent with dynamic isometry. A randomly initialized GPT-2 baseline achieves only 17\% accuracy (chance is 8.3\%), confirming the signal is training-induced.
@@ -373,7 +382,7 @@ How does the method perform as model size increases from millions to billions of
 \renewcommand{\arraystretch}{1.1}
 \begin{tabular}{lccccc}
 \toprule
-Model & Params & Layers & Pair Acc & Mean $d(i,i)$ & Neg Traces \\
+Model & Params & Layers & Pair Acc & Mean $s(i,i)$ & Neg Traces \\
 \midrule
 GPT-2        & 124M  & 12 & 100\% & 4.18 & 92\% \\
 GPT-2-medium & 355M  & 24 & 100\% & 5.46 & 92\% \\
@@ -383,11 +392,11 @@ GPT-2-xl     & 1.5B  & 48 & 100\% & 7.77 & 81\% \\
 GPT-2 (random init) & 124M & 12 & 17\% & 0.12 & 50\% \\
 \bottomrule
 \end{tabular}
-\caption{Scalability of MLP block pairing across the GPT-2 family. Pair accuracy remains at 100\% from 124M to 1.5B parameters, while signal strength (mean $d(i,i)$) increases with model size, consistent with the $O(\sqrt{d})$ scaling predicted by Corollary~\ref{cor:baseline}.}
+\caption{Scalability of MLP block pairing across the GPT-2 family. Pair accuracy remains at 100\% from 124M to 1.5B parameters, while signal strength (mean $s(i,i)$) increases with model size, consistent with the $O(\sqrt{d})$ scaling predicted by Corollary~\ref{cor:baseline}.}
 \label{tab:gpt2_scaling}
 \end{table}
 
-Signal strength \emph{increases} with model size: mean $d(i,i)$ grows from 4.18 (GPT-2, $d{=}768$) to 7.77 (GPT-2-xl, $d{=}1600$). The fraction of correctly paired products exhibiting negative traces (81--92\%) confirms that dynamical isometry holds in transformer MLP blocks. Figure~\ref{fig:gpt2} visualizes the pairing matrices and trace distributions. These results establish that the diagonal-dominance fingerprint not only persists but \emph{strengthens} as models scale to billions of parameters.
+Signal strength \emph{increases} with model size: mean $s(i,i)$ grows from 4.18 (GPT-2, $d{=}768$) to 7.77 (GPT-2-xl, $d{=}1600$). The fraction of correctly paired products exhibiting negative traces (81--92\%) confirms that dynamical isometry holds in transformer MLP blocks. Figure~\ref{fig:gpt2} visualizes the pairing matrices and trace distributions. These results establish that the diagonal-dominance fingerprint not only persists but \emph{strengthens} as models scale to billions of parameters.
 
 \begin{figure}[H]
 \centering
@@ -452,7 +461,7 @@ Orthogonal & 0.0\% & 100\% \\
 Figure~\ref{fig:heatmaps} shows the pairing matrix at five points along the training trajectory. At initialization, no diagonal structure is visible. By epoch 5, the diagonal is fully separated and Hungarian matching recovers $100\%$ of correct pairs. The mean correct-pair score rises monotonically from $0.19$ at epoch 0 to $2.07$ at epoch 300, while the mean incorrect-pair score remains flat at ${\approx}0.16$.
 
 \paragraph{Margin formula verification.}
-Proposition~\ref{prop:margin} provides an exact closed-form expression for diagonal dominance. On the 48-block network, this formula reproduces the empirical $d(i,i)$ to floating-point precision on every block (Figure~\ref{fig:margin}). The fitted off-diagonal ratio $\|E\|_F/(\varepsilon\sqrt{d})$ ranges from $1.90$ to $3.80$ across blocks, yielding $d(i,i) \in [1.76, 3.23]$, well below the theoretical maximum of $\sqrt{48} \approx 6.93$ but sufficient for perfect separation.
+Proposition~\ref{prop:margin} provides an exact closed-form expression for diagonal dominance. On the 48-block network, this formula reproduces the empirical $s(i,i)$ to floating-point precision on every block (Figure~\ref{fig:margin}). The fitted off-diagonal ratio $\|E\|_F/(\varepsilon\sqrt{d})$ ranges from $1.90$ to $3.80$ across blocks, yielding $s(i,i) \in [1.76, 3.23]$, well below the theoretical maximum of $\sqrt{48} \approx 6.93$ but sufficient for perfect separation.
 
 \paragraph{Initialization ablation: training enforces isometry from non-isometric starts.}
 A skeptical reading of dynamical-isometry theory is that the diagonal-dominance fingerprint requires the network to begin training in a near-isometric state---e.g., from explicit orthogonal initialization. To test this, we re-train 24-block residual MLPs from four common initialization schemes (3 seeds each, 200 epochs, identical optimizer): orthogonal (theoretical sweet spot), Kaiming-normal ($\mathcal{N}(0, \sqrt{2/d_{\mathrm{in}}})$), Xavier-normal ($\mathcal{N}(0, \sqrt{2/(d_{\mathrm{in}}{+}d_{\mathrm{out}})})$), and a small-scale Gaussian ($\mathcal{N}(0, 0.02^2)$ matching the GPT-2/BERT/LLaMA-2 default). Three of the four schemes converge to a clean fingerprint: pair accuracy $82\%\pm 20\%$ (orthogonal), $97\%\pm 4\%$ (Kaiming), $100\%\pm 0\%$ (Xavier), all with AUC $\geq 0.95$, all with $100\%$ of trained blocks exhibiting negative trace. The condition $W_{\mathrm{out}}W_{\mathrm{in}}\approx -\varepsilon I + E$ thus emerges from gradient descent across initializations, not from the starting condition.
@@ -481,7 +490,7 @@ The diagonal-dominance signal is not an architectural artifact but a \emph{conse
 We explicitly delineate what the diagonal-dominance fingerprint does and does not establish, to preempt misreadings of the empirical results.
 
 \paragraph{Block-level identifiability, not run-level provenance.}
-The fingerprint identifies \emph{which weight matrices belong to the same residual block within a model}: given a shuffled pile of layers from one network, it recovers their original ordering. It does \emph{not} on its own distinguish two independently trained networks of the same architecture (say, two ResNet-50s with different random seeds). The trained values of $W_{\mathrm{out}}W_{\mathrm{in}}$ differ between runs in numerical detail, but both runs satisfy $W_{\mathrm{out}}W_{\mathrm{in}} \approx -\varepsilon I + E$, so both yield strong diagonal dominance and successful within-model pairing. Run-level uniqueness---using the matrix $E$ as a per-model signature---is a complementary direction we leave open. In the verification scenarios we target (e.g., confirming a deployed model matches a registered checkpoint by exact weight comparison), block-level recovery from corrupted or unlabeled weights is the relevant primitive.
+The fingerprint identifies \emph{which weight matrices belong to the same residual block within a model}: given a shuffled pile of layers from one network, it recovers their original ordering. It does \emph{not} on its own distinguish two independently trained networks of the same architecture (say, two ResNet-50s with different random seeds). The trained values of $W_{\mathrm{out}}W_{\mathrm{in}}$ differ between runs in numerical detail, but both runs satisfy $W_{\mathrm{out}}W_{\mathrm{in}} \approx -\varepsilon I + E$, so both yield strong diagonal dominance and successful within-model pairing. Run-level uniqueness---using the matrix $E$ as a per-model fingerprint---is a complementary direction we leave open. In the verification scenarios we target (e.g., confirming a deployed model matches a registered checkpoint by exact weight comparison), block-level recovery from corrupted or unlabeled weights is the relevant primitive.
 
 \paragraph{Architecture knowledge requirement.}
 The pairing procedure assumes the verifier knows (i) the architecture family (ResNet vs.\ Transformer vs.\ ConvNeXt), (ii) the residual-branch factorization to score (the $W_2W_1$ vs.\ $W_3W_2W_1$ distinction is essential for ResNet recovery; see Section~\ref{sec:experiments}, RQ1), and (iii) the layer dimensions used to reshape attention heads. This information is published with virtually every released model. When the architecture is partially unknown, the search space of factorizations is small (a few dozen candidates across the families in this paper); since the full procedure runs in seconds, exhaustive search over plausible factorizations is feasible. Recovery of pairings under \emph{adversarially obfuscated} architecture is not addressed.
@@ -490,15 +499,15 @@ The pairing procedure assumes the verifier knows (i) the architecture family (Re
 Our 21-attack robustness sweep (Section~\ref{sec:experiments}, RQ4) covers fine-tuning at three learning rates for up to 50 epochs, alternative-target fine-tuning, and Gaussian weight noise from 1\% to 20\% relative magnitude. We have not exhaustively tested \emph{structured} attacks that preserve network function while attempting to mask the trace pattern: per-block orthogonal rotations $R \in O(h)$ applied to the hidden state ($W_{\mathrm{in}} \mapsto R W_{\mathrm{in}}$, $W_{\mathrm{out}} \mapsto W_{\mathrm{out}} R^\top$), hidden-unit permutations applied jointly to in/out projections, or learned residual additions tuned to redistribute diagonal mass. By construction, the first two are symmetries of the residual block and leave $W_{\mathrm{out}}W_{\mathrm{in}}$ \emph{invariant}---they cannot alter the diagonal-dominance score. Independent application breaks function, which contradicts the adversary's goal of preserving the deployed model. A learned residual addition tuned to break diagonal dominance is the most plausible remaining attack vector and we have not yet quantified its required perturbation magnitude. The robustness results suggest that any function-preserving perturbation large enough to destroy the fingerprint also degrades classification accuracy, but a formal lower bound on the adversarial budget is open.
 
 \paragraph{Architectural scope.}
-The method applies to architectures with identifiable residual-branch structure: residual MLPs, ResNets (full, Bottleneck, and Pre-Activation), modern ConvNets (ConvNeXt), and Transformers (both MLP and attention sublayers, encoder-only and decoder-only, full MHA and grouped-query). Plain feedforward networks without skip connections do not develop the fingerprint---as confirmed by our non-residual control experiment (Section~\ref{sec:experiments}, RQ5, Figure~\ref{fig:nonresidual}), trained PlainNets achieve only chance-level pair accuracy despite learning the task. Recurrent networks and architectures whose channel-mixing happens through non-linear gating without a linear branch product similarly fall outside the current scope. Extending the framework to non-residual architectures---potentially by identifying analogous trace conditions on Jacobian factorizations---is a natural direction, though the non-residual control suggests this would require fundamentally different structural signatures.
+The method applies to architectures with identifiable residual-branch structure: residual MLPs, ResNets (full, Bottleneck, and Pre-Activation), modern ConvNets (ConvNeXt), and Transformers (both MLP and attention sublayers, encoder-only and decoder-only, full MHA and grouped-query). Plain feedforward networks without skip connections do not develop the fingerprint---as confirmed by our non-residual control experiment (Section~\ref{sec:experiments}, RQ5, Figure~\ref{fig:nonresidual}), trained PlainNets achieve only chance-level pair accuracy despite learning the task. Recurrent networks and architectures whose channel-mixing happens through non-linear gating without a linear branch product similarly fall outside the current scope. Extending the framework to non-residual architectures---potentially by identifying analogous trace conditions on Jacobian factorizations---is a natural direction, though the non-residual control suggests this would require fundamentally different structural fingerprints.
 
 \section{Conclusion}\label{sec:conclusion}
 
-We have shown that training induces an intrinsic fingerprint in neural network weights: the diagonal-dominance structure of residual-branch weight products. This signature emerges from gradient descent enforcing dynamical isometry and thus applies retroactively to any already-deployed model, enabling practical applications such as intellectual property protection and model ownership verification without requiring modifications during training.
+We have shown that training induces an intrinsic fingerprint in neural network weights: the diagonal-dominance structure of residual-branch weight products. This fingerprint emerges from gradient descent enforcing dynamical isometry and thus applies retroactively to any already-deployed model, enabling practical applications such as intellectual property protection and model ownership verification without requiring modifications during training.
 
 Our empirical evaluation demonstrates the method's reliability and scope. Diagonal-dominance Hungarian matching achieves 100\% pairing accuracy on GPT-2 models from 124M to 1.5B parameters, ViT-B/16, ConvNeXt-T, and across transformer families---encoder-only BERT-base and SwiGLU+GQA Mistral-7B---with signal strength scaling as $O(\sqrt{d})$ consistent with our theoretical analysis. On ImageNet ResNets with BatchNorm, architecture-aware factorization recovers 91--100\% of correct pairs, with accuracy correlating to the number of residual blocks per stage---deeper stages yield stronger signal. The fingerprint remains robust across 21 attack configurations, degrading only when perturbations exceed approximately 20\% relative magnitude, at which point model accuracy itself collapses. Section~\ref{sec:limitations} delineates the boundaries: the fingerprint establishes block-level identity within a model rather than run-level provenance, assumes the verifier knows the architecture, and has not yet been stress-tested against function-preserving structured attacks.
 
-Future work could extend the theoretical framework to non-residual architectures, develop cryptographic protocols that leverage these fingerprints for zero-knowledge ownership proofs, quantify adversarial budgets required to mask the trace pattern, and investigate whether similar emergent signatures arise from other optimizer families or normalization schemes.
+Future work could extend the theoretical framework to non-residual architectures, develop cryptographic protocols that leverage these fingerprints for zero-knowledge ownership proofs, quantify adversarial budgets required to mask the trace pattern, and investigate whether similar emergent fingerprints arise from other optimizer families or normalization schemes.
 
 %\acks{Acknowledgements should go at the end, before appendices and references. You can uncomment this for the camera-ready version on paper acceptance.}
 
