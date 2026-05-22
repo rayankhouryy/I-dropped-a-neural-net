@@ -1,0 +1,50 @@
+{
+  "experiments": [
+    {
+      "scenario": "honest_prover_honest_verifier",
+      "success": true,
+      "reason": "All checks passed",
+      "dd_scores": [
+        0.8352432964580256,
+        1.5675050652106024,
+        0.9822833556479328,
+        1.3375559082930448,
+        1.714211169071475
+      ]
+    },
+    {
+      "scenario": "fine_tuned_model",
+      "success": false,
+      "reason": "Block 8: E_hash mismatch",
+      "expected": "FAIL (weights changed)"
+    },
+    {
+      "scenario": "different_training_run",
+      "success": false,
+      "reason": "Block 8: E_hash mismatch",
+      "expected": "FAIL (different E matrices)"
+    },
+    {
+      "scenario": "distilled_model",
+      "success": false,
+      "reason": "Block 8: E_hash mismatch",
+      "expected": "FAIL (E not preserved through distillation)"
+    },
+    {
+      "scenario": "random_weights",
+      "success": false,
+      "reason": "Block 8: E_hash mismatch",
+      "expected": "FAIL (E_hash mismatch or DD score too low)"
+    }
+  ],
+  "summary": {
+    "total_experiments": 5,
+    "passed": 1,
+    "failed": 4,
+    "honest_verification_passed": true,
+    "adversarial_attacks_blocked": true,
+    "protocol_secure": true
+  },
+  "timestamp": "2026-05-22T13:26:12.083359",
+  "elapsed_seconds": 47.79601693153381
+}
