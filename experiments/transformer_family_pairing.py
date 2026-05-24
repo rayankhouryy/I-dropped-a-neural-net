@@ -486,7 +486,7 @@ def aggregate_random(per_seed, paths):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', default='bert-base',
-                    choices=['bert-base', 'mistral-7b', 'llama2-7b', 'llama2-7b-chat', 'tinyllama', 'qwen2.5-7b'],
+                    choices=['bert-base', 'mistral-7b', 'llama2-7b', 'llama2-7b-chat', 'tinyllama', 'qwen2.5-7b', 'deepseek-r1-distill-llama-8b'],
                     help='which model to evaluate')
     ap.add_argument('--seeds-random', type=int, default=3)
     args = ap.parse_args()
@@ -522,6 +522,12 @@ def main():
                           family='Qwen2.5',
                           use_safetensors_direct=True)
         out_key = 'qwen2_5_7b'
+    elif args.model == 'deepseek-r1-distill-llama-8b':
+        out = run_mistral(args.seeds_random,
+                          model_name='deepseek-ai/DeepSeek-R1-Distill-Llama-8B',
+                          family='DeepSeek-R1-Distill-Llama-8B',
+                          use_safetensors_direct=True)
+        out_key = 'deepseek_r1_distill_llama_8b'
 
     out_path = f'results/transformer_family_pairing_{out_key}.json'
     with open(out_path, 'w') as f:
