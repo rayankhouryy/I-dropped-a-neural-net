@@ -1,0 +1,23 @@
+{
+  "model": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
+  "family": "DeepSeek-R1-Distill-Llama-8B",
+  "arch": "decoder-only, causal LM, SwiGLU MLP, GQA 4:1, RMSNorm; LLaMA-3.1-8B base distilled from R1 reasoning traces",
+  "n_layers": 32,
+  "d_model": 4096,
+  "n_heads": 32,
+  "n_kv_heads": 8,
+  "d_ff": 14336,
+  "paths_tested": ["mlp_down_up", "mlp_down_gate", "mlp_joint", "attn_WO_WV", "attn_WQ_WK"],
+  "_partial": true,
+  "_partial_note": "Slim JSON reconstructed from run log; trained-paths only. The random-init scoring was attempted on a 32 GB-RAM Windows laptop but progressed at ~1 path per 18h overnight due to memory paging contention (process started 2026-05-24 12:32, killed 2026-05-25 09:08 after only 2 of 5 random paths completed). Trained results below are exact. Random baselines for DeepSeek can be assumed at the ~3-9% chance level consistent with all five other transformer families in this study (BERT 3-6%, Mistral 1-2%, LLaMA-2 3-9%, LLaMA-2-chat 3-9%, Qwen2.5 4-7%).",
+  "trained": {
+    "mlp_down_up":   {"n": 32, "pair_acc": 1.0,  "auc": 1.000, "pair_sep":  1.469, "trace": {"frac_negative": 0.19}},
+    "mlp_down_gate": {"n": 32, "pair_acc": 0.84, "auc": 0.927, "pair_sep": -0.036, "trace": {"frac_negative": 0.41}},
+    "mlp_joint":     {"n": 32, "pair_acc": 1.0,  "auc": 1.000, "pair_sep":  0.733},
+    "attn_WO_WV":    {"n": 32, "pair_acc": 1.0,  "auc": 1.000, "pair_sep":  0.280, "trace": {"frac_negative": 0.16}},
+    "attn_WQ_WK":    {"n": 32, "pair_acc": 1.0,  "auc": 1.000, "pair_sep":  0.045, "trace": {"frac_negative": 0.06}},
+    "_meta": {"gqa_expanded": true, "n_heads": 32, "n_kv_heads": 8}
+  },
+  "random_per_seed": [],
+  "random_aggregate": {}
+}
