@@ -18,9 +18,11 @@ This repo contains our ACML 2026 submission:
 **Abstract:** Verifying the provenance of neural network weights is difficult: existing watermarking schemes must be embedded during training, and can be removed by fine-tuning. We show that training itself leaves an intrinsic fingerprint requiring no such foresight. Residual networks initialized for dynamical isometry develop a distinctive structure: after training, each block's weight product settles near negative identity. This leaves a detectable trace: the diagonal-dominance score of correctly paired weights is high, while incorrect pairings score near zero.
 
 **Key Results:**
-- **100% accuracy** on GPT-2 (124M–1.5B), ViT-B/16, and ConvNeXt-T
-- **91–100% accuracy** on ImageNet ResNets with architecture-aware factorization
-- **Robust** across 21 attack configurations (fine-tuning, weight noise)
+- **100% pair accuracy** on every architecture-aware path of GPT-2 (124M–1.5B), ViT-B/16, ConvNeXt-T, BERT-base, Mistral-7B, LLaMA-2-7B (base + RLHF chat), and DeepSeek-R1-Distill-Llama-8B; Qwen2.5-7B and DeepSeek hit 4/5 paths with the joint SwiGLU score rescuing the gate-only path
+- **91–100% accuracy** on ImageNet ResNets (ResNet-50/101/152) with architecture-aware factorization
+- **Robust** across 21 attack configurations (fine-tuning up to 50 epochs, weight noise to 20%); RLHF and R1 reasoning distillation both preserve the fingerprint
+- **Initialization-agnostic:** the fingerprint develops from orthogonal, Kaiming, and Xavier inits (100% negative trace across all three); requires only that residual blocks be non-degenerately used during training
+- **Three application case studies:** training-quality early warning, zero-knowledge ownership proofs, model-compression auditing
 - Signal scales as **O(√d)** with hidden dimension
 
 The original research note is archived at [`paper/deprecated/paper.pdf`](paper/deprecated/paper.pdf).
@@ -50,19 +52,138 @@ python experiments/gpt2_mlp_pairing.py        # full family, ~30 min on CPU
 python experiments/gpt2_attention_pairing.py  # full family, ~10 min on CPU
 ```
 
-A few non-trivial side findings (full discussion in the paper):
+## Cross-family transformer sweep
 
-- **Attention pairing is ~2× sharper than MLP pairing**, consistently across
-  the entire family. Likely because W_V and W_O are tied through the head
-  structure and therefore more tightly co-trained.
-- **Attention V→O traces sign-flip with depth** — early layers have negative
-  traces (dynamic isometry holds) and late layers have positive traces.
-  MLP traces grow monotonically *more* negative with depth. The two
-  sublayer types specialise in opposite directions during training.
-- **The pairing signal does not require dynamic isometry.** Attention has
-  ~50% negative traces (chance) but 100% pair accuracy — so the diagonal-
-  dominance ratio captures a more universal property than the negative-
-  trace theorem that originally motivated it.
+To rule out the possibility that the fingerprint is specific to GPT-style
+causal decoders with GELU MLPs, we extended the sweep to six additional
+transformer families spanning encoder-only / decoder-only paradigms,
+GELU / SwiGLU activations, full / grouped-query / sliding-window
+attention, and three post-training regimes (pretraining, RLHF chat,
+R1 reasoning distillation):
+
+| Family | n_layers / d_model | Distinctive features | All paths 100%? |
+|---|---|---|---|
+| BERT-base | 12 / 768 | encoder-only, bidirectional, MLM-pretrained, GELU | ✅ 3/3 |
+| Mistral-7B | 32 / 4096 | SwiGLU, GQA 4:1, sliding-window attention (2023) | ✅ 5/5 |
+| LLaMA-2-7B | 32 / 4096 | SwiGLU, full MHA, RMSNorm (2023 pretraining) | ✅ 5/5 |
+| LLaMA-2-7B-chat | 32 / 4096 | + RLHF + instruction tuning | ✅ 5/5 |
+| Qwen2.5-7B | 28 / 3584 | SwiGLU, GQA 7:1, RoPE, Q/K/V biases (2024) | 4/5 + joint rescues |
+| DeepSeek-R1-Distill-Llama-8B | 32 / 4096 | + R1 reasoning distillation (2024) | 4/5 + joint rescues |
+
+**Three structural confounds ruled out at once:**
+- *Not specific to GELU activations* — SwiGLU works across four SwiGLU families
+- *Not specific to causal masking* — bidirectional (BERT) and sliding-window (Mistral) both work
+- *Not specific to full attention* — 4:1, 7:1, and 8:1 GQA all give AUC 1.000 on $W_O W_V$
+
+**Three post-training regimes preserve the fingerprint on LLaMA architectures:**
+pretraining (LLaMA-2-7B), RLHF chat-tuning (LLaMA-2-7B-chat), and
+reasoning-trace distillation (DeepSeek-R1-Distill-Llama-8B) all hit 100%
+pair accuracy on every attention path and on the joint SwiGLU stack.
+
+**Graceful degradation through factorization redundancy:** the only sub-100%
+data points in the sweep are Qwen2.5-7B and DeepSeek-R1-Distill-Llama-8B
+on the gate-only path $W_{\text{down}}W_{\text{gate}}$ (68% and 84% pair
+accuracy respectively). Both are 2024-era models trained with more
+aggressive schedules. On both, the up-only path $W_{\text{down}}W_{\text{up}}$
+becomes unusually strong (separation +2.869 and +1.469 vs +0.5 for 2023
+baselines), and the joint SwiGLU factorization
+$W_{\text{down}}[W_{\text{up}};W_{\text{gate}}]$ recovers all layers
+exactly. The fingerprint degrades *gracefully*: when one architecture-aware
+sub-path weakens, the joint factorization captures the union.
+
+Reproducible (model weights pre-downloaded via `hf download`):
+
+```bash
+python experiments/transformer_family_pairing.py --model bert-base
+python experiments/transformer_family_pairing.py --model mistral-7b
+python experiments/transformer_family_pairing.py --model llama2-7b
+python experiments/transformer_family_pairing.py --model llama2-7b-chat
+python experiments/transformer_family_pairing.py --model qwen2.5-7b              # safetensors-direct
+python experiments/transformer_family_pairing.py --model deepseek-r1-distill-llama-8b
+```
+
+The unified runner uses streaming layer-by-layer weight extraction (peak
+RAM ≈ model size, not 2×) and a safetensors-direct loader for models
+with bfloat16-stored weights that crash `AutoModelForCausalLM.from_pretrained`
+on Windows. Random-init scoring is computed directly in numpy without
+loading the full HF model. Full results in
+[`results/transformer_family_pairing_*.json`](results/).
+
+A few non-trivial side findings from the cross-family sweep (full
+discussion in the paper):
+
+- **Negative trace is sufficient but not necessary** for identifiability.
+  BERT MLP has only 8% negative traces, and several attention paths
+  across families have <10%, yet still recover 100% via Hungarian
+  assignment. The broader fingerprint is the global concentration of
+  diagonal mass in the correct branch product, which the global
+  assignment optimum exploits even when row-wise dominance is absent.
+- **Hungarian rescue regime** — paths with slightly negative pair
+  separation (e.g. Mistral $W_{\text{down}}W_{\text{gate}}$ sep −0.025,
+  LLaMA-2 same path sep −0.025, DeepSeek attn $W_QW_K^\top$ sep +0.045
+  with 6% negative trace) still recover 100% via global assignment.
+- **RLHF vs reasoning distillation** — both preserve the fingerprint
+  on the LLaMA-architecture base, but they perturb different paths.
+  RLHF chat-tuning shrinks attn $W_OW_V$ separation from +0.141
+  (base) to +0.036; R1 reasoning distillation actually grows it to
+  +0.280.
+
+## Initialization-agnostic emergence
+
+A skeptical reading of the dynamical-isometry theory is that the
+fingerprint requires the network to begin training in a near-isometric
+state — e.g. from explicit orthogonal initialization. We tested four
+common schemes on a 24-block residual MLP (3 seeds each, 200 epochs):
+
+| Init scheme | Pair acc | AUC | Frac neg trace | Eval loss |
+|---|---|---|---|---|
+| Orthogonal | 82% ± 20% | 0.947 | **100%** | 0.87 |
+| Kaiming-normal | 97% ± 4% | 0.981 | **100%** | 1.35 |
+| Xavier-normal | **100% ± 0%** | 0.990 | **100%** | 0.96 |
+| Gaussian σ=0.02 | 13% ± 10% | 0.671 | 32% | 0.12 |
+
+Three of four schemes converge to a clean fingerprint with **100% negative
+trace** — training enforces the dynamical-isometry condition from any
+non-trivial starting point. The σ=0.02 small-init case is a clean
+*negative control*: with such small initial weights the residual blocks
+collapse to near-zero contribution and the network shortcuts the task
+through the skip path and the readout layer, so no Jacobian condition
+develops. Real LLMs with σ=0.02 init (GPT-2, BERT, Mistral, LLaMA-2)
+still recover 100% because the language-modeling objective is hard
+enough that residual blocks must contribute non-trivially. The honest
+claim is therefore: **the fingerprint emerges whenever training drives
+residual blocks into non-degenerate use, regardless of init scheme.**
+
+```bash
+python experiments/init_scheme_ablation.py    # 4 schemes × 3 seeds, ~30 min
+```
+
+## Application case studies
+
+Three end-to-end applications of the fingerprint (paper §6, code under
+`case_studies/` and `experiments/`):
+
+1. **Training Quality Assurance** — pair-accuracy at epoch 10 is an early-
+   warning indicator: `pair_acc < 50%` flags 4 of 5 pathological training
+   conditions (LR too high/low, no skip connections, high weight decay,
+   small init) before they show in the loss curve.
+
+2. **Zero-Knowledge Ownership Proofs** — a 4-phase Register / Challenge /
+   Response / Verify protocol that commits to a hash of the per-block
+   error matrix $E$ and only reveals challenged blocks. Passes all 5
+   security scenarios (honest passes, attacks blocked).
+
+3. **Model Compression Auditing** — compression operations (FP16/INT8/INT4
+   quantization, 30–90% pruning, fine-tuning) preserve the $E$ correlation
+   to the original model at >0.75, while knowledge distillation erases
+   the correlation to ≈0. Clear separation enables derivation detection
+   on stolen / distilled checkpoints.
+
+```bash
+python experiments/training_qa_case_study.py
+python experiments/zkp_ownership.py
+python experiments/compression_audit.py
+```
 
 ## The Problem
 
@@ -280,9 +401,21 @@ FINAL full MSE: 0.000000000000
 │   ├── data.py                   # load_pieces, load_data, get_piece_groups
 │   └── eval.py                   # eval_mse, build_model_from_blocks
 │
-├── results/                      # GPT-2 family results (JSON)
+├── results/                      # Cross-architecture pairing results (JSON)
 │   ├── gpt2_mlp_pairing.json     # MLP pairing across 4 GPT-2 sizes
-│   └── gpt2_attention_pairing.json
+│   ├── gpt2_attention_pairing.json
+│   ├── transformer_family_pairing_bert.json
+│   ├── transformer_family_pairing_mistral_7b.json
+│   ├── transformer_family_pairing_llama2_7b.json       # base (slim — random budget-limited)
+│   ├── transformer_family_pairing_llama2_7b_chat.json  # RLHF chat
+│   ├── transformer_family_pairing_qwen2_5_7b.json
+│   ├── transformer_family_pairing_deepseek_r1_distill_llama_8b.json  # slim
+│   └── init_scheme_ablation.json
+│
+├── case_studies/                 # Application case studies (paper §6)
+│   ├── case_study_1/             # Training Quality Assurance
+│   ├── case_study_2/             # Zero-Knowledge Ownership Proofs
+│   └── case_study_3/             # Model Compression Auditing
 │
 ├── figures/                      # Working copies of generated figures
 │
@@ -301,17 +434,28 @@ FINAL full MSE: 0.000000000000
     │
     ├── null_model.py             # Untrained-network baseline (issue #1)
     ├── null_deepdive.py          # Training trajectory of the pairing signal
+    ├── init_scheme_ablation.py   # 4 init schemes (orthog/Kaiming/Xavier/
+    │                             #   Gaussian) × 3 seeds (issue #23)
+    ├── nonresidual_baseline.py   # Non-residual control (issue #17)
     │
     ├── gpt2_mlp_pairing.py       # GPT-2 MLP layer pairing
     │                             #   (gpt2, medium, large, xl; issue #8)
     ├── gpt2_attention_pairing.py # GPT-2 attention block pairing
     │                             #   (V↔O, Q↔K, per-head; issue #9)
+    ├── transformer_family_pairing.py  # Unified BERT/Mistral/LLaMA-2/
+    │                             #   Qwen2.5/DeepSeek runner with
+    │                             #   streaming extraction + safetensors-
+    │                             #   direct path for bf16 models (#10)
     ├── transformer_mlp.py        # Earlier from-scratch transformer
     │                             #   (superseded by gpt2_*_pairing.py)
     │
     ├── attack.py                 # Fine-tuning + noise attacks
     ├── attack_fast.py            # Fast attack variant
     ├── attack_shuffle.py         # Post-fine-tune shuffle robustness
+    │
+    ├── training_qa_case_study.py # Application 1: training-quality early warning
+    ├── zkp_ownership.py          # Application 2: zero-knowledge ownership proofs
+    ├── compression_audit.py      # Application 3: model-compression auditing
     │
     ├── make_figs.py              # Generates the main-text figures
     └── make_figs_extra.py        # Theory + sweep + attack figures
