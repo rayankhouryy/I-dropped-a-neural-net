@@ -18,9 +18,10 @@ This repo contains our AAAI 2026 submission:
 **Abstract:** Verifying the provenance of neural network weights is difficult: existing watermarking schemes must be embedded during training, and can be removed by fine-tuning. We show that training itself leaves an intrinsic fingerprint requiring no such foresight. Residual networks initialized for dynamical isometry develop a distinctive structure: after training, each block's weight product settles near negative identity. This leaves a detectable trace: the diagonal-dominance score of correctly paired weights is high, while incorrect pairings score near zero.
 
 **Key Results:**
-- **100% pair accuracy** on every architecture-aware path of GPT-2 (124M–1.5B), ViT-B/16, ConvNeXt-T, BERT-base, Mistral-7B, LLaMA-2-7B (base + RLHF chat), and DeepSeek-R1-Distill-Llama-8B; Qwen2.5-7B and DeepSeek hit 4/5 paths with the joint SwiGLU score rescuing the gate-only path
+- **100% pair accuracy** on every architecture-aware path of GPT-2 (124M–1.5B), ViT-B/16, ConvNeXt-T, BERT-base, Mistral-7B, LLaMA-2-7B (base + RLHF chat), DeepSeek-R1-Distill-Llama-8B, and Whisper (tiny/base/small, encoder + decoder); Qwen2.5-7B and DeepSeek hit 4/5 paths with the joint SwiGLU score rescuing the gate-only path
 - **91–100% accuracy** on ImageNet ResNets (ResNet-50/101/152) with architecture-aware factorization
 - **Robust** across 21 attack configurations (fine-tuning up to 50 epochs, weight noise to 20%); RLHF and R1 reasoning distillation both preserve the fingerprint
+- **Model-level lineage detection: AUROC = 1.000** on both synthetic depth-24 MLPs (252 reference–suspect pairs across 5 attack types) *and* real CNNs on natural images (ResNet-18 / CIFAR-10, 22 descendants vs 6 same-arch independents). Worst-case descendant ($80\%$ pruning) still beats best independent by ~170× separation
 - **Initialization-agnostic:** the fingerprint develops from orthogonal, Kaiming, and Xavier inits (100% negative trace across all three); requires only that residual blocks be non-degenerately used during training
 - **Three application case studies:** training-quality early warning, zero-knowledge ownership proofs, model-compression auditing
 - Signal scales as **O(√d)** with hidden dimension
@@ -69,11 +70,13 @@ R1 reasoning distillation):
 | LLaMA-2-7B-chat | 32 / 4096 | + RLHF + instruction tuning | ✅ 5/5 |
 | Qwen2.5-7B | 28 / 3584 | SwiGLU, GQA 7:1, RoPE, Q/K/V biases (2024) | 4/5 + joint rescues |
 | DeepSeek-R1-Distill-Llama-8B | 32 / 4096 | + R1 reasoning distillation (2024) | 4/5 + joint rescues |
+| Whisper-tiny/base/small | 4–12 / 384–768 | encoder + decoder, cross-attention, mel-spectrogram input (speech) | ✅ 3/3 in **both** encoder and decoder, all sizes |
 
-**Three structural confounds ruled out at once:**
+**Four structural confounds ruled out at once:**
 - *Not specific to GELU activations* — SwiGLU works across four SwiGLU families
 - *Not specific to causal masking* — bidirectional (BERT) and sliding-window (Mistral) both work
 - *Not specific to full attention* — 4:1, 7:1, and 8:1 GQA all give AUC 1.000 on $W_O W_V$
+- *Not specific to text or self-attention* — Whisper's speech encoder + cross-attention decoder both fingerprint at 100% on MLP, V/O, and Q/K paths across tiny/base/small
 
 **Three post-training regimes preserve the fingerprint on LLaMA architectures:**
 pretraining (LLaMA-2-7B), RLHF chat-tuning (LLaMA-2-7B-chat), and
@@ -100,6 +103,7 @@ python experiments/transformer_family_pairing.py --model llama2-7b
 python experiments/transformer_family_pairing.py --model llama2-7b-chat
 python experiments/transformer_family_pairing.py --model qwen2.5-7b              # safetensors-direct
 python experiments/transformer_family_pairing.py --model deepseek-r1-distill-llama-8b
+python experiments/whisper_pairing.py                                            # tiny + base + small
 ```
 
 The unified runner uses streaming layer-by-layer weight extraction (peak
@@ -183,6 +187,75 @@ Three end-to-end applications of the fingerprint (paper §6, code under
 python experiments/training_qa_case_study.py
 python experiments/zkp_ownership.py
 python experiments/compression_audit.py
+```
+
+## Model-level lineage detection
+
+The pair-accuracy fingerprint identifies *which weights pair with which inside
+a single model*. The natural follow-up: can the same residual-signature
+machinery decide *whether one model descends from another*? We answer this on
+two benchmarks.
+
+**Benchmark 1 — Synthetic depth-24 residual MLPs.** Each reference has 75
+descendants spanning 5 attack types (same-target fine-tune, target-shift
+fine-tune, weight noise 1–15%, magnitude pruning 10–85%, fake-int8
+quantization at 16–256 levels) and is paired against 67 non-descendants
+(45 same-task independents, 5 different-task models, 5 random inits, 3
+distilled students per reference). Across 252 reference–suspect pairs:
+
+| Metric | Value |
+| --- | --- |
+| **AUROC** | **1.000** |
+| **AUPRC** | 0.987 |
+| **TPR @ 1% FPR** | **100%** |
+| **TPR @ 10% FPR** | 100% |
+| Descendant minimum $\mathcal{L}$ | 0.81 |
+| Non-descendant maximum $\mathcal{L}$ | 0.20 |
+| Distilled student false positives | 1/9 at 1% FPR (function-similar but weight-fresh) |
+
+The score also recovers multi-generation ancestry on branching trees:
+parent (0.95) > grandparent (0.91) > sibling (0.90) > uncle (0.87) >
+cousin (0.85) ≫ independent (0.08). Cousins that diverged at a common
+ancestor through entirely different fine-tune branches still inherit a
+detectable shared residual signature.
+
+**Benchmark 2 — ResNet-18 / CIFAR-10 (real CNN, natural images).** Two
+ResNet-18 references and three same-architecture / different-seed
+independents trained from scratch on CIFAR-10. Branch products extracted
+per BasicBlock after BatchNorm folding, with channel-sum projection of the
+3×3 kernels (block dims are heterogeneous across stages: [64, 64, 128, 256,
+512], so Hungarian alignment is replaced by canonical block-index matching).
+Each reference yields 11 cheap descendants (no extra training): Gaussian
+weight noise at $\sigma_{\mathrm{rel}} \in \{1, 2, 5, 10\}\%$, magnitude
+pruning at $\{20, 40, 60, 80\}\%$ sparsity, fake-int8 quantization at
+$\{16, 64, 256\}$ levels.
+
+| Metric | Value |
+| --- | --- |
+| **AUROC** | **1.000** |
+| **TPR @ 1% FPR** | **100%** |
+| Descendant $\mathcal{L}$ — noise (mean / min) | 0.983 / 0.916 |
+| Descendant $\mathcal{L}$ — quantization (mean / min) | 0.954 / 0.854 |
+| Descendant $\mathcal{L}$ — pruning (mean / min) | 0.864 / 0.695 |
+| Independent baseline (mean / max) | **0.0014 / 0.004** |
+| Worst-descendant / best-independent gap | ~170× |
+
+The same residual-signature mechanism works on the convolutional branch
+product, on natural images, with heterogeneous stage dimensions —
+confirming that lineage discrimination is not a synthetic-MLP artifact.
+
+**Adaptive evasion is hard.** Function-preserving per-block hidden-unit
+permutations and per-block orthogonal rotations are mathematically exact
+invariants of $W_{\mathrm{out}} W_{\mathrm{in}}$, so both give
+$\mathcal{L}(A, T(A)) = 1.0$ to numerical precision (verified empirically).
+Direct gradient-based suppression of $\mathcal{L}$ traces a Pareto frontier
+between utility-preservation and fingerprint suppression; the score can
+only be driven below threshold by destroying model utility.
+
+```bash
+python experiments/lineage_detection.py             # synthetic-MLP benchmark
+python experiments/lineage_phase2_resnet.py         # ResNet-18 / CIFAR-10, ~1 hour on CPU
+python experiments/lineage_phase2_resnet.py --reuse_ckpts   # cheap re-score from saved ckpts
 ```
 
 ## The Problem
@@ -406,6 +479,8 @@ FINAL full MSE: 0.000000000000
 │   ├── transformer_family_pairing_llama2_7b_chat.json  # RLHF chat
 │   ├── transformer_family_pairing_qwen2_5_7b.json
 │   ├── transformer_family_pairing_deepseek_r1_distill_llama_8b.json  # slim
+│   ├── whisper_pairing.json      # Whisper tiny/base/small (encoder + decoder)
+│   ├── lineage_phase2_resnet18_cifar.json  # ResNet-18/CIFAR-10 lineage POC
 │   └── init_scheme_ablation.json
 │
 ├── case_studies/                 # Application case studies (paper §6)
@@ -442,6 +517,14 @@ FINAL full MSE: 0.000000000000
     │                             #   Qwen2.5/DeepSeek runner with
     │                             #   streaming extraction + safetensors-
     │                             #   direct path for bf16 models (#10)
+    ├── whisper_pairing.py        # Whisper encoder + decoder pairing
+    │                             #   (tiny/base/small, MLP/V-O/Q-K; #10)
+    ├── lineage_detection.py      # Core residual-signature lineage metric
+    │                             #   (residual_signature, lineage_score,
+    │                             #    evaluate_lineage; pure numpy; #30)
+    ├── lineage_phase2_resnet.py  # Phase 2: ResNet-18/CIFAR-10 lineage POC
+    │                             #   (BN-folded BasicBlock products,
+    │                             #    --reuse_ckpts for cheap re-scoring; #30)
     ├── transformer_mlp.py        # Earlier from-scratch transformer
     │                             #   (superseded by gpt2_*_pairing.py)
     │
