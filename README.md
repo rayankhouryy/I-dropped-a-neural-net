@@ -9,11 +9,11 @@ The solver reconstructs the network in under 30 seconds, with final
 
 ## Paper
 
-This repo contains our ACML 2026 submission:
+This repo contains our AAAI 2026 submission:
 
 > **Training Leaves Traces: Diagonal Dominance as a Neural Network Fingerprint.**
-> ACML 2026.
-> [`paper/ACML/paper_acml.pdf`](paper/ACML/paper_acml.pdf) · source: [`paper/ACML/paper_acml.tex`](paper/ACML/paper_acml.tex)
+> AAAI 2026.
+> [`paper/AAAI/AnonymousSubmission/LaTeX/anonymous-submission-latex-2026.pdf`](paper/AAAI/AnonymousSubmission/LaTeX/anonymous-submission-latex-2026.pdf)
 
 **Abstract:** Verifying the provenance of neural network weights is difficult: existing watermarking schemes must be embedded during training, and can be removed by fine-tuning. We show that training itself leaves an intrinsic fingerprint requiring no such foresight. Residual networks initialized for dynamical isometry develop a distinctive structure: after training, each block's weight product settles near negative identity. This leaves a detectable trace: the diagonal-dominance score of correctly paired weights is high, while incorrect pairings score near zero.
 
@@ -25,7 +25,7 @@ This repo contains our ACML 2026 submission:
 - **Three application case studies:** training-quality early warning, zero-knowledge ownership proofs, model-compression auditing
 - Signal scales as **O(√d)** with hidden dimension
 
-The original research note is archived at [`paper/deprecated/paper.pdf`](paper/deprecated/paper.pdf).
+Earlier versions are archived at [`paper/deprecated/`](paper/deprecated/).
 
 ## Generalization beyond the puzzle
 
@@ -380,12 +380,8 @@ FINAL full MSE: 0.000000000000
 ├── requirements.txt
 │
 ├── paper/
-│   ├── ACML/
-│   │   ├── paper_acml.tex        # ACML 2026 submission source
-│   │   └── paper_acml.pdf        # Compiled PDF
-│   ├── deprecated/
-│   │   ├── paper.tex             # Original research note (archived)
-│   │   └── paper.pdf             # Compiled PDF
+│   ├── AAAI/                     # AAAI 2026 submission
+│   ├── deprecated/               # Archived versions (ACML, original note)
 │   └── figures/                  # Figures used in the paper
 │
 ├── puzzle_artifacts/
