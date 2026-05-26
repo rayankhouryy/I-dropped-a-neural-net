@@ -392,6 +392,7 @@ LLaMA-2-7B         & SwiGLU+full MHA, pretrain & 32 & MLP$\times$3+V/O+Q/K & $\m
 LLaMA-2-7B-chat    & +RLHF instruction tuning  & 32 & MLP$\times$3+V/O+Q/K & $\mathbf{100\%}$ & 0.96--1.00 \\
 Qwen2.5-7B         & SwiGLU+GQA(7:1)+biases, 2024 & 28 & MLP$\times$3+V/O+Q/K & 4/5 + joint & 0.94--1.00 \\
 DeepSeek-R1-Distill-Llama-8B & +R1 reasoning distillation, 2024 & 32 & MLP$\times$3+V/O+Q/K & 4/5 + joint & 0.93--1.00 \\
+Whisper-tiny/base/small & speech enc--dec, GELU & 4+4 to 12+12 & MLP+V/O+Q/K & $\mathbf{100\%}$ & 0.85--1.00 \\
 \midrule
 ResNet-50/101/152  & BatchNorm, Bottleneck $W_3 W_2 W_1$ & up to 35 blocks/stage & triple product & $91$--$100\%$ & 0.96--1.00 \\
 \bottomrule
@@ -401,7 +402,7 @@ ResNet-50/101/152  & BatchNorm, Bottleneck $W_3 W_2 W_1$ & up to 35 blocks/stage
 \end{table*}
 
 \paragraph{Three architectural confounds ruled out at once.}
-The cross-family sweep rules out (i) GELU-activation specificity, since SwiGLU works across four SwiGLU families; (ii) causal-mask specificity, since BERT's bidirectional attention and Mistral's sliding-window attention both work; and (iii) full-attention specificity, since 4:1, 7:1, and 8:1 grouped-query attention all give AUC 1.000 on $W_O W_V$.
+The cross-family sweep rules out (i) GELU-activation specificity, since SwiGLU works across four SwiGLU families; (ii) causal-mask specificity, since BERT's bidirectional attention and Mistral's sliding-window attention both work; and (iii) full-attention specificity, since 4:1, 7:1, and 8:1 grouped-query attention all give AUC 1.000 on $W_O W_V$. Whisper extends the sweep to the speech modality, adding a fourth confound rejection: encoder--decoder cross-attention. Across Whisper-tiny ($n{=}4$), -base ($n{=}6$), and -small ($n{=}12$), both the bidirectional encoder \emph{and} the causal decoder achieve $100\%$ pair accuracy on every path (MLP, $W_O W_V$, and the $Q$--$K^T$ control)---the fingerprint is independent of modality and of the encoder--decoder architectural split.
 
 \paragraph{Post-training regime invariance.}
 The LLaMA-architecture sub-comparison provides a three-regime ablation on identical residual block structure: pretraining (LLaMA-2-7B), RLHF chat tuning (LLaMA-2-7B-chat), and reasoning distillation from R1 (DeepSeek-R1-Distill-Llama-8B). All three preserve the fingerprint at $100\%$ pair accuracy on every attention path and on the joint SwiGLU stack, with $W_O W_V$ pair separation varying from $+0.141$ (base) to $+0.036$ (chat) to $+0.280$ (distill)---RLHF perturbs the attention output projection more than reasoning distillation, but neither destroys the fingerprint.
