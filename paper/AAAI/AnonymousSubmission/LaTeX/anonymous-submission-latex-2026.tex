@@ -1,0 +1,461 @@
+%File: anonymous-submission-latex-2026.tex
+\documentclass[letterpaper]{article}
+\usepackage[submission]{aaai2026}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage[hyphens]{url}
+\usepackage{graphicx}
+\urlstyle{rm}
+\def\UrlFont{\rm}
+\usepackage{natbib}
+\usepackage{caption}
+\frenchspacing
+\setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{enumitem}
+\usepackage{booktabs}
+
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+
+\pdfinfo{
+/TemplateVersion (2026.1)
+}
+
+\setcounter{secnumdepth}{2}
+
+\title{Training Leaves Traces: Weight-Level Model Provenance Without Watermarks}
+\author{Anonymous Submission}
+\affiliations{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Model provenance depends on external evidence---hashes, metadata, logs, or watermarks---which can fail when checkpoints are adapted or records are incomplete. We ask whether provenance can be inferred from weights alone: if a suspect checkpoint descends from a reference model, does training leave a persistent structural signal? We find that modern residual architectures exhibit such a signal. In a two-layer residual branch with input projection $W_{\mathrm{in}}$ and output projection $W_{\mathrm{out}}$, training couples paired matrices so that $W_{\mathrm{out}}W_{\mathrm{in}}$ exhibits a diagonal-dominance fingerprint: a signed, identity-like component absent from mismatched or random pairings. For deeper branches, we measure the trace on $M=W_K\cdots W_1$, formalize it with $s(M)=|\mathrm{tr}(M)|/\|M\|_F$, derive a separation margin, and compute cross-block score matrices that recover residual-branch correspondences and yield checkpoint-level ancestry evidence.
+
+Empirically, across X architectures, Y model families, Z post-training weight modifications, and N reference--suspect pairs, the fingerprint recovers X--Y\% residual-block correspondences and achieves X AUROC / Y\% TPR at Z\% FPR for descendant detection. It is absent at initialization, appears after training, strengthens with width, and persists under fine-tuning, quantization, pruning, weight noise, and LoRA-style adaptation. When perturbations substantially degrade the fingerprint, model utility also drops by X\%. Boundary cases clarify the signal: independently trained models do not falsely match, while distillation removes the trace despite functional imitation.
+\end{abstract}
+
+\section{Introduction}
+
+The open-weight ecosystem has grown explosively: Hugging Face now hosts nearly one million model repositories, with derivatives proliferating faster than originals~\citep{huggingface2024}. When Meta's LLaMA weights leaked in March 2023, the community produced instruction-tuned variants---Alpaca, Vicuna, Koala---within weeks, each costing under \$300 to create~\citep{touvron2023llama}. This rapid, low-cost adaptation means any widely-distributed checkpoint spawns hundreds of fine-tuned, merged, quantized, and renamed descendants whose lineage quickly becomes untraceable.
+
+Current approaches to model provenance rely on externally maintained evidence. Model cards document training datasets and licensing terms~\citep{mitchell2019model}; experiment tracking platforms such as MLflow and Weights \& Biases record artifacts and lineage graphs; cryptographic hashes provide integrity checks for unmodified files. For cases where theft is anticipated, watermarking methods embed ownership signals into network parameters~\citep{uchida2017embedding} or decision boundaries~\citep{adi2018turning} that can later be extracted to verify provenance.
+
+Yet each approach has fundamental limitations. Cryptographic hashes become invalid after any weight modification---including routine quantization or fine-tuning. Metadata and provenance logs can be falsified, lost, or simply never recorded. Watermarks require deliberate insertion before deployment and remain vulnerable to removal: a recent systematization found that no surveyed DNN watermarking scheme proved robust against fine-tuning, pruning, or model extraction attacks~\citep{lukas2022sok}. These limitations leave a critical gap: there is no established method to verify provenance for models released without embedded watermarks or whose external records are unavailable.
+
+Prior intrinsic fingerprinting methods have asked whether weight statistics---means, variances, or histogram features---can identify models~\citep{zheng2022fingerprinting,zhao2020shaping}, but these aggregate properties lack verification precision and are easily disrupted. Training dynamics research has established that gradient descent enforces near-orthogonal Jacobians in residual networks~\citep{pennington2017resurrecting,saxe2014exact}, yet this work focused on trainability, not on what structural traces the process leaves behind. We ask a different question: \emph{does training itself imprint a recoverable signature---not in aggregate statistics, but in the relational structure between paired weight matrices?}
+
+The answer is yes. In residual architectures, trained residual-branch products exhibit diagonal-dominant structure. This phenomenon emerges because residual blocks must maintain near-identity behavior for stable gradient flow---a requirement formalized as \emph{dynamical isometry}, where the input-output Jacobian's singular values concentrate near unity throughout training~\citep{pennington2017resurrecting,saxe2014exact}. For a residual block computing $x + W_{\mathrm{out}} \phi(W_{\mathrm{in}} x)$, this constraint forces the branch product toward a negative scaled identity: $W_{\mathrm{out}} W_{\mathrm{in}} \approx -\varepsilon I$~\citep{he2016deep}. We find this fingerprint is absent at initialization, emerges within the first five epochs of training, and yields a diagonal-dominance score that scales as $\Theta(\sqrt{d})$---separating correctly paired blocks from mismatched pairings by a margin that grows linearly with hidden dimension $d$.
+
+This trace enables \emph{passive} weight-level provenance verification: auditing whether a suspect checkpoint descends from a reference model without requiring watermarks, metadata, or cooperation from the original trainer. Unlike embedded watermarks that must be inserted before or during training, the diagonal-dominance fingerprint emerges from optimization itself and can be read retroactively from any residual model---including checkpoints deployed long before provenance verification was anticipated. The fingerprint maintains 100\% pair accuracy across 21 attack configurations (fine-tuning, quantization, pruning, weight noise up to ${\sim}20\%$), degrading only when perturbations also destroy model utility. Boundary cases clarify the signal's scope: independently trained models do not falsely match, while distillation removes the trace---correctly, since the method detects weight-level lineage rather than functional imitation.
+
+We make the following contributions:
+\begin{itemize}[nosep,leftmargin=*]
+\item \textbf{We formalize the diagonal-dominance signal and derive a separation margin that grows with width.} Building on \citet{park2026}'s observation that training induces negative diagonal structure in residual-branch products, we define the score $s(i,j) = |\mathrm{tr}(M)|/\|M\|_F$ and prove it achieves $\Theta(\sqrt{d})$ for correct pairs versus $\Theta(1/\sqrt{d})$ for mismatched pairs (Section~\ref{sec:diagonal-dominance}).
+\item \textbf{We develop a passive provenance verification protocol.} Cross-block score matrices combined with Hungarian matching recover residual-branch correspondences and yield checkpoint-level ancestry evidence from weights alone---without watermarks, metadata, or cooperation from the original trainer (Section~\ref{sec:verification}).
+\item \textbf{The fingerprint generalizes across architectures and survives post-training modification.} We validate across nine architecture families (GPT-2 to 1.5B, BERT, LLaMA, Mistral, Qwen, Gemma, ViT, Whisper, ResNet), demonstrate robustness under 21 attack configurations, and confirm via ablation that the signal requires both training and residual connections (Sections~\ref{sec:experiments}--\ref{sec:boundaries}).
+\end{itemize}
+
+\section{Background and Problem Setting}\label{sec:background}
+
+\subsection{Passive Model Provenance}
+
+We define \emph{passive model provenance} as follows: given a reference checkpoint $R$ and a suspect checkpoint $S$ with missing or untrusted metadata, determine whether $S$ shares weight-level lineage with $R$ after allowed post-training transformations. This is a \emph{white-box} verification task---the verifier has access to both sets of weights. The setting matches regulatory audits, model hub compliance checks, and ownership disputes where both parties can produce their checkpoints.
+
+The method detects \emph{weight-level lineage}, not behavioral equivalence. Two models share weight-level lineage if the suspect's parameters can be derived from the reference through transformations such as fine-tuning, pruning, or quantization---without retraining from scratch. This is distinct from functional equivalence, where models produce similar outputs regardless of whether their weights share any relationship. Model extraction attacks~\citep{tramer2016stealing} create functional copies with entirely fresh weights; such models are behaviorally similar but share no weight-level identity.
+
+Distilled models and independently trained functional copies are explicitly outside the positive guarantee. A student trained via knowledge distillation~\citep{hinton2015distilling} may replicate the teacher's behavior with high fidelity, but it evolves its weights through a separate optimization process that produces distinct structural fingerprints. This boundary is intentional: proving that weights were copied or derived requires distinguishing ``same functionality'' from ``same parameters (up to transformation).''
+
+\subsection{Limits of Existing Methods}
+
+Model provenance verification has relied on three families of approaches, each with fundamental limitations.
+
+\textbf{Cryptographic hashes} fail immediately upon any weight modification. The avalanche effect ensures that fine-tuning, pruning, or even numerical precision changes produce entirely different digests, providing no signal of derivation.
+
+\textbf{Metadata and logging systems}---model cards~\citep{mitchell2019model}, experiment trackers like MLflow and Weights \& Biases---require trusted provenance records that may be incomplete, falsified, or absent when models are redistributed outside controlled environments.
+
+\textbf{Watermarking methods} embed ownership signals into weights~\citep{uchida2017embedding,rouhani2019deepsigns} or train models to produce specific outputs on trigger inputs~\citep{adi2018turning,zhang2018protecting}. Both require forethought: the watermark must be inserted before training concludes, precluding retroactive verification of already-deployed models. A systematic evaluation found that no surveyed watermarking scheme is robust in practice against fine-tuning, pruning, and model extraction attacks~\citep{lukas2022sok}.
+
+\textbf{Output watermarking} systems such as SynthID~\citep{dathathri2024synthid} identify AI-generated content by embedding statistical signatures during generation, but address a fundamentally different question: they detect whether content was AI-generated, not whether one model's weights derive from another's.
+
+\textbf{Decision-boundary fingerprinting}~\citep{cao2021ipguard,lemerrer2020adversarial} identifies functional similarity via adversarial examples near classification boundaries, but cannot distinguish weight lineage: a distilled student may share decision surfaces while having entirely independent weights.
+
+The key differentiator of our approach: prior watermarking work asks how to \emph{insert or protect} an ownership signal. We ask whether training already \emph{leaves} a signal that can be read retroactively.
+
+\subsection{Residual Branch Products}
+
+Modern deep networks use \emph{residual connections}---shortcuts that allow information to bypass layers---to enable stable training of very deep architectures~\citep{he2016deep}. A residual block computes $x' = x + F(x)$, where $x$ is the input and $F$ is the residual branch function. For these blocks to maintain stable gradient flow, the Jacobian $J = I + J_F$ must remain close to orthogonal throughout training---a condition formalized as \emph{dynamical isometry}~\citep{pennington2017resurrecting,saxe2014exact}.
+
+For a residual branch with $K$ linear transformations separated by nonlinearities, we define the \emph{residual branch product}:
+\begin{equation}
+M = W_K W_{K-1} \cdots W_1 \in \mathbb{R}^{d \times d}
+\end{equation}
+This product captures how the branch transforms the input space. The dynamical isometry constraint implies that $M$ should approximate a negative scaled identity: $M \approx -\varepsilon I$ for small $\varepsilon > 0$~\citep{tarnowski2019dynamical,de2020batch}.
+
+Table~\ref{tab:factorization} shows the architecture-aware factorization for common residual blocks. Using the correct factorization is critical: the naive endpoint product $W_3 W_1$ for Bottleneck ResNets (skipping the middle convolution) yields chance-level pairing accuracy, while the full triple product $W_3 W_2 W_1$ recovers 91--100\% of correct pairs.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lp{2.8cm}l@{}}
+\toprule
+Architecture & Residual Form & Product $M$ \\
+\midrule
+BasicBlock / MLP & $x + W_2 \phi(W_1 x)$ & $W_2 W_1$ \\
+Transformer MLP & $x + W_2 \phi(W_1 x)$ & $W_2 W_1$ \\
+Attention V/O & $x + W_O \mathrm{Attn}(W_V x)$ & $W_O W_V$ \\
+Attention Q/K & softmax$(QK^\top)$ & $W_Q W_K^\top$ \\
+Bottleneck & $x + W_3 \phi(W_2 \phi(W_1 x))$ & $W_3 W_2 W_1$ \\
+SwiGLU MLP & gated linear unit & $W_{\text{d}} W_{\text{u}}$ \\
+\bottomrule
+\end{tabular}
+\caption{Architecture-aware factorization for residual branch products.}
+\label{tab:factorization}
+\end{table}
+
+\section{Training-Induced Diagonal Dominance}\label{sec:diagonal-dominance}
+
+\subsection{Empirical Observation}
+
+Training a deep residual network imprints a characteristic structure on its weights. We first demonstrate this phenomenon empirically before formalizing it.
+
+\textbf{At initialization, no diagonal structure appears.} We compute the score matrix $s(i,j)$ for all pairs of input and output projections in a 48-block residual network. At epoch 0, the matrix shows no discernible pattern: Hungarian matching recovers only 6.25\% of correct pairs (chance is $1/48 \approx 2.1\%$), and pair separation---the gap between the worst correct-pair score and the best incorrect-pair score---is $-0.42$ (negative indicates no separation). Across seven initialization schemes---Kaiming uniform/normal, Xavier uniform/normal, Gaussian, uniform, and orthogonal---pair accuracy remains at chance level ($\leq 2.1\%$). Critically, orthogonal initialization provides dynamical isometry at initialization by construction~\citep{saxe2014exact}, yet shows \emph{zero} correct pairs before training, ruling out the hypothesis that near-orthogonal Jacobians alone create the fingerprint.
+
+\textbf{During training, diagonal structure emerges rapidly.} By epoch 5, the diagonal of $s(i,j)$ is fully separated and Hungarian matching recovers 100\% of correct pairs. The mean correct-pair score rises monotonically from 0.19 at epoch 0 to 2.07 at epoch 300, while the mean incorrect-pair score remains flat at ${\approx}0.16$---a $21\times$ ratio at convergence. The transformation occurs within the first few epochs, well before training loss plateaus.
+
+\textbf{The effect is not explained by matrix shape or architecture alone.} A null model with randomly initialized weights achieves only 6.25\% pair accuracy with negative separation, ruling out shape compatibility as an explanation. To confirm the fingerprint requires residual training specifically, we train a PlainNet---architecturally identical except that skip connections are removed. While both networks converge to similar evaluation loss (1.35 vs 1.56), ResNet achieves 100\% pair accuracy (AUC 0.98) with 100\% of correctly paired products exhibiting negative trace, while PlainNet achieves only 3\%---at the chance baseline of $1/24 \approx 4.2\%$---with AUC 0.51 and no discernible diagonal structure. The skip connection creates a functional constraint---the block must act as a near-identity perturbation to preserve gradient flow---that imprints the characteristic trace structure.
+
+\subsection{Diagonal-Dominance Fingerprint}
+
+For a candidate residual branch product $M_{ij} = W_{\mathrm{out}}^{(j)} W_{\mathrm{in}}^{(i)}$, we define the \emph{diagonal-dominance score}:
+\begin{equation}\label{eq:dd-score}
+s(i,j) = \frac{|\mathrm{tr}(M_{ij})|}{\|M_{ij}\|_F}
+\end{equation}
+The numerator $|\mathrm{tr}(M)|$ captures \emph{diagonal mass}---how much of the matrix energy concentrates on the diagonal. The denominator $\|M\|_F$ normalizes by total matrix energy (Frobenius norm), isolating structural fingerprint from scale.
+
+This ratio has a natural geometric interpretation. A matrix with energy uniformly spread across entries achieves $s = \Theta(1/\sqrt{d})$, while a matrix proportional to the identity achieves $s = \sqrt{d}$. The key insight is that correctly paired blocks---where all $K$ matrices come from the same residual branch---score at $\Theta(\sqrt{d})$, while incorrect pairings remain at the random baseline $\Theta(1/\sqrt{d})$. This yields a signal-to-noise gap that grows linearly with hidden dimension $d$, making correct pairs increasingly separable in wider networks.
+
+Dynamical isometry~\citep{pennington2017resurrecting} predicts that a well-trained residual block has Jacobian $J = I + W_{\mathrm{out}} W_{\mathrm{in}}$ close to orthogonal. For the block to act as a near-identity perturbation of the residual stream, the branch product must approximate a negative scaled identity. We formalize this with the decomposition:
+\begin{equation}\label{eq:decomp}
+M = W_{\mathrm{out}}^{(i)} W_{\mathrm{in}}^{(i)} = -\varepsilon I + E
+\end{equation}
+where $\varepsilon = |\mathrm{tr}(M)|/d > 0$ captures diagonal strength and $E$ is the residual with $\mathrm{tr}(E) = 0$. The matrix $E$ contains all off-diagonal structure plus the zero-trace portion of the diagonal. Dynamical isometry implies $\|E\|_F \ll \varepsilon\sqrt{d}$ for well-trained blocks; the following proposition quantifies the margin exactly.
+
+Crucially, diagonal dominance captures \emph{relational} structure between paired matrices---how they jointly encode the near-identity mapping---rather than aggregate properties of individual matrices. This relational fingerprint is preserved under fine-tuning and noise because it reflects the functional constraint that the residual block must approximate.
+
+\subsection{Margin Analysis and Null Model}
+
+\begin{proposition}[Margin Formula]\label{prop:margin}
+Let $M = -\varepsilon I + E$ with $\varepsilon = |\mathrm{tr}(M)|/d$ and $\mathrm{tr}(E) = 0$. Then the diagonal-dominance score satisfies
+\begin{equation}\label{eq:margin-formula}
+s(i,i) = \frac{\sqrt{d}}{\sqrt{1 + \|E\|_F^2 / (\varepsilon^2 d)}} \leq \sqrt{d},
+\end{equation}
+with equality if and only if $E = 0$, i.e., $M = -\varepsilon I$.
+\end{proposition}
+
+\begin{proof}
+By construction, $|\mathrm{tr}(M)| = \varepsilon d$. For the Frobenius norm, expand $\|M\|_F^2 = \|-\varepsilon I + E\|_F^2 = \varepsilon^2 d - 2\varepsilon \,\mathrm{tr}(E) + \|E\|_F^2 = \varepsilon^2 d + \|E\|_F^2$, where the last step uses $\mathrm{tr}(E) = 0$. Substituting into \eqref{eq:dd-score}: $s(i,i) = \varepsilon d / \sqrt{\varepsilon^2 d + \|E\|_F^2} = \sqrt{d}/\sqrt{1 + \|E\|_F^2/(\varepsilon^2 d)}$. The bound follows immediately, with equality iff $\|E\|_F = 0$.
+\end{proof}
+
+The margin formula reveals the geometry of diagonal dominance. The numerator $\sqrt{d}$ is the score achievable by a perfect negative-scalar identity; the denominator penalizes deviation from this ideal via the dimensionless ratio $\|E\|_F^2/(\varepsilon^2 d)$. For typical trained blocks, $\|E\|_F/(\varepsilon\sqrt{d}) \in [1.9, 3.8]$, yielding $s(i,i) \in [1.76, 3.23]$---well above the baseline but below the theoretical maximum of $\sqrt{d}$.
+
+\begin{corollary}[Signal-to-Baseline Ratio]\label{cor:baseline}
+Suppose $(W_{\mathrm{in}}^{(i)}, W_{\mathrm{out}}^{(j)})$ with $i \neq j$ are independent random matrices with i.i.d.\ zero-mean entries. Then $\mathbb{E}[s(i,j)^2] = 1/d$, so $\mathbb{E}[s(i,j)] \approx 1/\sqrt{d}$. The signal-to-baseline ratio scales as $d$.
+\end{corollary}
+
+Correct pairs achieve scores of order $\sqrt{d}$, while incorrect pairs score at the random baseline $1/\sqrt{d}$. The gap grows with dimension, providing increasingly robust separation for wider networks. On GPT-2 models, mean $s(i,i)$ rises from 4.18 ($d=768$, 124M parameters) to 7.77 ($d=1600$, 1.5B parameters), consistent with $\sqrt{d}$ scaling.
+
+\begin{corollary}[Null Model]\label{cor:null-model}
+For randomly initialized weights with no training, all pairs satisfy $\mathbb{E}[s(i,j)] = 1/\sqrt{d} + o(1)$ uniformly in $(i,j)$. Hungarian matching recovers correct pairs at the chance rate $1/L$.
+\end{corollary}
+
+The null model rules out three alternative explanations: (a) diagonal dominance is not an artifact of compatible matrix shapes; (b) the residual connection itself does not create the signal; (c) any nontrivial loss level does not suffice. The diagonal-dominance fingerprint is a \emph{learned} property induced by gradient descent. The theory explains why the observed structure is identifiable once induced; controlled experiments---including the initialization ablation showing orthogonal init at 0\% pairing and the PlainNet control at 3\%---confirm that training induces it
+
+\section{From Fingerprints to Provenance Verification}\label{sec:verification}
+
+\subsection{Pairing Algorithm}
+
+\textbf{Purpose:} Turn the fingerprint into a concrete computational method.
+
+\textbf{Content:} Algorithm:
+\begin{enumerate}[nosep]
+\item Extract candidate residual-branch matrices.
+\item Compute all pairwise scores $s(i,j)$.
+\item Construct a score matrix.
+\item Use Hungarian matching or equivalent assignment.
+\item Recover block correspondences.
+\end{enumerate}
+
+\subsection{Model-Level Lineage Score}
+
+\textbf{Purpose:} Bridge the biggest current gap: pair accuracy is not enough for AAAI Main.
+
+\textbf{Content:} Define a model-level lineage score. Possible forms:
+\begin{equation}
+L(A,B) = \frac{1}{|P|} \sum_{p \in P} \|s_p(A,B)\|
+\end{equation}
+or:
+\begin{equation}
+L(A,B) = \frac{\mu_{\text{matched}}(A,B) - \mu_{\text{null}}}{\sigma_{\text{null}}}
+\end{equation}
+
+The exact formula can change, but the paper needs a scalar decision object.
+
+Report against:
+\begin{itemize}[nosep]
+\item Known descendants
+\item Unrelated independently trained models
+\item Random-initialized models
+\item Functionally similar but non-descendant models
+\item Distilled models
+\end{itemize}
+
+\subsection{Verification Protocol}
+
+\textbf{Purpose:} Make the paper feel like a complete verification framework, similar in maturity to accepted watermarking papers.
+
+\textbf{Content:} Protocol:
+\begin{enumerate}[nosep]
+\item \textbf{Reference:} start from a known checkpoint.
+\item \textbf{Suspect:} receive a candidate checkpoint with untrusted metadata.
+\item \textbf{Extract:} compute architecture-aware residual branch products.
+\item \textbf{Align:} compute diagonal-dominance alignment.
+\item \textbf{Aggregate:} produce model-level lineage score.
+\item \textbf{Calibrate:} compare to unrelated-model null.
+\item \textbf{Decide:} output descendant / non-descendant / inconclusive.
+\end{enumerate}
+
+\section{Experiments}\label{sec:experiments}
+
+\subsection{Does Training Induce the Fingerprint?}
+
+\textbf{Purpose:} Establish existence and rule out trivial explanations.
+
+\textbf{Experiments:}
+\begin{itemize}[nosep]
+\item Untrained vs trained networks
+\item Training trajectory
+\item Initialization ablations
+\item Random seed ablations
+\item Orthogonal initialization control
+\item Non-residual or weak-residual controls where feasible
+\end{itemize}
+
+\textbf{Metrics:}
+\begin{itemize}[nosep]
+\item Pair accuracy
+\item Correct-vs-incorrect score separation
+\item AUC
+\item Mean correct score over training
+\item Mean incorrect score over training
+\end{itemize}
+
+\subsection{Does It Generalize Across Architectures?}
+
+\textbf{Purpose:} Show this is not a toy-network artifact.
+
+\textbf{Experiments:} Evaluate across:
+\begin{itemize}[nosep]
+\item Residual MLPs
+\item GPT-style transformer MLPs
+\item Transformer attention V/O and Q/K paths
+\item BERT-style encoders
+\item LLaMA/Mistral/Qwen/Gemma-style architectures if available
+\item ViT
+\item ConvNeXt
+\item ResNet BasicBlock and Bottleneck
+\item Optionally Whisper/audio if already feasible
+\end{itemize}
+
+\textbf{Metrics:}
+\begin{itemize}[nosep]
+\item Pair accuracy
+\item AUC
+\item Pair separation
+\item Negative trace fraction
+\item Architecture-specific failure cases
+\end{itemize}
+
+\subsection{Does It Scale With Model Size?}
+
+\textbf{Purpose:} Turn the work into empirical ML theory, not just forensics.
+
+\textbf{Experiments:} Use model families with multiple sizes, such as GPT-2 small/medium/large/XL or comparable open models.
+
+Report:
+\begin{itemize}[nosep]
+\item Hidden dimension
+\item Number of layers
+\item Mean $s(i,i)$
+\item Pair accuracy
+\item Score separation
+\item Scaling trend versus $\sqrt{d}$
+\end{itemize}
+
+\subsection{Does It Survive Post-Training Modification?}
+
+\textbf{Purpose:} Show the fingerprint is useful for passive provenance.
+
+\textbf{Experiments:} Evaluate descendants after:
+\begin{itemize}[nosep]
+\item Same-task fine-tuning
+\item Alternative-task fine-tuning
+\item LoRA/adapters merged into the base model
+\item Quantization
+\item Pruning
+\item Weight noise
+\item Partial layer replacement
+\item Model soups / weight averaging, if feasible
+\end{itemize}
+
+Report model utility alongside fingerprint survival.
+
+\textbf{Metrics:}
+\begin{itemize}[nosep]
+\item Lineage score
+\item Pair accuracy
+\item AUROC / TPR at fixed FPR
+\item Task accuracy/perplexity/utility
+\item Utility-vs-fingerprint degradation curve
+\end{itemize}
+
+\subsection{How Does It Compare to Baselines?}
+
+\textbf{Purpose:} Prevent the obvious reviewer criticism that the baselines are too weak.
+
+\textbf{Baselines} (minimum):
+\begin{itemize}[nosep]
+\item Frobenius matching
+\item Singular-value distance
+\item Weight cosine similarity
+\item Normalized/centered weight similarity
+\item Spectral-statistic fingerprints
+\item Activation similarity such as CKA/SVCCA-style comparisons
+\item Behavioral agreement
+\item Existing watermark/fingerprint methods where applicable
+\end{itemize}
+
+\textbf{Metrics:}
+\begin{itemize}[nosep]
+\item Pair accuracy
+\item AUROC for lineage detection
+\item FPR at high TPR
+\item Robustness under transformations
+\item Runtime
+\end{itemize}
+
+\section{Adaptive Evasion and Boundary Cases}\label{sec:boundaries}
+
+\subsection{Direct Fingerprint-Suppression Attacks}
+
+\textbf{Purpose:} Reviewer-proof the paper against the obvious attack.
+
+\textbf{Content:} Attack objective:
+\begin{equation}
+\min_{\Delta W} L(A, A + \Delta W)
+\end{equation}
+subject to preserving model utility.
+
+Evaluate whether an adversary can reduce the lineage score while keeping the model useful.
+
+\subsection{Function-Preserving Reparameterizations}
+
+\textbf{Purpose:} Address the basis-dependence objection.
+
+\textbf{Experiments / analysis:} Consider:
+\begin{itemize}[nosep]
+\item Orthogonal rotations
+\item Neuron/channel permutations
+\item Invertible basis changes where architecture permits
+\item Equivalent reparameterizations across adjacent layers
+\item Adapter insertion/removal
+\end{itemize}
+
+\subsection{Distillation and Retraining}
+
+\textbf{Purpose:} Define the boundary cleanly.
+
+\textbf{Content:} State:
+\begin{quote}
+The fingerprint tracks weight-level lineage, not function-level imitation.
+\end{quote}
+
+Evaluate:
+\begin{itemize}[nosep]
+\item Distilled students
+\item Retrained-from-scratch models
+\item Independently trained models with same architecture
+\item Same architecture/same data/different seed
+\end{itemize}
+
+\section{Related Work}
+
+\textbf{Purpose:} Situate the contribution without bloating the paper.
+
+\textbf{Recommended subsections:}
+
+\textbf{1. Neural Network Watermarking}
+\begin{itemize}[nosep]
+\item Embedded parameter watermarks
+\item Backdoor/trigger watermarks
+\item Watermark capacity
+\item NeuralMark / robust weight-based watermarking
+\end{itemize}
+
+\textbf{2. Model Fingerprinting and Ownership Verification}
+\begin{itemize}[nosep]
+\item Black-box fingerprints
+\item Decision-boundary fingerprints
+\item Intrinsic/statistical fingerprints
+\end{itemize}
+
+\textbf{3. Training Dynamics and Residual Networks}
+\begin{itemize}[nosep]
+\item Dynamical isometry
+\item Residual near-identity behavior
+\item Weight-space structure
+\end{itemize}
+
+\textbf{4. Model Provenance and Trustworthy ML}
+\begin{itemize}[nosep]
+\item Model supply chains
+\item Checkpoint auditability
+\item Lineage verification
+\end{itemize}
+
+\section{Discussion and Limitations}
+
+\textbf{Purpose:} Show maturity and avoid overclaiming.
+
+\textbf{Must say clearly:}
+\begin{itemize}[nosep]
+\item White-box only
+\item Residual architectures only
+\item Detects weight-level lineage, not behavioral identity
+\item Distillation/retraining breaks or erases the signal
+\item Not a proof of safety
+\item Not a replacement for watermarking
+\item Adaptive reparameterization attacks require care
+\item Provenance is one part of an audit stack
+\end{itemize}
+
+\section{Conclusion}
+
+\textbf{Purpose:} End with the scientific thesis.
+
+\textbf{Recommended message:}
+\begin{quote}
+Training itself can provide provenance signal. Residual-network optimization leaves an intrinsic weight-space trace; diagonal dominance exposes it; and this trace enables passive model-lineage auditing under common post-training transformations.
+\end{quote}
+
+\bibliography{aaai2026}
+
+\end{document}
