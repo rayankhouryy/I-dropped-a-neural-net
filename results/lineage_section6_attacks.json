@@ -1,0 +1,481 @@
+{
+  "config": {
+    "depth": 24,
+    "hidden": 64,
+    "in_dim": 24,
+    "epochs_root": 200,
+    "tau_s": 0.03048113122691754
+  },
+  "reference_eval_loss": 0.6882880926132202,
+  "baseline_independent_lineage": 0.08374246411545849,
+  "exp1_orthogonal_rotation": {
+    "description": "Per-block random orthogonal rotation of hidden units. Function-preserving for linear part; ReLU breaks general rotations so outputs may drift, but the weight product W_out @ W_in is exactly invariant.",
+    "runs": [
+      {
+        "seed": 0,
+        "lineage_L": 0.9999999999974111,
+        "output_drift": 1.8625673055648804,
+        "id_perm_count": 24,
+        "n_layers": 24
+      },
+      {
+        "seed": 1,
+        "lineage_L": 0.9999999999974117,
+        "output_drift": 2.5386857986450195,
+        "id_perm_count": 24,
+        "n_layers": 24
+      },
+      {
+        "seed": 2,
+        "lineage_L": 0.9999999999974136,
+        "output_drift": 2.0227200984954834,
+        "id_perm_count": 24,
+        "n_layers": 24
+      },
+      {
+        "seed": 3,
+        "lineage_L": 0.999999884610426,
+        "output_drift": 2.4924721717834473,
+        "id_perm_count": 24,
+        "n_layers": 24
+      },
+      {
+        "seed": 4,
+        "lineage_L": 0.9999999678255929,
+        "output_drift": 1.9286879301071167,
+        "id_perm_count": 24,
+        "n_layers": 24
+      }
+    ],
+    "mean_lineage": 0.999999970485651,
+    "min_lineage": 0.999999884610426
+  },
+  "exp2_hidden_permutation": {
+    "description": "Per-block random hidden-unit permutation. Function-preserving for the full ReLU block (P commutes with ReLU). Branch product exactly invariant. Both the fingerprint score and the model output should be identical to the reference.",
+    "runs": [
+      {
+        "seed": 0,
+        "lineage_L": 0.9999999999975039,
+        "output_drift": 1.7776291506496622e-13,
+        "id_perm_count": 24,
+        "n_layers": 24
+      },
+      {
+        "seed": 1,
+        "lineage_L": 0.9999999930805101,
+        "output_drift": 1.9101487427376773e-13,
+        "id_perm_count": 24,
+        "n_layers": 24
+      },
+      {
+        "seed": 2,
+        "lineage_L": 0.9999999999975038,
+        "output_drift": 1.876435069608426e-13,
+        "id_perm_count": 24,
+        "n_layers": 24
+      },
+      {
+        "seed": 3,
+        "lineage_L": 0.9999999999975039,
+        "output_drift": 1.8307116890145525e-13,
+        "id_perm_count": 24,
+        "n_layers": 24
+      },
+      {
+        "seed": 4,
+        "lineage_L": 0.9999999999975038,
+        "output_drift": 1.8534224719216064e-13,
+        "id_perm_count": 24,
+        "n_layers": 24
+      }
+    ],
+    "mean_lineage": 0.999999998614105,
+    "min_lineage": 0.9999999930805101
+  },
+  "exp3_gradient_attack": {
+    "description": "Adversary trains a perturbation Delta to minimize the lineage cosine objective while a utility-drift penalty discourages function change. Sweeping the tradeoff parameter lambda traces the Pareto frontier between utility-preservation and lineage-suppression.",
+    "lambda_grid": [
+      0.0,
+      0.01,
+      0.1,
+      1.0,
+      10.0,
+      100.0
+    ],
+    "runs": [
+      {
+        "lambda_utility": 0.0,
+        "final_lineage": 0.05309551129085165,
+        "utility_drift": 38.72258758544922,
+        "eval_y_loss": 39.51224899291992,
+        "history": [
+          {
+            "step": 0,
+            "cos_objective": 1.0,
+            "lineage_full": 0.9999999953598042,
+            "utility_drift": 0.0
+          },
+          {
+            "step": 25,
+            "cos_objective": 0.6966683268547058,
+            "lineage_full": 0.6306151393028593,
+            "utility_drift": 2.702131748199463
+          },
+          {
+            "step": 50,
+            "cos_objective": 0.06892646849155426,
+            "lineage_full": 0.08158910253502452,
+            "utility_drift": 14.2703275680542
+          },
+          {
+            "step": 75,
+            "cos_objective": -0.42081522941589355,
+            "lineage_full": 0.058769348523445175,
+            "utility_drift": 57.46040344238281
+          },
+          {
+            "step": 100,
+            "cos_objective": -0.757003128528595,
+            "lineage_full": 0.0529412667394531,
+            "utility_drift": 113.02044677734375
+          },
+          {
+            "step": 125,
+            "cos_objective": -0.9221537709236145,
+            "lineage_full": 0.053224790402043455,
+            "utility_drift": 77.89521789550781
+          },
+          {
+            "step": 150,
+            "cos_objective": -0.9776785969734192,
+            "lineage_full": 0.05417178891516241,
+            "utility_drift": 49.867576599121094
+          },
+          {
+            "step": 175,
+            "cos_objective": -0.9934176802635193,
+            "lineage_full": 0.05373285728718944,
+            "utility_drift": 41.344608306884766
+          },
+          {
+            "step": 199,
+            "cos_objective": -0.9978132843971252,
+            "lineage_full": 0.05309551129085165,
+            "utility_drift": 38.78602981567383
+          }
+        ]
+      },
+      {
+        "lambda_utility": 0.01,
+        "final_lineage": 0.05348302385482365,
+        "utility_drift": 0.07392261177301407,
+        "eval_y_loss": 0.773963451385498,
+        "history": [
+          {
+            "step": 0,
+            "cos_objective": 1.0,
+            "lineage_full": 0.9999999953598042,
+            "utility_drift": 0.0
+          },
+          {
+            "step": 25,
+            "cos_objective": 0.9263529777526855,
+            "lineage_full": 0.8926500563137229,
+            "utility_drift": 0.05665306746959686
+          },
+          {
+            "step": 50,
+            "cos_objective": 0.3673706352710724,
+            "lineage_full": 0.3403335183541288,
+            "utility_drift": 0.34758082032203674
+          },
+          {
+            "step": 75,
+            "cos_objective": -0.20541130006313324,
+            "lineage_full": 0.0687552060955103,
+            "utility_drift": 0.5309367775917053
+          },
+          {
+            "step": 100,
+            "cos_objective": -0.5848806500434875,
+            "lineage_full": 0.06368093100740886,
+            "utility_drift": 0.44601568579673767
+          },
+          {
+            "step": 125,
+            "cos_objective": -0.8153608441352844,
+            "lineage_full": 0.059737407834186886,
+            "utility_drift": 0.3897111117839813
+          },
+          {
+            "step": 150,
+            "cos_objective": -0.9224515557289124,
+            "lineage_full": 0.06219423556227791,
+            "utility_drift": 0.2803972661495209
+          },
+          {
+            "step": 175,
+            "cos_objective": -0.9647325873374939,
+            "lineage_full": 0.056752603994825325,
+            "utility_drift": 0.1735917031764984
+          },
+          {
+            "step": 199,
+            "cos_objective": -0.9814490675926208,
+            "lineage_full": 0.05348302385482365,
+            "utility_drift": 0.08912457525730133
+          }
+        ]
+      },
+      {
+        "lambda_utility": 0.1,
+        "final_lineage": 0.08308849594734258,
+        "utility_drift": 0.03151245415210724,
+        "eval_y_loss": 0.6982524394989014,
+        "history": [
+          {
+            "step": 0,
+            "cos_objective": 1.0,
+            "lineage_full": 0.9999999953598042,
+            "utility_drift": 0.0
+          },
+          {
+            "step": 25,
+            "cos_objective": 0.9984197616577148,
+            "lineage_full": 0.9780591444940013,
+            "utility_drift": 0.05199863389134407
+          },
+          {
+            "step": 50,
+            "cos_objective": 0.9841427803039551,
+            "lineage_full": 0.9826437390004733,
+            "utility_drift": 0.006935433950275183
+          },
+          {
+            "step": 75,
+            "cos_objective": 0.8863193988800049,
+            "lineage_full": 0.8786842321364997,
+            "utility_drift": 0.009719833731651306
+          },
+          {
+            "step": 100,
+            "cos_objective": 0.5889131426811218,
+            "lineage_full": 0.5734278238625616,
+            "utility_drift": 0.033292099833488464
+          },
+          {
+            "step": 125,
+            "cos_objective": 0.2011810690164566,
+            "lineage_full": 0.21185624341295964,
+            "utility_drift": 0.05158259719610214
+          },
+          {
+            "step": 150,
+            "cos_objective": -0.11327344924211502,
+            "lineage_full": 0.08806389388428593,
+            "utility_drift": 0.043805550783872604
+          },
+          {
+            "step": 175,
+            "cos_objective": -0.35949280858039856,
+            "lineage_full": 0.08482741508603071,
+            "utility_drift": 0.06047922745347023
+          },
+          {
+            "step": 199,
+            "cos_objective": -0.5252394676208496,
+            "lineage_full": 0.08308849594734258,
+            "utility_drift": 0.02809893898665905
+          }
+        ]
+      },
+      {
+        "lambda_utility": 1.0,
+        "final_lineage": 0.9082341957118337,
+        "utility_drift": 0.00021848546748515218,
+        "eval_y_loss": 0.6872673630714417,
+        "history": [
+          {
+            "step": 0,
+            "cos_objective": 1.0,
+            "lineage_full": 0.9999999953598042,
+            "utility_drift": 0.0
+          },
+          {
+            "step": 25,
+            "cos_objective": 0.9991553425788879,
+            "lineage_full": 0.9649552054255777,
+            "utility_drift": 0.05374131351709366
+          },
+          {
+            "step": 50,
+            "cos_objective": 0.9987236857414246,
+            "lineage_full": 0.9702421590463576,
+            "utility_drift": 0.004634899087250233
+          },
+          {
+            "step": 75,
+            "cos_objective": 0.9976615905761719,
+            "lineage_full": 0.9708577622315916,
+            "utility_drift": 0.0004888426628895104
+          },
+          {
+            "step": 100,
+            "cos_objective": 0.9942534565925598,
+            "lineage_full": 0.973732450696352,
+            "utility_drift": 8.380074723390862e-05
+          },
+          {
+            "step": 125,
+            "cos_objective": 0.9862880110740662,
+            "lineage_full": 0.9780411551932294,
+            "utility_drift": 4.963896208209917e-05
+          },
+          {
+            "step": 150,
+            "cos_objective": 0.9718310236930847,
+            "lineage_full": 0.9710781968135477,
+            "utility_drift": 7.428510434692726e-05
+          },
+          {
+            "step": 175,
+            "cos_objective": 0.9473636746406555,
+            "lineage_full": 0.9461028506055053,
+            "utility_drift": 0.00013828340161126107
+          },
+          {
+            "step": 199,
+            "cos_objective": 0.910106360912323,
+            "lineage_full": 0.9082341957118337,
+            "utility_drift": 0.00021437183022499084
+          }
+        ]
+      },
+      {
+        "lambda_utility": 10.0,
+        "final_lineage": 0.9628242251657205,
+        "utility_drift": 1.722855813568458e-07,
+        "eval_y_loss": 0.6882511377334595,
+        "history": [
+          {
+            "step": 0,
+            "cos_objective": 1.0,
+            "lineage_full": 0.9999999953598042,
+            "utility_drift": 0.0
+          },
+          {
+            "step": 25,
+            "cos_objective": 0.9991931915283203,
+            "lineage_full": 0.9647403165872888,
+            "utility_drift": 0.054059963673353195
+          },
+          {
+            "step": 50,
+            "cos_objective": 0.9990518093109131,
+            "lineage_full": 0.9680401470652372,
+            "utility_drift": 0.004567498341202736
+          },
+          {
+            "step": 75,
+            "cos_objective": 0.9990506768226624,
+            "lineage_full": 0.9655007691700542,
+            "utility_drift": 0.0004522424715105444
+          },
+          {
+            "step": 100,
+            "cos_objective": 0.9990136623382568,
+            "lineage_full": 0.9645179759738257,
+            "utility_drift": 4.809248275705613e-05
+          },
+          {
+            "step": 125,
+            "cos_objective": 0.998923122882843,
+            "lineage_full": 0.9638653462197309,
+            "utility_drift": 8.111484021355864e-06
+          },
+          {
+            "step": 150,
+            "cos_objective": 0.9987239241600037,
+            "lineage_full": 0.9635639015473161,
+            "utility_drift": 1.6534863789274823e-06
+          },
+          {
+            "step": 175,
+            "cos_objective": 0.9983184933662415,
+            "lineage_full": 0.9632732438360132,
+            "utility_drift": 4.166558653651009e-07
+          },
+          {
+            "step": 199,
+            "cos_objective": 0.997616708278656,
+            "lineage_full": 0.9628242251657205,
+            "utility_drift": 1.7573835009443428e-07
+          }
+        ]
+      },
+      {
+        "lambda_utility": 100.0,
+        "final_lineage": 0.9627395507517381,
+        "utility_drift": 5.0571621557082835e-08,
+        "eval_y_loss": 0.6882825493812561,
+        "history": [
+          {
+            "step": 0,
+            "cos_objective": 1.0,
+            "lineage_full": 0.9999999953598042,
+            "utility_drift": 0.0
+          },
+          {
+            "step": 25,
+            "cos_objective": 0.9991974234580994,
+            "lineage_full": 0.9650203650691817,
+            "utility_drift": 0.0540945902466774
+          },
+          {
+            "step": 50,
+            "cos_objective": 0.9990730285644531,
+            "lineage_full": 0.968188761376488,
+            "utility_drift": 0.004552577156573534
+          },
+          {
+            "step": 75,
+            "cos_objective": 0.9990983605384827,
+            "lineage_full": 0.9653622042673243,
+            "utility_drift": 0.00045265431981533766
+          },
+          {
+            "step": 100,
+            "cos_objective": 0.9991063475608826,
+            "lineage_full": 0.9641289247646586,
+            "utility_drift": 4.646712841349654e-05
+          },
+          {
+            "step": 125,
+            "cos_objective": 0.9991067051887512,
+            "lineage_full": 0.96331035234618,
+            "utility_drift": 7.584597369714174e-06
+          },
+          {
+            "step": 150,
+            "cos_objective": 0.9991042017936707,
+            "lineage_full": 0.9629520784488704,
+            "utility_drift": 1.4298104815679835e-06
+          },
+          {
+            "step": 175,
+            "cos_objective": 0.9991002678871155,
+            "lineage_full": 0.9627919739206892,
+            "utility_drift": 2.737399427132914e-07
+          },
+          {
+            "step": 199,
+            "cos_objective": 0.9990958571434021,
+            "lineage_full": 0.9627395507517381,
+            "utility_drift": 5.39579794178735e-08
+          }
+        ]
+      }
+    ]
+  },
+  "total_seconds": 130.74062538146973
+}
