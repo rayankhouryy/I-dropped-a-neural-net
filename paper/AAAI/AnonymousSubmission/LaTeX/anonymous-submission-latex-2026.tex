@@ -595,28 +595,17 @@ A subtler attack relies on cross-layer rescaling: for any positive scalar $c$, t
 
 \section{Discussion and Limitations}
 
-\textbf{Purpose:} Show maturity and avoid overclaiming.
+\textbf{Scope.} Our method is a white-box auditing tool: it requires access to the suspect checkpoint's weights, and it presumes residual architecture. The first restriction is intrinsic---there is no recoverable weight-level signature without weights. The second tracks where the diagonal-dominance phenomenon comes from: residual connections force the branch product toward $-\varepsilon I + E_\ell$ for stable gradient flow, and non-residual networks (e.g., classic feed-forward stacks) have no analogous identity-target constraint. The fingerprint should therefore not be expected on non-residual designs.
 
-\textbf{Must say clearly:}
-\begin{itemize}[nosep]
-\item White-box only
-\item Residual architectures only
-\item Detects weight-level lineage, not behavioral identity
-\item Distillation/retraining breaks or erases the signal
-\item Not a proof of safety
-\item Not a replacement for watermarking
-\item Adaptive reparameterization attacks require care
-\item Provenance is one part of an audit stack
-\end{itemize}
+\textbf{Weight-level, not behavioral.} The diagonal-dominance signature is a property of the trained weight matrices themselves, not of the function the model computes. Two consequences follow. First, the method correctly classifies as non-descendant any model that was trained from scratch---even one trained to mimic a reference via distillation ($\mathcal{L} \approx 0.086$, indistinguishable from the same-architecture independent baseline at $0.084$; \S\ref{sec:attack-boundaries}). Second, the method cannot adjudicate behavioral imitation, knowledge transfer, or training-data overlap. If the question is ``did this checkpoint inherit this reference's weights?'' our method answers it; if the question is ``does this checkpoint encode the same knowledge as the reference?'' it does not, and behavioral fingerprints or query-based attribution remain appropriate.
+
+\textbf{Adaptive reparameterization requires care.} Two function-preserving symmetries leave $\mathcal{L} = 1$ exactly: per-block hidden-unit permutations and positive cross-layer rescaling (\S\ref{sec:attack-function-preserving}, \S\ref{sec:attack-scaling}). Per-block orthogonal rotations preserve the branch product but not the function, and also yield $\mathcal{L} = 1$ (\S\ref{sec:attack-rotation}). These are invariances of our score, not vulnerabilities: they imply the method is insensitive to the underlying basis. The class of attacks that genuinely threatens the score---direct gradient-based suppression---falls cleanly on the wrong side of a Pareto frontier (Table~\ref{tab:gradient-attack-pareto}): driving $\mathcal{L}$ to the independent-baseline level requires at least a $12\%$ utility loss, and full chance-level suppression destroys the model entirely ($57\times$ eval-loss degradation). We have not characterized all possible adaptive attacks, however, and a determined adversary willing to retrain or distill can always escape detection by producing a model that is, by our definition, not a weight-level descendant.
+
+\textbf{Positioning.} Our method is not a proof of safety: a checkpoint that passes lineage verification is not certified clean, only weight-attributable to a reference. It is also not a replacement for cryptographic watermarking. Watermarks remain the right tool when an owner can intervene before deployment and accepts the small utility cost of embedding; diagonal-dominance fingerprints are complementary, offering passive, retroactive verification for the much larger population of checkpoints that were never watermarked. We see provenance verification as one component of a layered audit stack alongside metadata, behavioral fingerprints, and watermarking---each addressing a different failure mode of the open-weight ecosystem.
 
 \section{Conclusion}
 
-\textbf{Purpose:} End with the scientific thesis.
-
-\textbf{Recommended message:}
-\begin{quote}
-Training itself can provide provenance signal. Residual-network optimization leaves an intrinsic weight-space trace; diagonal dominance exposes it; and this trace enables passive model-lineage auditing under common post-training transformations.
-\end{quote}
+We have shown that training itself can provide provenance signal. Residual-network optimization leaves an intrinsic weight-space trace in the form of diagonal dominance of the branch product $W_{\mathrm{out}} W_{\mathrm{in}} \approx -\varepsilon I + E_\ell$; an architecture-aware factorization exposes this trace as a residual signature whose separation margin grows as $\Theta(\sqrt{d})$ with hidden dimension. Across 12 architectures spanning five families, the fingerprint is detectable in trained but not random-initialized models, recovers block correspondences with $91$--$100\%$ accuracy under five classes of post-training modification, and yields model-level lineage detection at AUROC $= 1.000$ (TPR $= 100\%$ at $1\%$ FPR) on both synthetic depth-24 MLP benchmarks and real ResNet-18/CIFAR-10 checkpoints. Adaptive suppression is forced through a strict utility--detection Pareto frontier on which the attacker cannot win without paying a measurable accuracy cost. Together, these results establish a passive, retroactive route to model-lineage auditing under common post-training transformations---one that requires no watermark, no metadata, and no cooperation from the original trainer.
 
 \bibliography{aaai2026}
 
