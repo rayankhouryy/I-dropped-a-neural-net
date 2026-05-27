@@ -223,8 +223,10 @@ where the threshold $\tau_s$ is the minimum diagonal-dominance score across refe
 
 \textbf{Lineage Score.} The model-level lineage score between checkpoints $A$ and $B$ is the Hungarian-aligned mean of gated branch scores:
 \begin{equation}\label{eq:lineage-score}
-\mathcal{L}(A, B) = \frac{1}{L} \sum_{\ell=1}^{L} G(\phi^A_\ell, \phi^B_{\hat\pi(\ell)}),
-\quad \hat\pi = \arg\max_{\pi \in S_L} \sum_{\ell} G(\phi^A_\ell, \phi^B_{\pi(\ell)}).
+\begin{aligned}
+\mathcal{L}(A, B) &= \frac{1}{L} \sum_{\ell=1}^{L} G(\phi^A_\ell, \phi^B_{\hat\pi(\ell)}), \\
+\hat\pi &= \arg\max_{\pi \in S_L} \sum_{\ell} G(\phi^A_\ell, \phi^B_{\pi(\ell)}).
+\end{aligned}
 \end{equation}
 This score satisfies: (1) self-similarity $\mathcal{L}(A,A) = 1$; (2) symmetry $\mathcal{L}(A,B) = \mathcal{L}(B,A)$; (3) boundedness $\mathcal{L}(A,B) \in [-1,1]$; and (4) orthogonality $\mathbb{E}[\mathcal{L}(A,B)] \approx 0$ when $A$ and $B$ are independently trained.
 
