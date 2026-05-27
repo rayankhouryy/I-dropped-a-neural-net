@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-05-25T20:47:16.882502",
+  "title": "Root Cause Analysis: Why Diagonal Dominance Works in GPT-2 but Not Synthetic Models",
+  "findings": {
+    "pretrained_gpt2": {
+      "dd_score": 4.18,
+      "random_init_dd": 0.03,
+      "amplification": "135x from training",
+      "pairing_accuracy": "100%",
+      "parent_retrieval": "Perfect separation (0.99+ for descendants, 0.005 for random)"
+    },
+    "synthetic_resnet": {
+      "dd_score": 0.24,
+      "random_init_dd": 0.24,
+      "amplification": "1x (no change from training)",
+      "pairing_accuracy": "0-38%",
+      "parent_retrieval": "All methods at 100% because task was too easy"
+    }
+  },
+  "root_cause": [
+    "Diagonal dominance emerges from dynamical isometry during large-scale training",
+    "Synthetic regression task with d=64 hidden dimension does NOT induce this constraint",
+    "Real transformers (GPT-2, LLaMA) trained on language modeling DO develop diagonal-dominant structure",
+    "The POC used toy models where the fingerprint theory does not apply"
+  ],
+  "why_synthetic_fails": [
+    "Hidden dimension d=64 is too small (GPT-2 has d=768)",
+    "Training for 200 epochs on synthetic data is insufficient",
+    "Regression loss does not create the gradient flow pattern that induces -\u03b5I structure",
+    "Random initialization baseline already achieves high pairing via other features"
+  ],
+  "implications_for_paper": {
+    "claim_validity": "Paper claims hold for production-scale transformers, NOT toy models",
+    "poc_conclusion": "POC success was misleading - all methods worked because task was too easy",
+    "recommended_action": "Use pretrained models (GPT-2, LLaMA) for lineage experiments, not synthetic"
+  },
+  "evidence": {
+    "gpt2_pretrained": {
+      "mean_dd_diagonal": 4.1771,
+      "mean_dd_offdiagonal": 0.0613,
+      "separation": "diagonal >> off-diagonal"
+    },
+    "gpt2_random_init": {
+      "mean_dd_diagonal": 0.018,
+      "mean_dd_offdiagonal": 0.0289,
+      "separation": "diagonal \u2248 off-diagonal (no structure)"
+    }
+  }
+}

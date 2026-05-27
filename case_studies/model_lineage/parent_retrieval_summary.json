@@ -1,0 +1,293 @@
+{
+  "timestamp": "2026-05-25T20:12:12.263231",
+  "config": {
+    "n_references": 10,
+    "n_independents": 20,
+    "n_random_init": 10,
+    "n_distilled": 5,
+    "depth": 24,
+    "hidden": 64,
+    "in_dim": 24,
+    "epochs": 200,
+    "tau_s": 0.3
+  },
+  "elapsed_seconds": 230.8459188938141,
+  "n_references": 10,
+  "n_suspects": 85,
+  "results_by_method": {
+    "diag_centered": {
+      "overall": {
+        "top1": 1.0,
+        "mrr": 1.0,
+        "auroc": 1.0,
+        "n_descendants": 50,
+        "n_non_descendants": 35
+      },
+      "by_suspect_type": {
+        "fine_tuned": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "quantized": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "pruned": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "noisy": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "lora_merged": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "independent": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 20
+        },
+        "random_init": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 10
+        },
+        "distilled": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 5
+        }
+      }
+    },
+    "frobenius": {
+      "overall": {
+        "top1": 1.0,
+        "mrr": 1.0,
+        "auroc": 1.0,
+        "n_descendants": 50,
+        "n_non_descendants": 35
+      },
+      "by_suspect_type": {
+        "fine_tuned": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "quantized": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "pruned": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "noisy": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "lora_merged": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "independent": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 20
+        },
+        "random_init": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 10
+        },
+        "distilled": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 5
+        }
+      }
+    },
+    "raw_cosine": {
+      "overall": {
+        "top1": 1.0,
+        "mrr": 1.0,
+        "auroc": 1.0,
+        "n_descendants": 50,
+        "n_non_descendants": 35
+      },
+      "by_suspect_type": {
+        "fine_tuned": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "quantized": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "pruned": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "noisy": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "lora_merged": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "independent": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 20
+        },
+        "random_init": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 10
+        },
+        "distilled": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 5
+        }
+      }
+    },
+    "raw_diagonal": {
+      "overall": {
+        "top1": 1.0,
+        "mrr": 1.0,
+        "auroc": 1.0,
+        "n_descendants": 50,
+        "n_non_descendants": 35
+      },
+      "by_suspect_type": {
+        "fine_tuned": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "quantized": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "pruned": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "noisy": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "lora_merged": {
+          "top1": 1.0,
+          "mrr": 1.0,
+          "auroc": 0.5,
+          "n_descendants": 10,
+          "n_non_descendants": 0
+        },
+        "independent": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 20
+        },
+        "random_init": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 10
+        },
+        "distilled": {
+          "top1": 0.0,
+          "mrr": 0.0,
+          "auroc": 0.5,
+          "n_descendants": 0,
+          "n_non_descendants": 5
+        }
+      }
+    }
+  },
+  "poc_targets": {
+    "top1_fine_tuned_>90%": true,
+    "mrr_overall_>0.9": true,
+    "auroc_>0.95": true
+  },
+  "poc_success": true
+}
