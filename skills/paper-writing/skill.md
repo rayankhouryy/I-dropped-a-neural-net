@@ -52,6 +52,17 @@ This skill enforces structured checklists for each paper section. Each checklist
 
 ---
 
+## Page Budget (AAAI Main Technical Track)
+
+| Constraint | Limit |
+|------------|-------|
+| **Total pages** | 7 pages (technical content) |
+| **References** | Unlimited additional pages |
+| **Format** | Two-column, AAAI style |
+| **Review** | Double-blind |
+
+---
+
 ## Section Checklists
 
 ### Abstract (150–200 words)
