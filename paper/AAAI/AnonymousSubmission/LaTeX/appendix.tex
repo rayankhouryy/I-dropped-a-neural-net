@@ -1,0 +1,218 @@
+\appendix
+
+\section{Extended Experimental Details}\label{app:experiments}
+
+\subsection{Initialization Ablation}
+
+We test whether the diagonal-dominance fingerprint depends on initialization scheme. We train depth-24 residual MLPs ($h{=}64$, $d{=}24$) on a synthetic regression target for 200 epochs from seven initialization schemes: Kaiming uniform/normal, Xavier uniform/normal, Gaussian, uniform, and orthogonal. Table~\ref{tab:init-ablation-full} reports pair accuracy before and after training.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Init scheme & Untrained & Trained & AUC \\
+\midrule
+Orthogonal       & $0.0\%$  & $100\%$ & $0.947$ \\
+Kaiming-normal   & $2.1\%$  & $97\%$  & $0.981$ \\
+Kaiming-uniform  & $2.1\%$  & $98.6\%$ & $0.98$ \\
+Xavier-normal    & $2.1\%$  & $100\%$ & $0.990$ \\
+Xavier-uniform   & $2.1\%$  & $100\%$ & $0.99$ \\
+Uniform          & $2.1\%$  & $93.8\%$ & --- \\
+Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
+\bottomrule
+\end{tabular}
+\caption{Initialization ablation on depth-24 residual MLPs (3 seeds, 200 epochs). All schemes show chance-level accuracy (${\leq}2.1\%$) at initialization, rising to $75$--$100\%$ after training. Orthogonal initialization---which provides dynamical isometry at init---shows \emph{zero} correct pairs before training.}
+\label{tab:init-ablation-full}
+\end{table}
+
+Critically, orthogonal initialization provides dynamical isometry at initialization by construction~\citep{saxe2014exact}, yet shows \emph{zero} correct pairs before training, ruling out the hypothesis that near-orthogonal Jacobians alone create the fingerprint. The $\sigma{=}0.02$ small-Gaussian case fails because residual blocks collapse to near-zero contribution; without active per-block contribution there is no Jacobian constraint to enforce.
+
+\subsection{PlainNet Control Experiment}
+
+To confirm the fingerprint requires residual training specifically, we train a PlainNet---architecturally identical to ResNet except that skip connections are removed.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Architecture & Eval Loss & Pair Acc & AUC & Neg Trace \\
+\midrule
+ResNet-24   & 1.35 & $100\%$ & $0.98$ & $100\%$ \\
+PlainNet-24 & 1.56 & $3\%$   & $0.51$ & $47\%$ \\
+\bottomrule
+\end{tabular}
+\caption{ResNet vs.\ PlainNet control. Despite similar evaluation loss, PlainNet achieves only chance-level pair accuracy (3\% vs.\ chance $\approx 4.2\%$), confirming the skip connection is necessary for the fingerprint.}
+\label{tab:plainnet-control}
+\end{table}
+
+While both networks converge to similar evaluation loss (1.35 vs 1.56), ResNet achieves 100\% pair accuracy with 100\% of correctly paired products exhibiting negative trace, while PlainNet achieves only 3\%---at the chance baseline---with AUC 0.51 and no discernible diagonal structure. The skip connection creates a functional constraint that imprints the characteristic trace structure.
+
+\subsection{Training Dynamics}
+
+The fingerprint emerges rapidly during training. On a 48-block residual network:
+\begin{itemize}[nosep]
+\item Epoch 0: Mean correct-pair score = 0.19, pair accuracy = 6.25\%
+\item Epoch 5: Diagonal fully separated, pair accuracy = 100\%
+\item Epoch 300: Mean correct-pair score = 2.07, mean incorrect-pair score = 0.16 ($21\times$ ratio)
+\end{itemize}
+The transformation occurs within the first few epochs, well before training loss plateaus.
+
+\section{Extended Theoretical Results}\label{app:proofs}
+
+\subsection{Null Model (Corollary)}
+
+\begin{corollary}[Null Model]
+For randomly initialized weights with no training, all pairs satisfy $\mathbb{E}[s(i,j)] = 1/\sqrt{d} + o(1)$ uniformly in $(i,j)$. Hungarian matching recovers correct pairs at the chance rate $1/L$.
+\end{corollary}
+
+The null model rules out three alternative explanations:
+\begin{enumerate}[nosep]
+\item Diagonal dominance is not an artifact of compatible matrix shapes
+\item The residual connection itself does not create the signal without training
+\item Any nontrivial loss level does not suffice---training must actively couple the projections
+\end{enumerate}
+
+The diagonal-dominance fingerprint is a \emph{learned} property induced by gradient descent under the residual constraint.
+
+\subsection{Geometric Interpretation of the Score}
+
+The diagonal-dominance score $s(M) = |\mathrm{tr}(M)|/\|M\|_F$ has a natural geometric interpretation:
+\begin{itemize}[nosep]
+\item A matrix with energy uniformly spread across entries achieves $s = \Theta(1/\sqrt{d})$
+\item A matrix proportional to the identity achieves $s = \sqrt{d}$
+\end{itemize}
+
+The key insight is that correctly paired blocks---where all $K$ matrices come from the same residual branch---score at $\Theta(\sqrt{d})$, while incorrect pairings remain at the random baseline $\Theta(1/\sqrt{d})$. This yields a signal-to-noise gap that grows linearly with hidden dimension $d$, making correct pairs increasingly separable in wider networks.
+
+For typical trained blocks, $\|E\|_F/(\varepsilon\sqrt{d}) \in [1.9, 3.8]$, yielding $s(i,i) \in [1.76, 3.23]$---well above the baseline but below the theoretical maximum of $\sqrt{d}$.
+
+\section{Verification Protocol Details}\label{app:verification}
+
+\subsection{Gated Branch Score}
+
+Branch similarity is reliable only when both branches exhibit strong diagonal dominance. We gate the cosine similarity:
+\begin{equation}
+G(\phi^A_\ell, \phi^B_m) = \langle \phi^A_\ell, \phi^B_m \rangle \cdot \min\!\left(\tfrac{s(M^A_\ell)}{\tau_s}, \tfrac{s(M^B_m)}{\tau_s}, 1\right)
+\end{equation}
+where $\tau_s$ is the minimum diagonal-dominance score across reference branches.
+
+\subsection{Statistical Calibration}
+
+We calibrate against a null distribution $\mathcal{N}_A = \{\mathcal{L}(A, U_j) : U_j \notin \mathcal{D}(A)\}$ of scores between reference $A$ and independently trained models. The z-score is:
+\begin{equation}
+Z(A,B) = \frac{\mathcal{L}(A,B) - \mu_{\mathrm{null}}}{\sigma_{\mathrm{null}}}
+\end{equation}
+Under Gaussian approximation, $\tau = 1.645$ yields 95\% confidence; $\tau = 3.0$ yields FPR $< 0.13\%$ for high-stakes applications.
+
+\subsection{Full Protocol Steps}
+
+\begin{enumerate}[nosep,leftmargin=*]
+\item \textbf{Compatibility Check:} Verify $\mathrm{arch}(A) = \mathrm{arch}(B)$. If not, return \textsc{Incompatible}.
+\item \textbf{Extract:} Compute architecture-aware branch products $\{M_\ell^A\}$, $\{M_\ell^B\}$.
+\item \textbf{Fingerprint:} Compute centered residual signatures $\{\phi_\ell^A\}$, $\{\phi_\ell^B\}$.
+\item \textbf{Align:} Apply Hungarian matching to recover block correspondences.
+\item \textbf{Aggregate:} Compute lineage score $\mathcal{L}(A,B)$.
+\item \textbf{Calibrate:} Compute z-score $Z(A,B)$.
+\item \textbf{Decide:} Return verdict:
+\end{enumerate}
+\begin{equation}
+\mathrm{Verdict} = \begin{cases}
+\textsc{Descendant} & \text{if } Z(A,B) > \tau_{\mathrm{upper}} \\
+\textsc{Non-Descendant} & \text{if } Z(A,B) < \tau_{\mathrm{lower}} \\
+\textsc{Inconclusive} & \text{otherwise}
+\end{cases}
+\end{equation}
+
+\subsection{Failure Modes}
+
+The protocol cannot provide a verdict when: (1) architectures differ; (2) perturbation destroys utility (e.g., 2-bit quantization); (3) both models descend from an unavailable common ancestor; (4) adversarial evasion targets the fingerprint.
+
+\subsection{Lineage Chain and Branching Tree}
+
+To test multi-generational ancestry recovery, we construct a branching tree: root $C_1$, siblings $C_2, C_3$ fine-tuned from $C_1$, grandchildren $C_4 = C_2 \to \mathrm{FT}$, $C_5 = C_3 \to \mathrm{FT}$. The lineage score recovers correct ancestry: for $C_4$, ranking by $\mathcal{L}(C_4, \cdot)$ is parent ($0.96$) $>$ grandparent ($0.91$) $>$ uncle ($0.87$) $>$ cousin ($0.85$) $>$ independent ($0.08$). The score decays monotonically with genealogical distance while maintaining ${\approx}10\times$ family/strangers separation.
+
+\section{Per-Architecture Details}\label{app:architectures}
+
+\subsection{GPT-2 Scaling}
+
+Across the GPT-2 family, mean correct-pair score grows with hidden dimension: $d{=}768$ at $\bar{s}(i,i) = 4.18$, $d{=}1024$ at $5.46$, $d{=}1280$ at $6.98$, $d{=}1600$ at $7.77$. The scaling matches the $\Theta(\sqrt{d})$ prediction within $\le 8\%$.
+
+\subsection{Alternative Methods Comparison}
+
+Diagonal dominance achieves 100\% pairing accuracy on all four GPT-2 variants. Frobenius norm matching degrades from 67\% (GPT-2) to 47\% (GPT-2-large). Singular-value distance performs at chance (0--8\%). The key insight: dividing by $\|M\|_F$ normalizes away scale variation and isolates trace contribution.
+
+\subsection{ResNet Factorization}
+
+For Bottleneck blocks, the naive $W_3 W_1$ achieves chance-level accuracy. The triple product $W_3 W_2 W_1$ recovers:
+\begin{itemize}[nosep]
+\item ResNet-50/layer3 ($n{=}5$): 100\%, AUC 1.000
+\item ResNet-101/layer3 ($n{=}22$): 100\%, AUC 0.995
+\item ResNet-152/layer3 ($n{=}35$): 91\%, AUC 0.964
+\end{itemize}
+
+\subsection{CIFAR-10 ResNet-18 Benchmark}
+
+We train two CIFAR-10 ResNet-18 references and three independents. Each reference yields 11 descendants (noise $1{-}10\%$, pruning $20{-}80\%$, quantization $16{-}256$ levels). Results: AUROC$=$1.000, TPR@1\%FPR$=$100\%. Descendant scores: $\mathcal{L} \in [0.695, 1.000]$; independent baseline: $\mathcal{L}_{\max} = 0.004$.
+
+\subsection{Branching Ancestry Recovery}
+
+On a synthetic tree $C_1 \!\to\! \{C_2, C_3\}$, $C_2 \!\to\! C_4$, $C_3 \!\to\! C_5$, the lineage score ranks candidates correctly:
+\begin{align*}
+\mathcal{L}(C_4, C_2) &= 0.961 \;>\; \mathcal{L}(C_4, C_1) = 0.910 \\
+&>\; \mathcal{L}(C_4, C_3) = 0.867 \;>\; \mathcal{L}(C_4, C_5) = 0.850 \\
+&\gg\; \mathcal{L}(C_4, I_k) \approx 0.08.
+\end{align*}
+The score decays monotonically with genealogical distance while maintaining ${\approx}10\times$ family/strangers separation.
+
+\section{Attack and Robustness Details}\label{app:attacks}
+
+\subsection{Gradient-Based Suppression Attack}
+
+An adversary optimizes perturbation $\Delta$ to minimize lineage score subject to utility:
+\begin{equation}
+\min_{\Delta} \;\mathcal{L}_{\mathrm{cos}}(A, A + \Delta) \;+\; \lambda \cdot \|f_{A+\Delta}(X) - f_A(X)\|_2^2
+\end{equation}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}rccc@{}}
+\toprule
+$\lambda$ & Final $\mathcal{L}$ & Eval loss & Verdict \\
+\midrule
+$0$         & 0.053 & 39.5 & utility destroyed \\
+$10^{-2}$   & 0.054 & 0.77 & +12\% loss \\
+$10^{-1}$   & 0.083 & 0.70 & +1.5\% loss \\
+$\ge 1$     & 0.91+ & 0.69 & utility preserved \\
+\bottomrule
+\end{tabular}
+\caption{Pareto frontier: suppressing $\mathcal{L}$ to chance level requires $\ge$12\% utility loss.}
+\end{table}
+
+\subsection{Reparameterization Invariances}
+
+\textbf{Permutations:} $W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$ leaves $M = W_{\mathrm{out}} W_{\mathrm{in}}$ unchanged.
+
+\textbf{Rescaling:} $W_{\mathrm{in}} \leftarrow c W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}}/c$ preserves $M$ exactly.
+
+\textbf{Orthogonal rotations:} $R^\top R = I$ preserves $M$ but breaks model function (ReLU non-commutative).
+
+All three yield $\mathcal{L} = 1.0$ to numerical precision---these are invariances, not evasion paths.
+
+\section{Practical Applications}\label{app:applications}
+
+The fingerprint enables applications beyond forensic verification.
+
+\subsection{Training Quality Assurance}
+
+The fingerprint serves as an early warning: if pair accuracy $<$50\% at epoch 10, training is pathological (LR too low, missing skip connections, degenerate initialization). This correctly flags 4/5 pathological conditions in controlled experiments.
+
+\subsection{Zero-Knowledge Ownership Proofs}
+
+The $E$ matrix ($M = -\varepsilon I + E$) provides a commitment scheme: owners commit to $\text{Hash}(E_k \| r_k)$ at registration, reveal challenged blocks on request. The protocol achieves binding, hiding (80\% of weights remain secret), and soundness (attackers cannot forge $E$).
+
+\subsection{Compression Auditing}
+
+For original $\mathcal{M}$ and claimed-compressed $\mathcal{M}'$, compute $E$-matrix correlation. Quantization ($r > 0.97$), pruning ($r > 0.75$ at 70\%), and fine-tuning ($r > 0.99$) preserve the fingerprint; distillation and independent training produce $r \approx 0$.
