@@ -1,0 +1,742 @@
+{
+  "config": {
+    "depth": 24,
+    "hidden": 64,
+    "in_dim": 24,
+    "epochs": 120,
+    "n_refs": 3,
+    "n_indeps": 3,
+    "out": "results/dar_fingerprint.json"
+  },
+  "wall_time_s": 1054.6722247600555,
+  "results": {
+    "standard": {
+      "arch": "standard",
+      "tau_s": 0.021979631623240497,
+      "eval_loss_refs": [
+        0.01754981465637684,
+        0.042960166931152344,
+        0.02139730378985405
+      ],
+      "eval_loss_indeps": [
+        0.017605716362595558,
+        0.025763124227523804,
+        0.02932286076247692
+      ],
+      "fingerprint": {
+        "mean_diag_s_correct": 0.2792677294660275,
+        "mean_diag_s_off": 0.16530027350273227,
+        "separation": 0.11396745596329527,
+        "pair_acc": 0.20138888888888892,
+        "neg_trace_frac": 0.9097222222222222,
+        "per_model": [
+          {
+            "pair_acc": 0.16666666666666666,
+            "mean_diag_s": 0.27762808984136966,
+            "mean_off_s": 0.15765443219708977,
+            "neg_trace_frac": 0.9166666666666666,
+            "separation": 0.11997365764427989
+          },
+          {
+            "pair_acc": 0.125,
+            "mean_diag_s": 0.2790616853843783,
+            "mean_off_s": 0.17216900285606626,
+            "neg_trace_frac": 0.8333333333333334,
+            "separation": 0.10689268252831205
+          },
+          {
+            "pair_acc": 0.20833333333333334,
+            "mean_diag_s": 0.2723977551407009,
+            "mean_off_s": 0.1650790549466412,
+            "neg_trace_frac": 0.9166666666666666,
+            "separation": 0.1073187001940597
+          },
+          {
+            "pair_acc": 0.2916666666666667,
+            "mean_diag_s": 0.2983135768839296,
+            "mean_off_s": 0.16250992648958676,
+            "neg_trace_frac": 0.875,
+            "separation": 0.13580365039434286
+          },
+          {
+            "pair_acc": 0.25,
+            "mean_diag_s": 0.29016477818407066,
+            "mean_off_s": 0.16478137515747093,
+            "neg_trace_frac": 1.0,
+            "separation": 0.12538340302659973
+          },
+          {
+            "pair_acc": 0.16666666666666666,
+            "mean_diag_s": 0.2580404913617161,
+            "mean_off_s": 0.16960784936953863,
+            "neg_trace_frac": 0.9166666666666666,
+            "separation": 0.08843264199217746
+          }
+        ]
+      },
+      "lineage": {
+        "auroc": 1.0,
+        "desc_mean": 0.9437090497910651,
+        "desc_min": 0.6687980959845558,
+        "indep_mean": 0.07927655382423256,
+        "indep_max": 0.0835687476408895,
+        "desc_records": [
+          {
+            "id": "standard-desc-0-noise-0",
+            "ref_id": "standard-ref-0",
+            "attack": "noise",
+            "score": 0.9996169303795535,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-0-noise-1",
+            "ref_id": "standard-ref-0",
+            "attack": "noise",
+            "score": 0.9844674296533468,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-0-noise-2",
+            "ref_id": "standard-ref-0",
+            "attack": "noise",
+            "score": 0.9621911022994573,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-0-prune-0",
+            "ref_id": "standard-ref-0",
+            "attack": "prune",
+            "score": 0.9928244197060048,
+            "utility": 0.10025566071271896,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-0-prune-1",
+            "ref_id": "standard-ref-0",
+            "attack": "prune",
+            "score": 0.8527849280635493,
+            "utility": 1.4910036325454712,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-0-prune-2",
+            "ref_id": "standard-ref-0",
+            "attack": "prune",
+            "score": 0.6687980959845558,
+            "utility": 4.651387691497803,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-0-quant-0",
+            "ref_id": "standard-ref-0",
+            "attack": "quant",
+            "score": 0.999874400951224,
+            "utility": 0.01913284696638584,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-0-quant-1",
+            "ref_id": "standard-ref-0",
+            "attack": "quant",
+            "score": 0.9994854782850665,
+            "utility": 0.01903379335999489,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-0-quant-2",
+            "ref_id": "standard-ref-0",
+            "attack": "quant",
+            "score": 0.9979093388086605,
+            "utility": 0.044922444969415665,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-noise-0",
+            "ref_id": "standard-ref-1",
+            "attack": "noise",
+            "score": 0.9996338478856641,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-noise-1",
+            "ref_id": "standard-ref-1",
+            "attack": "noise",
+            "score": 0.9976863833159016,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-noise-2",
+            "ref_id": "standard-ref-1",
+            "attack": "noise",
+            "score": 0.9906467224260629,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-prune-0",
+            "ref_id": "standard-ref-1",
+            "attack": "prune",
+            "score": 0.9929642786963742,
+            "utility": 0.08767253905534744,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-prune-1",
+            "ref_id": "standard-ref-1",
+            "attack": "prune",
+            "score": 0.8710391807021914,
+            "utility": 1.3692046403884888,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-prune-2",
+            "ref_id": "standard-ref-1",
+            "attack": "prune",
+            "score": 0.6966086195695432,
+            "utility": 4.3182854652404785,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-quant-0",
+            "ref_id": "standard-ref-1",
+            "attack": "quant",
+            "score": 0.999880038226386,
+            "utility": 0.04435941204428673,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-quant-1",
+            "ref_id": "standard-ref-1",
+            "attack": "quant",
+            "score": 0.9995173981002323,
+            "utility": 0.04977168142795563,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-1-quant-2",
+            "ref_id": "standard-ref-1",
+            "attack": "quant",
+            "score": 0.9979955048593849,
+            "utility": 0.059234026819467545,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-noise-0",
+            "ref_id": "standard-ref-2",
+            "attack": "noise",
+            "score": 0.9986319698993945,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-noise-1",
+            "ref_id": "standard-ref-2",
+            "attack": "noise",
+            "score": 0.9817469107353257,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-noise-2",
+            "ref_id": "standard-ref-2",
+            "attack": "noise",
+            "score": 0.9668306729110471,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-prune-0",
+            "ref_id": "standard-ref-2",
+            "attack": "prune",
+            "score": 0.9686608117920894,
+            "utility": 0.0706964060664177,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-prune-1",
+            "ref_id": "standard-ref-2",
+            "attack": "prune",
+            "score": 0.8714450855229043,
+            "utility": 1.3883148431777954,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-prune-2",
+            "ref_id": "standard-ref-2",
+            "attack": "prune",
+            "score": 0.6916571066093292,
+            "utility": 3.163163661956787,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-quant-0",
+            "ref_id": "standard-ref-2",
+            "attack": "quant",
+            "score": 0.9998705178351258,
+            "utility": 0.02163359709084034,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-quant-1",
+            "ref_id": "standard-ref-2",
+            "attack": "quant",
+            "score": 0.9994895657399733,
+            "utility": 0.024816900491714478,
+            "label": 1
+          },
+          {
+            "id": "standard-desc-2-quant-2",
+            "ref_id": "standard-ref-2",
+            "attack": "quant",
+            "score": 0.9978876054004057,
+            "utility": 0.029818443581461906,
+            "label": 1
+          }
+        ],
+        "indep_records": [
+          {
+            "id": "standard-ref-0|standard-indep-0",
+            "ref_id": "standard-ref-0",
+            "attack": "indep",
+            "score": 0.08317660885161436,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "standard-ref-0|standard-indep-1",
+            "ref_id": "standard-ref-0",
+            "attack": "indep",
+            "score": 0.07647360225156916,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "standard-ref-0|standard-indep-2",
+            "ref_id": "standard-ref-0",
+            "attack": "indep",
+            "score": 0.08158416730674932,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "standard-ref-1|standard-indep-0",
+            "ref_id": "standard-ref-1",
+            "attack": "indep",
+            "score": 0.07657530796323209,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "standard-ref-1|standard-indep-1",
+            "ref_id": "standard-ref-1",
+            "attack": "indep",
+            "score": 0.08203693864447116,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "standard-ref-1|standard-indep-2",
+            "ref_id": "standard-ref-1",
+            "attack": "indep",
+            "score": 0.08011654731384439,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "standard-ref-2|standard-indep-0",
+            "ref_id": "standard-ref-2",
+            "attack": "indep",
+            "score": 0.0752598307610422,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "standard-ref-2|standard-indep-1",
+            "ref_id": "standard-ref-2",
+            "attack": "indep",
+            "score": 0.0835687476408895,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "standard-ref-2|standard-indep-2",
+            "ref_id": "standard-ref-2",
+            "attack": "indep",
+            "score": 0.07469723368468086,
+            "utility": null,
+            "label": 0
+          }
+        ]
+      }
+    },
+    "dar": {
+      "arch": "dar",
+      "tau_s": 0.03287582154960665,
+      "eval_loss_refs": [
+        0.030076630413532257,
+        0.017657646909356117,
+        0.027015572413802147
+      ],
+      "eval_loss_indeps": [
+        0.03400544822216034,
+        0.018718630075454712,
+        0.02598755992949009
+      ],
+      "fingerprint": {
+        "mean_diag_s_correct": 0.6881931639128273,
+        "mean_diag_s_off": 0.23779570130148053,
+        "separation": 0.45039746261134667,
+        "pair_acc": 0.7638888888888888,
+        "neg_trace_frac": 0.048611111111111105,
+        "per_model": [
+          {
+            "pair_acc": 1.0,
+            "mean_diag_s": 0.7532134961276514,
+            "mean_off_s": 0.24935720371147294,
+            "neg_trace_frac": 0.041666666666666664,
+            "separation": 0.5038562924161785
+          },
+          {
+            "pair_acc": 0.5416666666666666,
+            "mean_diag_s": 0.6749303712057975,
+            "mean_off_s": 0.24767565183923593,
+            "neg_trace_frac": 0.041666666666666664,
+            "separation": 0.42725471936656156
+          },
+          {
+            "pair_acc": 0.7916666666666666,
+            "mean_diag_s": 0.6745517837826975,
+            "mean_off_s": 0.22206188574131733,
+            "neg_trace_frac": 0.08333333333333333,
+            "separation": 0.4524898980413802
+          },
+          {
+            "pair_acc": 0.7916666666666666,
+            "mean_diag_s": 0.6993425023659162,
+            "mean_off_s": 0.2384005709686639,
+            "neg_trace_frac": 0.041666666666666664,
+            "separation": 0.4609419313972523
+          },
+          {
+            "pair_acc": 0.875,
+            "mean_diag_s": 0.6839647644647586,
+            "mean_off_s": 0.23737636159505485,
+            "neg_trace_frac": 0.041666666666666664,
+            "separation": 0.4465884028697038
+          },
+          {
+            "pair_acc": 0.5833333333333334,
+            "mean_diag_s": 0.6431560655301419,
+            "mean_off_s": 0.23190253395313817,
+            "neg_trace_frac": 0.041666666666666664,
+            "separation": 0.41125353157700373
+          }
+        ]
+      },
+      "lineage": {
+        "auroc": 1.0,
+        "desc_mean": 0.9835018165612078,
+        "desc_min": 0.8935024431891248,
+        "indep_mean": 0.10012342828602946,
+        "indep_max": 0.3571887065436358,
+        "desc_records": [
+          {
+            "id": "dar-desc-0-noise-0",
+            "ref_id": "dar-ref-0",
+            "attack": "noise",
+            "score": 0.9998695496578537,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-0-noise-1",
+            "ref_id": "dar-ref-0",
+            "attack": "noise",
+            "score": 0.999213555709907,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-0-noise-2",
+            "ref_id": "dar-ref-0",
+            "attack": "noise",
+            "score": 0.9969260741384085,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-0-prune-0",
+            "ref_id": "dar-ref-0",
+            "attack": "prune",
+            "score": 0.9982610723987185,
+            "utility": 0.11441576480865479,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-0-prune-1",
+            "ref_id": "dar-ref-0",
+            "attack": "prune",
+            "score": 0.9726510264958246,
+            "utility": 2.1268486976623535,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-0-prune-2",
+            "ref_id": "dar-ref-0",
+            "attack": "prune",
+            "score": 0.8935024431891248,
+            "utility": 5.9822773933410645,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-0-quant-0",
+            "ref_id": "dar-ref-0",
+            "attack": "quant",
+            "score": 0.9999231045120164,
+            "utility": 0.03328075259923935,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-0-quant-1",
+            "ref_id": "dar-ref-0",
+            "attack": "quant",
+            "score": 0.9996737482205235,
+            "utility": 0.04320523515343666,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-0-quant-2",
+            "ref_id": "dar-ref-0",
+            "attack": "quant",
+            "score": 0.9986879615791769,
+            "utility": 0.08369332551956177,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-noise-0",
+            "ref_id": "dar-ref-1",
+            "attack": "noise",
+            "score": 0.9998640577534732,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-noise-1",
+            "ref_id": "dar-ref-1",
+            "attack": "noise",
+            "score": 0.9991450848544682,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-noise-2",
+            "ref_id": "dar-ref-1",
+            "attack": "noise",
+            "score": 0.9858233086528365,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-prune-0",
+            "ref_id": "dar-ref-1",
+            "attack": "prune",
+            "score": 0.9983012386639977,
+            "utility": 0.07526277005672455,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-prune-1",
+            "ref_id": "dar-ref-1",
+            "attack": "prune",
+            "score": 0.9718885471401212,
+            "utility": 2.471832752227783,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-prune-2",
+            "ref_id": "dar-ref-1",
+            "attack": "prune",
+            "score": 0.8950696839852399,
+            "utility": 5.843463897705078,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-quant-0",
+            "ref_id": "dar-ref-1",
+            "attack": "quant",
+            "score": 0.997151889678714,
+            "utility": 0.019312340766191483,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-quant-1",
+            "ref_id": "dar-ref-1",
+            "attack": "quant",
+            "score": 0.9928339400382655,
+            "utility": 0.024674927815794945,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-1-quant-2",
+            "ref_id": "dar-ref-1",
+            "attack": "quant",
+            "score": 0.9837060068039477,
+            "utility": 0.05376002565026283,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-noise-0",
+            "ref_id": "dar-ref-2",
+            "attack": "noise",
+            "score": 0.9998764706766611,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-noise-1",
+            "ref_id": "dar-ref-2",
+            "attack": "noise",
+            "score": 0.999218301433419,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-noise-2",
+            "ref_id": "dar-ref-2",
+            "attack": "noise",
+            "score": 0.9969645512545497,
+            "utility": NaN,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-prune-0",
+            "ref_id": "dar-ref-2",
+            "attack": "prune",
+            "score": 0.9982955171025036,
+            "utility": 0.08319201320409775,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-prune-1",
+            "ref_id": "dar-ref-2",
+            "attack": "prune",
+            "score": 0.9722381220487278,
+            "utility": 1.9659934043884277,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-prune-2",
+            "ref_id": "dar-ref-2",
+            "attack": "prune",
+            "score": 0.9070145534388656,
+            "utility": 5.697470664978027,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-quant-0",
+            "ref_id": "dar-ref-2",
+            "attack": "quant",
+            "score": 0.9999296284969686,
+            "utility": 0.028496235609054565,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-quant-1",
+            "ref_id": "dar-ref-2",
+            "attack": "quant",
+            "score": 0.9997083271484158,
+            "utility": 0.03213319554924965,
+            "label": 1
+          },
+          {
+            "id": "dar-desc-2-quant-2",
+            "ref_id": "dar-ref-2",
+            "attack": "quant",
+            "score": 0.9988112820798861,
+            "utility": 0.06956490874290466,
+            "label": 1
+          }
+        ],
+        "indep_records": [
+          {
+            "id": "dar-ref-0|dar-indep-0",
+            "ref_id": "dar-ref-0",
+            "attack": "indep",
+            "score": 0.18612641981532538,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "dar-ref-0|dar-indep-1",
+            "ref_id": "dar-ref-0",
+            "attack": "indep",
+            "score": 0.024113698330503728,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "dar-ref-0|dar-indep-2",
+            "ref_id": "dar-ref-0",
+            "attack": "indep",
+            "score": 0.046214525942324815,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "dar-ref-1|dar-indep-0",
+            "ref_id": "dar-ref-1",
+            "attack": "indep",
+            "score": 0.03466887562604897,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "dar-ref-1|dar-indep-1",
+            "ref_id": "dar-ref-1",
+            "attack": "indep",
+            "score": 0.3571887065436358,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "dar-ref-1|dar-indep-2",
+            "ref_id": "dar-ref-1",
+            "attack": "indep",
+            "score": 0.03777968827910921,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "dar-ref-2|dar-indep-0",
+            "ref_id": "dar-ref-2",
+            "attack": "indep",
+            "score": 0.1954646621520375,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "dar-ref-2|dar-indep-1",
+            "ref_id": "dar-ref-2",
+            "attack": "indep",
+            "score": 0.00959464914545573,
+            "utility": null,
+            "label": 0
+          },
+          {
+            "id": "dar-ref-2|dar-indep-2",
+            "ref_id": "dar-ref-2",
+            "attack": "indep",
+            "score": 0.009959628739823985,
+            "utility": null,
+            "label": 0
+          }
+        ]
+      }
+    }
+  }
+}
