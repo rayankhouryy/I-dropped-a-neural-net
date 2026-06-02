@@ -215,8 +215,12 @@ def run_training_experiment(seed: int, depth: int, in_dim: int, hidden: int,
         results, d = extract_block_metrics(model)
         checkpoints[0] = {'blocks': results, 'eval_loss': None}
 
-    opt = torch.optim.Adam(model.parameters(), lr=1e-4)
+    opt = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
     loss_fn = nn.MSELoss()
+
+    # Normalize targets to prevent explosion
+    y_mean, y_std = y.mean(), y.std()
+    y = (y - y_mean) / (y_std + 1e-8)
 
     X_eval, y_eval = X[:1000], y[:1000]
     X_train, y_train = X[1000:], y[1000:]
