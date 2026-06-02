@@ -1,0 +1,217 @@
+{
+  "model": "gpt2",
+  "d_model": 768,
+  "n_layers": 12,
+  "pretrained": {
+    "per_layer": [
+      {
+        "layer": 0,
+        "trace": 2043.49072265625,
+        "trace_negative": false,
+        "diag_dominance_s": 3.1614346504211426,
+        "jacobian_deviation": 1537.8274676866172,
+        "d_model": 768
+      },
+      {
+        "layer": 1,
+        "trace": -3698.21142578125,
+        "trace_negative": true,
+        "diag_dominance_s": 5.168711185455322,
+        "jacobian_deviation": 12011.720717256982,
+        "d_model": 768
+      },
+      {
+        "layer": 2,
+        "trace": -2363.169677734375,
+        "trace_negative": true,
+        "diag_dominance_s": 2.571254014968872,
+        "jacobian_deviation": 21786.291996061726,
+        "d_model": 768
+      },
+      {
+        "layer": 3,
+        "trace": -1815.5496826171875,
+        "trace_negative": true,
+        "diag_dominance_s": 2.887768268585205,
+        "jacobian_deviation": 6810.910813559584,
+        "d_model": 768
+      },
+      {
+        "layer": 4,
+        "trace": -2696.073974609375,
+        "trace_negative": true,
+        "diag_dominance_s": 5.139477252960205,
+        "jacobian_deviation": 2656.0182442313476,
+        "d_model": 768
+      },
+      {
+        "layer": 5,
+        "trace": -1846.7958984375,
+        "trace_negative": true,
+        "diag_dominance_s": 3.4307422637939453,
+        "jacobian_deviation": 2463.874550758239,
+        "d_model": 768
+      },
+      {
+        "layer": 6,
+        "trace": -2229.41650390625,
+        "trace_negative": true,
+        "diag_dominance_s": 4.071656703948975,
+        "jacobian_deviation": 1734.2257963221218,
+        "d_model": 768
+      },
+      {
+        "layer": 7,
+        "trace": -2343.468994140625,
+        "trace_negative": true,
+        "diag_dominance_s": 4.008913040161133,
+        "jacobian_deviation": 1781.2665728786535,
+        "d_model": 768
+      },
+      {
+        "layer": 8,
+        "trace": -2833.0859375,
+        "trace_negative": true,
+        "diag_dominance_s": 4.331554889678955,
+        "jacobian_deviation": 1807.1866347324483,
+        "d_model": 768
+      },
+      {
+        "layer": 9,
+        "trace": -3209.685546875,
+        "trace_negative": true,
+        "diag_dominance_s": 4.389011383056641,
+        "jacobian_deviation": 2026.8986009574699,
+        "d_model": 768
+      },
+      {
+        "layer": 10,
+        "trace": -4797.65380859375,
+        "trace_negative": true,
+        "diag_dominance_s": 5.696706771850586,
+        "jacobian_deviation": 4602.273229522372,
+        "d_model": 768
+      },
+      {
+        "layer": 11,
+        "trace": -6035.03857421875,
+        "trace_negative": true,
+        "diag_dominance_s": 5.267932891845703,
+        "jacobian_deviation": 19885.887303528292,
+        "d_model": 768
+      }
+    ],
+    "aggregate": {
+      "mean_s": 4.177096943060557,
+      "mean_delta_J": 6592.031827291321,
+      "frac_neg_trace": 0.9166666666666666,
+      "mean_trace": -2652.054941813151
+    }
+  },
+  "random_init": {
+    "per_layer": [
+      {
+        "layer": 0,
+        "trace": 0.6658176183700562,
+        "trace_negative": false,
+        "diag_dominance_s": 0.03907356411218643,
+        "jacobian_deviation": 1.0408306288552247,
+        "d_model": 768
+      },
+      {
+        "layer": 1,
+        "trace": -0.29346615076065063,
+        "trace_negative": true,
+        "diag_dominance_s": 0.017227090895175934,
+        "jacobian_deviation": 1.038778181415612,
+        "d_model": 768
+      },
+      {
+        "layer": 2,
+        "trace": 0.6091398000717163,
+        "trace_negative": false,
+        "diag_dominance_s": 0.035794034600257874,
+        "jacobian_deviation": 1.0387128662276781,
+        "d_model": 768
+      },
+      {
+        "layer": 3,
+        "trace": 0.04845625162124634,
+        "trace_negative": false,
+        "diag_dominance_s": 0.0028490228578448296,
+        "jacobian_deviation": 1.0355157420376775,
+        "d_model": 768
+      },
+      {
+        "layer": 4,
+        "trace": -0.4657604694366455,
+        "trace_negative": true,
+        "diag_dominance_s": 0.027418572455644608,
+        "jacobian_deviation": 1.032049917074049,
+        "d_model": 768
+      },
+      {
+        "layer": 5,
+        "trace": -0.2784760296344757,
+        "trace_negative": true,
+        "diag_dominance_s": 0.016332797706127167,
+        "jacobian_deviation": 1.0390356055079237,
+        "d_model": 768
+      },
+      {
+        "layer": 6,
+        "trace": 0.07705084979534149,
+        "trace_negative": false,
+        "diag_dominance_s": 0.004524496383965015,
+        "jacobian_deviation": 1.0374477273407512,
+        "d_model": 768
+      },
+      {
+        "layer": 7,
+        "trace": -0.26603132486343384,
+        "trace_negative": true,
+        "diag_dominance_s": 0.015603551641106606,
+        "jacobian_deviation": 1.0393689952634912,
+        "d_model": 768
+      },
+      {
+        "layer": 8,
+        "trace": 0.40470263361930847,
+        "trace_negative": false,
+        "diag_dominance_s": 0.023754369467496872,
+        "jacobian_deviation": 1.040932349520335,
+        "d_model": 768
+      },
+      {
+        "layer": 9,
+        "trace": 0.15348218381404877,
+        "trace_negative": false,
+        "diag_dominance_s": 0.0090066809207201,
+        "jacobian_deviation": 1.0389806826561376,
+        "d_model": 768
+      },
+      {
+        "layer": 10,
+        "trace": -0.09000438451766968,
+        "trace_negative": true,
+        "diag_dominance_s": 0.00528743164613843,
+        "jacobian_deviation": 1.0363513075101425,
+        "d_model": 768
+      },
+      {
+        "layer": 11,
+        "trace": 0.0907493531703949,
+        "trace_negative": false,
+        "diag_dominance_s": 0.0053328112699091434,
+        "jacobian_deviation": 1.0383570878190795,
+        "d_model": 768
+      }
+    ],
+    "aggregate": {
+      "mean_s": 0.01685036866304775,
+      "mean_delta_J": 1.038030090935675,
+      "frac_neg_trace": 0.4166666666666667,
+      "mean_trace": 0.054638360937436424
+    }
+  }
+}
