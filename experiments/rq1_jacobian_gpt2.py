@@ -62,6 +62,21 @@ def jacobian_orthogonality_deviation(M: np.ndarray) -> float:
     return float(deviation)
 
 
+def jacobian_orthogonality_normalized(M: np.ndarray) -> float:
+    """Compute scale-invariant orthogonality: ||J^T J / ||J||_F^2 - I/d||_F
+
+    Asks "are singular values uniform?" not "are they all 1?"
+    This metric is invariant to weight magnitude, unlike δ_J.
+    """
+    d = M.shape[0]
+    I = np.eye(d, dtype=np.float64)
+    J = I + M
+    JTJ = J.T @ J
+    J_frob_sq = np.linalg.norm(J, 'fro') ** 2
+    normalized = JTJ / J_frob_sq - I / d
+    return float(np.linalg.norm(normalized, 'fro'))
+
+
 def diagonal_dominance(M: np.ndarray, eps: float = 1e-12) -> float:
     """Compute s = |tr(M)| / ||M||_F."""
     tr = np.trace(M)
@@ -82,6 +97,7 @@ def analyze_model(model_name: str, pretrained: bool = True):
             'trace_negative': tr < 0,
             'diag_dominance_s': diagonal_dominance(M),
             'jacobian_deviation': jacobian_orthogonality_deviation(M),
+            'jacobian_deviation_norm': jacobian_orthogonality_normalized(M),
             'd_model': d_model,
         })
 
@@ -111,6 +127,7 @@ def main():
         return {
             'mean_s': float(np.mean([r['diag_dominance_s'] for r in results])),
             'mean_delta_J': float(np.mean([r['jacobian_deviation'] for r in results])),
+            'mean_delta_J_norm': float(np.mean([r['jacobian_deviation_norm'] for r in results])),
             'frac_neg_trace': float(np.mean([r['trace_negative'] for r in results])),
             'mean_trace': float(np.mean([r['trace'] for r in results])),
         }
@@ -126,21 +143,23 @@ def main():
     print("\nPretrained GPT-2:")
     print(f"  Mean s(i,i):     {pretrained_agg['mean_s']:.4f}")
     print(f"  Mean δ_J:        {pretrained_agg['mean_delta_J']:.4f}")
+    print(f"  Mean δ_J (norm): {pretrained_agg['mean_delta_J_norm']:.4f}")
     print(f"  Frac neg trace:  {pretrained_agg['frac_neg_trace']:.1%}")
     print(f"  Mean trace:      {pretrained_agg['mean_trace']:.2f}")
 
     print("\nRandom-init GPT-2:")
     print(f"  Mean s(i,i):     {random_agg['mean_s']:.4f}")
     print(f"  Mean δ_J:        {random_agg['mean_delta_J']:.4f}")
+    print(f"  Mean δ_J (norm): {random_agg['mean_delta_J_norm']:.4f}")
     print(f"  Frac neg trace:  {random_agg['frac_neg_trace']:.1%}")
     print(f"  Mean trace:      {random_agg['mean_trace']:.2f}")
 
     print("\nPer-layer details:")
-    print(f"{'Layer':>5} | {'Pre s':>8} | {'Pre δ_J':>8} | {'Pre tr':>10} | {'Rand s':>8} | {'Rand δ_J':>8}")
-    print("-" * 65)
+    print(f"{'Layer':>5} | {'Pre s':>8} | {'Pre δ_J':>10} | {'Pre δ_J_n':>10} | {'Rand s':>8} | {'Rand δ_J_n':>10}")
+    print("-" * 75)
     for p, r in zip(pretrained_results, random_results):
-        print(f"{p['layer']:>5} | {p['diag_dominance_s']:>8.4f} | {p['jacobian_deviation']:>8.4f} | "
-              f"{p['trace']:>10.2f} | {r['diag_dominance_s']:>8.4f} | {r['jacobian_deviation']:>8.4f}")
+        print(f"{p['layer']:>5} | {p['diag_dominance_s']:>8.4f} | {p['jacobian_deviation']:>10.1f} | "
+              f"{p['jacobian_deviation_norm']:>10.4f} | {r['diag_dominance_s']:>8.4f} | {r['jacobian_deviation_norm']:>10.4f}")
 
     # Save JSON
     output = {

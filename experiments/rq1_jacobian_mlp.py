@@ -127,6 +127,21 @@ def jacobian_orthogonality_deviation(M: np.ndarray) -> float:
     return float(deviation)
 
 
+def jacobian_orthogonality_normalized(M: np.ndarray) -> float:
+    """Compute scale-invariant orthogonality: ||J^T J / ||J||_F^2 - I/d||_F
+
+    Asks "are singular values uniform?" not "are they all 1?"
+    This metric is invariant to weight magnitude, unlike δ_J.
+    """
+    d = M.shape[0]
+    I = np.eye(d, dtype=np.float64)
+    J = I + M
+    JTJ = J.T @ J
+    J_frob_sq = np.linalg.norm(J, 'fro') ** 2
+    normalized = JTJ / J_frob_sq - I / d
+    return float(np.linalg.norm(normalized, 'fro'))
+
+
 def diagonal_dominance(M: np.ndarray, eps: float = 1e-12) -> float:
     """Compute s = |tr(M)| / ||M||_F."""
     tr = np.trace(M)
@@ -151,6 +166,7 @@ def extract_block_metrics(model: nn.Module):
             'trace_negative': tr < 0,
             'diag_dominance_s': diagonal_dominance(M),
             'jacobian_deviation': jacobian_orthogonality_deviation(M),
+            'jacobian_deviation_norm': jacobian_orthogonality_normalized(M),
         })
 
     return results, d
@@ -255,6 +271,7 @@ def aggregate_results(block_results: list):
     return {
         'mean_s': float(np.mean([r['diag_dominance_s'] for r in block_results])),
         'mean_delta_J': float(np.mean([r['jacobian_deviation'] for r in block_results])),
+        'mean_delta_J_norm': float(np.mean([r['jacobian_deviation_norm'] for r in block_results])),
         'frac_neg_trace': float(np.mean([r['trace_negative'] for r in block_results])),
         'mean_trace': float(np.mean([r['trace'] for r in block_results])),
     }
@@ -323,7 +340,7 @@ def main():
             'aggregate': agg,
             'n_blocks': len(all_blocks),
         }
-        print(f"s={agg['mean_s']:.4f}, δ_J={agg['mean_delta_J']:.4f}, neg_tr={agg['frac_neg_trace']:.1%}")
+        print(f"s={agg['mean_s']:.4f}, δ_J={agg['mean_delta_J']:.4f}, δ_J_norm={agg['mean_delta_J_norm']:.4f}, neg_tr={agg['frac_neg_trace']:.1%}")
 
     # 2. Training experiments
     print("\n[Phase 2] Training experiments")
@@ -343,7 +360,7 @@ def main():
                 'aggregate': agg,
                 'eval_loss': data['eval_loss'],
             }
-            print(f"    Epoch {ep:3d}: s={agg['mean_s']:.4f}, δ_J={agg['mean_delta_J']:.4f}, "
+            print(f"    Epoch {ep:3d}: s={agg['mean_s']:.4f}, δ_J={agg['mean_delta_J']:.4f}, δ_J_norm={agg['mean_delta_J_norm']:.4f}, "
                   f"neg_tr={agg['frac_neg_trace']:.1%}", end="")
             if data['eval_loss'] is not None:
                 print(f", loss={data['eval_loss']:.4f}")
