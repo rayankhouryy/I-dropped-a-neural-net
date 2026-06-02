@@ -344,7 +344,9 @@ def main():
     for ep in checkpoint_epochs:
         ns = normal_s.get(ep)
         ss = shuffled_s.get(ep)
-        print(f"{ep:<8} {ns:.4f if ns else 'N/A':<12} {ss:.4f if ss else 'N/A':<12}")
+        ns_str = f"{ns:.4f}" if ns is not None else "N/A"
+        ss_str = f"{ss:.4f}" if ss is not None else "N/A"
+        print(f"{ep:<8} {ns_str:<12} {ss_str:<12}")
 
     # Save JSON
     with open(args.out, 'w') as f:
