@@ -185,24 +185,26 @@ def train_model(model, X, y, epochs, lr=1e-3, batch=256, grad_clip=1.0):
     return eval_loss
 
 
-def run_init_experiment(scheme: str, seed: int, depth: int, in_dim: int, hidden: int):
+def run_init_experiment(scheme: str, seed: int, depth: int, in_dim: int,
+                        hidden: int, device: torch.device):
     """Measure metrics at initialization (epoch 0) for a given scheme."""
-    model = ResNet(in_dim=in_dim, hidden_dim=hidden, depth=depth)
+    model = ResNet(in_dim=in_dim, hidden_dim=hidden, depth=depth).to(device)
     apply_init(model, scheme, seed=seed)
     results, d = extract_block_metrics(model)
     return results
 
 
 def run_training_experiment(seed: int, depth: int, in_dim: int, hidden: int,
-                            checkpoint_epochs: list):
+                            checkpoint_epochs: list, device: torch.device):
     """Train model and measure metrics at checkpoint epochs."""
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    model = ResNet(in_dim=in_dim, hidden_dim=hidden, depth=depth)
+    model = ResNet(in_dim=in_dim, hidden_dim=hidden, depth=depth).to(device)
     apply_init(model, "kaiming_normal", seed=seed * 1000 + 1)
 
     X, y = make_data(in_dim=in_dim, n=4000, seed=seed)
+    X, y = X.to(device), y.to(device)
 
     checkpoints = {}
 
@@ -211,7 +213,7 @@ def run_training_experiment(seed: int, depth: int, in_dim: int, hidden: int,
         results, d = extract_block_metrics(model)
         checkpoints[0] = {'blocks': results, 'eval_loss': None}
 
-    opt = torch.optim.Adam(model.parameters(), lr=1e-3)
+    opt = torch.optim.Adam(model.parameters(), lr=1e-4)
     loss_fn = nn.MSELoss()
 
     X_eval, y_eval = X[:1000], y[:1000]
@@ -258,8 +260,11 @@ def main():
     ap.add_argument("--hidden", type=int, default=256)
     ap.add_argument("--in-dim", type=int, default=128)
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
+    ap.add_argument("--device", default="cpu")
     ap.add_argument("--out", default="results/rq1_jacobian_mlp.json")
     args = ap.parse_args()
+
+    device = torch.device(args.device)
 
     Path("results").mkdir(exist_ok=True)
     Path("figures").mkdir(exist_ok=True)
@@ -296,7 +301,8 @@ def main():
         print(f"\n  {scheme}:", end=" ", flush=True)
         all_blocks = []
         for seed in args.seeds:
-            results = run_init_experiment(scheme, seed, args.depth, args.in_dim, args.hidden)
+            results = run_init_experiment(
+                scheme, seed, args.depth, args.in_dim, args.hidden, device)
             all_blocks.extend(results)
             for r in results:
                 scatter_data.append({
@@ -319,7 +325,7 @@ def main():
         print(f"\n  Seed {seed}:", flush=True)
         t0 = time.time()
         checkpoints = run_training_experiment(
-            seed, args.depth, args.in_dim, args.hidden, checkpoint_epochs
+            seed, args.depth, args.in_dim, args.hidden, checkpoint_epochs, device
         )
         elapsed = time.time() - t0
         print(f"    Trained in {elapsed:.1f}s")
