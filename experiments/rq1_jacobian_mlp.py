@@ -188,8 +188,9 @@ def train_model(model, X, y, epochs, lr=1e-3, batch=256, grad_clip=1.0):
 def run_init_experiment(scheme: str, seed: int, depth: int, in_dim: int,
                         hidden: int, device: torch.device):
     """Measure metrics at initialization (epoch 0) for a given scheme."""
-    model = ResNet(in_dim=in_dim, hidden_dim=hidden, depth=depth).to(device)
+    model = ResNet(in_dim=in_dim, hidden_dim=hidden, depth=depth)
     apply_init(model, scheme, seed=seed)
+    model = model.to(device)
     results, d = extract_block_metrics(model)
     return results
 
@@ -200,8 +201,9 @@ def run_training_experiment(seed: int, depth: int, in_dim: int, hidden: int,
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    model = ResNet(in_dim=in_dim, hidden_dim=hidden, depth=depth).to(device)
+    model = ResNet(in_dim=in_dim, hidden_dim=hidden, depth=depth)
     apply_init(model, "kaiming_normal", seed=seed * 1000 + 1)
+    model = model.to(device)
 
     X, y = make_data(in_dim=in_dim, n=4000, seed=seed)
     X, y = X.to(device), y.to(device)
