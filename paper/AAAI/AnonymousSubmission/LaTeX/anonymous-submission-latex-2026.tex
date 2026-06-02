@@ -290,6 +290,13 @@ Independent / Distilled & 0.08 & 0.01 & --- \\
 \label{tab:survival}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../../../figures/fig_lineage_three_panel.pdf}
+\caption{Lineage detection on depth-24 residual MLPs. (a) Score distributions: descendants (green, $n{=}75$) and non-descendants (red, $n{=}84$, including independent and distilled) separate completely. (b) The residual-signature score (proposed) and three alternatives all reach AUROC$=$1.000, except the diagonal-dominance-only baseline (AUROC$=$0.417) which cannot distinguish two trained residual models. (c) Lineage vs.\ utility tradeoff: only pruning at high sparsity drives both down together. (d) Mean lineage by control type: descendants $\ge 0.81$, non-descendants $\le 0.09$.}
+\label{fig:lineage-three-panel}
+\end{figure}
+
 Table~\ref{tab:survival} shows 100\% detection at 1\% FPR across all transformations. The weakest descendant (85\% pruning, $\mathcal{L}{=}0.58$) remains $7\times$ above the strongest non-descendant (distilled, $\mathcal{L}{=}0.19$). Fingerprint degradation correlates with utility loss ($\rho{=}-0.83$): suppressing the signal damages the model.
 
 \textbf{Real architectures:} On CIFAR-10 ResNet-18, the method achieves AUROC$=$1.000 with $>$100$\times$ separation between descendants and independents (Appendix~\ref{app:experiments}).
@@ -303,6 +310,15 @@ We test whether the fingerprint can be suppressed without destroying model utili
 \textbf{Gradient-based suppression.} An adversary optimizes $\Delta$ to minimize $\mathcal{L}$ subject to utility preservation. Sweeping the utility weight $\lambda$ traces a Pareto frontier: with $\lambda \ge 1$, the attacker cannot push $\mathcal{L}$ below $0.91$; suppressing to chance level ($\mathcal{L} \approx 0.08$) requires $\ge$12\% eval-loss degradation; full suppression destroys the model ($57\times$ loss increase). Details in Appendix~\ref{app:attacks}.
 
 \textbf{Distillation boundary.} The fingerprint tracks weight inheritance, not functional imitation. Distilled students ($\mathcal{L} = 0.086$) are correctly classified as non-descendants---they trained fresh weights and share no residual structure with the teacher, even though they replicate its outputs.
+
+\textbf{Cross-layer routing architectures.} A natural concern is whether the fingerprint depends on the standard $x + f(x)$ identity path. We test this directly against DAR~\citep{xu2026dar}, a recent residual replacement that drops the additive recurrence in favor of a learnable, timestep-adaptive softmax aggregation over sublayer history. At matched fingerprint plateau on depth-24 MLPs, the negative-identity component is essentially ablated under DAR (negative-trace fraction $0.99 \to 0.02$), confirming that this specific geometry is regime-dependent. However, the broader trace/Frobenius concentration in the architecture-aware product persists: separation between correct and mismatched pairs is comparable ($0.42$ vs.\ $0.39$ for standard residual), and the centered residual-signature score yields AUROC$=$1.000 across noise, prune, quant, and fine-tune descendants (45 desc / 36 indep pairs, Figure~\ref{fig:dar-fingerprint}). The lineage signal is therefore not tied to the negative-identity form of dynamical isometry; it follows from trace concentration in the trained branch product more generally.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{../../../figures/fig_dar_fingerprint.pdf}
+\caption{Fingerprint survives DAR cross-layer routing~\citep{xu2026dar} on depth-24 MLPs at matched plateau. (a) Negative-identity component is ablated under DAR ($0.99 \to 0.02$). (b) Trace concentration on correct pairs is preserved; separation from off-diagonal pairs is comparable to standard residual. (c) Lineage score distributions remain bimodal with AUROC$=$1.000 for both architectures. (d) Per-attack descendant scores stay above each architecture's independent ceiling across noise, pruning, quantization, and same/different-target fine-tuning.}
+\label{fig:dar-fingerprint}
+\end{figure*}
 
 \section{Discussion and Limitations}
 
