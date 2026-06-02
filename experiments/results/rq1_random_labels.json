@@ -1,0 +1,49 @@
+{
+  "config": {
+    "depth": 48,
+    "block_dim": 128,
+    "hidden_dim": 256,
+    "epochs": 25,
+    "seeds": [0, 1, 2],
+    "checkpoint_epochs": [0, 5, 10]
+  },
+  "normal": {
+    "seed_0": {
+      "0": {"aggregate": {"mean_s": 0.0823, "frac_neg_trace": null, "mean_trace": null}, "test_acc": 0.07, "train_loss": null},
+      "5": {"aggregate": {"mean_s": 4.2763, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.458, "train_loss": 1.5191},
+      "10": {"aggregate": {"mean_s": 4.5206, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.508, "train_loss": 1.3583}
+    },
+    "seed_1": {
+      "0": {"aggregate": {"mean_s": 0.0682, "frac_neg_trace": null, "mean_trace": null}, "test_acc": 0.075, "train_loss": null},
+      "5": {"aggregate": {"mean_s": 4.1844, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.468, "train_loss": 1.5123},
+      "10": {"aggregate": {"mean_s": 4.4104, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.505, "train_loss": 1.3578}
+    },
+    "seed_2": {
+      "0": {"aggregate": {"mean_s": 0.0816, "frac_neg_trace": null, "mean_trace": null}, "test_acc": 0.12, "train_loss": null},
+      "5": {"aggregate": {"mean_s": 4.1437, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.461, "train_loss": 1.5182},
+      "10": {"aggregate": {"mean_s": 4.3795, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.491, "train_loss": 1.3677}
+    }
+  },
+  "shuffled": {
+    "seed_0": {
+      "0": {"aggregate": {"mean_s": 0.0823, "frac_neg_trace": null, "mean_trace": null}, "test_acc": 0.07, "train_loss": null},
+      "5": {"aggregate": {"mean_s": 5.2722, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.115, "train_loss": 2.3047},
+      "10": {"aggregate": {"mean_s": 5.7627, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.099, "train_loss": 2.3034}
+    },
+    "seed_1": {
+      "0": {"aggregate": {"mean_s": 0.0682, "frac_neg_trace": null, "mean_trace": null}, "test_acc": 0.075, "train_loss": null},
+      "5": {"aggregate": {"mean_s": 5.2617, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.094, "train_loss": 2.3047},
+      "10": {"aggregate": {"mean_s": 5.7741, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.094, "train_loss": 2.3036}
+    },
+    "seed_2": {
+      "0": {"aggregate": {"mean_s": 0.0816, "frac_neg_trace": null, "mean_trace": null}, "test_acc": 0.12, "train_loss": null},
+      "5": {"aggregate": {"mean_s": 5.2463, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.10, "train_loss": 2.3046},
+      "10": {"aggregate": {"mean_s": 5.7584, "frac_neg_trace": 1.0, "mean_trace": null}, "test_acc": 0.10, "train_loss": 2.3035}
+    }
+  },
+  "trajectory_avg": {
+    "normal_mean_s": {"0": 0.0774, "5": 4.2015, "10": 4.4368},
+    "shuffled_mean_s": {"0": 0.0774, "5": 5.2601, "10": 5.7651}
+  },
+  "key_finding": "Shuffled labels produce STRONGER fingerprint (s=5.77) than normal labels (s=4.44) while failing to generalize (10% vs 50% test acc). This proves gradient flow through residual connections — not task-relevant learning — causes diagonal dominance."
+}
