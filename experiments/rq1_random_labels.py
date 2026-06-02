@@ -301,20 +301,21 @@ def main():
             }
 
     # Compute trajectory averages
-    def avg_trajectory(condition_data, metric):
+    def avg_metric(condition_data, metric_path):
+        """Average a metric across seeds for each epoch."""
         trajectory = {}
         for ep in checkpoint_epochs:
-            values = [condition_data[f'seed_{s}'][ep][metric]
-                      for s in args.seeds if ep in condition_data[f'seed_{s}']]
+            values = []
+            for s in args.seeds:
+                key = f'seed_{s}'
+                if key in condition_data and ep in condition_data[key]:
+                    val = condition_data[key][ep]['aggregate'][metric_path]
+                    values.append(val)
             trajectory[ep] = float(np.mean(values)) if values else None
         return trajectory
 
-    normal_s_traj = avg_trajectory(all_results['normal'], 'aggregate')
-    shuffled_s_traj = avg_trajectory(all_results['shuffled'], 'aggregate')
-
-    # Extract mean_s from aggregate
-    normal_s = {ep: d['mean_s'] if d else None for ep, d in normal_s_traj.items()}
-    shuffled_s = {ep: d['mean_s'] if d else None for ep, d in shuffled_s_traj.items()}
+    normal_s = avg_metric(all_results['normal'], 'mean_s')
+    shuffled_s = avg_metric(all_results['shuffled'], 'mean_s')
 
     all_results['trajectory_avg'] = {
         'normal_mean_s': normal_s,
