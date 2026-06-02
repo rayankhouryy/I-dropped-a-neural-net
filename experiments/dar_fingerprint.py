@@ -297,7 +297,7 @@ def run_arch(arch_name, model_cls, args, X, y, t0):
     print(f"  negative-trace fraction:         "
           f"{np.mean([f['neg_trace_frac'] for f in fps]):.4f}", flush=True)
 
-    # descendants: apply 3 attacks at 3 strengths each, per ref
+    # descendants: apply 3 attacks at 3 strengths + fine-tune (same and diff target), per ref
     desc_records = []
     attack_grid = [
         ('noise', [0.02, 0.05, 0.10], 'sigma_rel'),
@@ -321,6 +321,27 @@ def run_arch(arch_name, model_cls, args, X, y, t0):
                     'ref_id': ref['id'], 'attack': atk, key: val,
                     'model': child, 'utility': ev,
                 })
+        # fine-tune descendants: same target with noisy inputs (3) + diff target (3)
+        for k in range(3):
+            g = torch.Generator().manual_seed(5000 + ri*100 + k)
+            Xk = X + torch.randn(X.shape, generator=g) * 0.05
+            yk = synthetic_target(Xk, args.in_dim, key=42)
+            child = copy.deepcopy(ref['model'])
+            train_model(child, Xk, yk, epochs=args.ft_epochs, lr=3e-4)
+            desc_records.append({
+                'id': f'{arch_name}-desc-{ri}-ft_same-{k}',
+                'ref_id': ref['id'], 'attack': 'ft_same',
+                'model': child, 'utility': eval_loss(child, X, y),
+            })
+        for k in range(3):
+            yk = synthetic_target(X, args.in_dim, key=99 + k*11)
+            child = copy.deepcopy(ref['model'])
+            train_model(child, X, yk, epochs=args.ft_epochs, lr=3e-4)
+            desc_records.append({
+                'id': f'{arch_name}-desc-{ri}-ft_diff-{k}',
+                'ref_id': ref['id'], 'attack': 'ft_diff',
+                'model': child, 'utility': eval_loss(child, X, y),
+            })
 
     # compute residual-signature lineage scores
     ref_Ms = {r['id']: branch_products(r['model']) for r in refs}
@@ -397,9 +418,10 @@ def main():
     ap.add_argument('--depth', type=int, default=24)
     ap.add_argument('--hidden', type=int, default=64)
     ap.add_argument('--in-dim', type=int, default=24)
-    ap.add_argument('--epochs', type=int, default=120)
+    ap.add_argument('--epochs', type=int, default=600)
+    ap.add_argument('--ft-epochs', type=int, default=80)
     ap.add_argument('--n-refs', type=int, default=3)
-    ap.add_argument('--n-indeps', type=int, default=3)
+    ap.add_argument('--n-indeps', type=int, default=15)
     ap.add_argument('--out', default='results/dar_fingerprint.json')
     args = ap.parse_args()
 
@@ -411,6 +433,13 @@ def main():
     results = {}
     for name, cls in [('standard', StandardResNet), ('dar', DARNet)]:
         results[name] = run_arch(name, cls, args, X, y, t0)
+        # checkpoint after each arch so we don't lose 3 hours on a crash
+        partial = {'config': vars(args), 'wall_time_s': time.time() - t0,
+                   'results': results, 'partial': name != 'dar'}
+        with open(args.out, 'w') as f:
+            json.dump(partial, f, indent=2, default=lambda o: str(o))
+        print(f"\n  --> partial checkpoint written ({name} done, "
+              f"{time.time()-t0:.0f}s)", flush=True)
 
     # summary table
     print("\n=================== SUMMARY ===================")
