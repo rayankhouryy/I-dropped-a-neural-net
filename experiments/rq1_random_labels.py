@@ -104,8 +104,14 @@ def diagonal_dominance(M: np.ndarray, eps: float = 1e-12) -> float:
     return float(abs(tr) / frob)
 
 
-def extract_metrics(model: nn.Module):
-    """Extract diagonal dominance metrics for all blocks."""
+def extract_metrics(model: nn.Module, init_weights: dict = None):
+    """Extract diagonal dominance metrics for all blocks.
+
+    Args:
+        model: The ResNetMLP model
+        init_weights: Optional dict mapping block index to (W_in_init, W_out_init)
+                      for computing weight change magnitude
+    """
     results = []
     for i, blk in enumerate(model.blocks):
         W_in = blk.inp.weight.detach().cpu().numpy().astype(np.float64)
@@ -113,23 +119,41 @@ def extract_metrics(model: nn.Module):
         M = W_out @ W_in
 
         tr = float(np.trace(M))
-        results.append({
+        block_result = {
             'block': i,
             'trace': tr,
             'trace_negative': tr < 0,
             'diag_dominance_s': diagonal_dominance(M),
-        })
+        }
+
+        # Weight magnitude tracking for P0.5 control
+        if init_weights is not None and i in init_weights:
+            W_in_init, W_out_init = init_weights[i]
+            delta_W_in = np.linalg.norm(W_in - W_in_init, 'fro')
+            delta_W_out = np.linalg.norm(W_out - W_out_init, 'fro')
+            block_result['delta_W_in_fro'] = float(delta_W_in)
+            block_result['delta_W_out_fro'] = float(delta_W_out)
+            block_result['total_weight_delta'] = float(delta_W_in + delta_W_out)
+
+        results.append(block_result)
 
     return results
 
 
 def aggregate_metrics(block_results: list):
     """Aggregate per-block results."""
-    return {
+    agg = {
         'mean_s': float(np.mean([r['diag_dominance_s'] for r in block_results])),
         'frac_neg_trace': float(np.mean([r['trace_negative'] for r in block_results])),
         'mean_trace': float(np.mean([r['trace'] for r in block_results])),
     }
+
+    # Weight magnitude aggregates (P0.5 control)
+    if 'total_weight_delta' in block_results[0]:
+        agg['mean_delta_W'] = float(np.mean([r['total_weight_delta'] for r in block_results]))
+        agg['sum_delta_W'] = float(np.sum([r['total_weight_delta'] for r in block_results]))
+
+    return agg
 
 
 # --------------------------------------------------------------------- train
@@ -200,12 +224,19 @@ def run_experiment(seed: int, shuffle_labels: bool, depth: int, block_dim: int,
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
+    # Store initial weights for P0.5 weight magnitude control
+    init_weights = {}
+    for i, blk in enumerate(model.blocks):
+        W_in_init = blk.inp.weight.detach().cpu().numpy().astype(np.float64).copy()
+        W_out_init = blk.out.weight.detach().cpu().numpy().astype(np.float64).copy()
+        init_weights[i] = (W_in_init, W_out_init)
+
     # Training with checkpoints
     checkpoints = {}
 
-    # Epoch 0 (before training)
+    # Epoch 0 (before training) - no weight delta at init
     if 0 in checkpoint_epochs:
-        metrics = extract_metrics(model)
+        metrics = extract_metrics(model)  # No init_weights comparison at epoch 0
         test_acc = evaluate(model, test_loader, device)
         checkpoints[0] = {
             'blocks': metrics,
@@ -221,7 +252,7 @@ def run_experiment(seed: int, shuffle_labels: bool, depth: int, block_dim: int,
         train_loss = train_epoch(model, train_loader, optimizer, device)
 
         if ep in checkpoint_epochs:
-            metrics = extract_metrics(model)
+            metrics = extract_metrics(model, init_weights)  # Pass init weights for delta
             test_acc = evaluate(model, test_loader, device)
             agg = aggregate_metrics(metrics)
             checkpoints[ep] = {
@@ -231,9 +262,10 @@ def run_experiment(seed: int, shuffle_labels: bool, depth: int, block_dim: int,
                 'aggregate': agg,
             }
             elapsed = time.time() - t0
+            delta_str = f", ΔW={agg.get('mean_delta_W', 0):.2f}" if 'mean_delta_W' in agg else ""
             print(f"    Epoch {ep}: s={agg['mean_s']:.4f}, "
                   f"neg_tr={agg['frac_neg_trace']:.1%}, "
-                  f"acc={test_acc:.1%}, loss={train_loss:.4f} ({elapsed:.0f}s)")
+                  f"acc={test_acc:.1%}, loss={train_loss:.4f}{delta_str} ({elapsed:.0f}s)")
 
     return checkpoints
 
@@ -317,10 +349,61 @@ def main():
     normal_s = avg_metric(all_results['normal'], 'mean_s')
     shuffled_s = avg_metric(all_results['shuffled'], 'mean_s')
 
+    # Weight delta trajectories (P0.5 control)
+    def avg_metric_optional(condition_data, metric_path):
+        """Average a metric across seeds, returning None if metric missing."""
+        trajectory = {}
+        for ep in checkpoint_epochs:
+            if ep == 0:  # No delta at epoch 0
+                trajectory[ep] = 0.0
+                continue
+            values = []
+            for s in args.seeds:
+                key = f'seed_{s}'
+                if key in condition_data and ep in condition_data[key]:
+                    agg = condition_data[key][ep]['aggregate']
+                    if metric_path in agg:
+                        values.append(agg[metric_path])
+            trajectory[ep] = float(np.mean(values)) if values else None
+        return trajectory
+
+    normal_delta = avg_metric_optional(all_results['normal'], 'mean_delta_W')
+    shuffled_delta = avg_metric_optional(all_results['shuffled'], 'mean_delta_W')
+
     all_results['trajectory_avg'] = {
         'normal_mean_s': normal_s,
         'shuffled_mean_s': shuffled_s,
+        'normal_mean_delta_W': normal_delta,
+        'shuffled_mean_delta_W': shuffled_delta,
     }
+
+    # P0.5: Compute correlation between s and ||ΔW|| across all blocks/epochs
+    s_values = []
+    delta_values = []
+    for condition in ['normal', 'shuffled']:
+        for seed in args.seeds:
+            key = f'seed_{seed}'
+            for ep in checkpoint_epochs:
+                if ep == 0:
+                    continue
+                if key in all_results[condition] and ep in all_results[condition][key]:
+                    agg = all_results[condition][key][ep]['aggregate']
+                    if 'mean_delta_W' in agg:
+                        s_values.append(agg['mean_s'])
+                        delta_values.append(agg['mean_delta_W'])
+
+    if len(s_values) > 2:
+        corr = float(np.corrcoef(s_values, delta_values)[0, 1])
+        all_results['weight_magnitude_control'] = {
+            'correlation_s_deltaW': corr,
+            'n_samples': len(s_values),
+            'interpretation': (
+                'positive: fingerprint may correlate with gradient flow' if corr > 0.5
+                else 'negative: fingerprint inversely related to weight change' if corr < -0.5
+                else 'weak: fingerprint largely independent of weight magnitude'
+            )
+        }
+        print(f"\nP0.5 Weight Magnitude Control: r(s, ||ΔW||) = {corr:.3f}")
 
     # Print summary
     print("\n" + "=" * 60)
@@ -353,10 +436,10 @@ def main():
         json.dump(all_results, f, indent=2)
     print(f"\nSaved {args.out}")
 
-    # Create figure
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    # Create figure with 3 panels (added P0.5 weight magnitude control)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
-    # Left: s(i,i) trajectory
+    # Panel 1: s(i,i) trajectory
     ax = axes[0]
     epochs = checkpoint_epochs
     normal_means = [normal_s[ep] for ep in epochs]
@@ -370,7 +453,7 @@ def main():
     ax.legend()
     ax.grid(True, alpha=0.3)
 
-    # Right: Test accuracy trajectory
+    # Panel 2: Test accuracy trajectory
     ax = axes[1]
     normal_acc = [all_results['normal'][f'seed_0'][ep]['test_acc'] for ep in epochs]
     shuffled_acc = [all_results['shuffled'][f'seed_0'][ep]['test_acc'] for ep in epochs]
@@ -384,6 +467,42 @@ def main():
     ax.legend()
     ax.grid(True, alpha=0.3)
     ax.set_ylim(0, 1)
+
+    # Panel 3: P0.5 Weight Magnitude Control - s vs ||ΔW||
+    ax = axes[2]
+    if normal_delta and shuffled_delta:
+        # Skip epoch 0 (no delta)
+        epochs_nonzero = [ep for ep in epochs if ep > 0]
+        normal_d = [normal_delta.get(ep, 0) for ep in epochs_nonzero]
+        shuffled_d = [shuffled_delta.get(ep, 0) for ep in epochs_nonzero]
+        normal_s_nonzero = [normal_s[ep] for ep in epochs_nonzero]
+        shuffled_s_nonzero = [shuffled_s[ep] for ep in epochs_nonzero]
+
+        ax.scatter(normal_d, normal_s_nonzero, c='steelblue', s=100, marker='o', label='Normal', edgecolors='black')
+        ax.scatter(shuffled_d, shuffled_s_nonzero, c='coral', s=100, marker='s', label='Shuffled', edgecolors='black')
+
+        # Annotate epochs
+        for i, ep in enumerate(epochs_nonzero):
+            ax.annotate(f'e{ep}', (normal_d[i], normal_s_nonzero[i]), textcoords='offset points',
+                        xytext=(5, 5), fontsize=8, color='steelblue')
+            ax.annotate(f'e{ep}', (shuffled_d[i], shuffled_s_nonzero[i]), textcoords='offset points',
+                        xytext=(5, 5), fontsize=8, color='coral')
+
+        ax.set_xlabel(r'Mean weight change $\|\Delta W\|_F$')
+        ax.set_ylabel(r'Mean diagonal dominance $s(i,i)$')
+
+        # Add correlation if computed
+        if 'weight_magnitude_control' in all_results:
+            corr = all_results['weight_magnitude_control']['correlation_s_deltaW']
+            ax.set_title(f'P0.5 Control: s vs Weight Magnitude\n(r = {corr:.3f})')
+        else:
+            ax.set_title('P0.5 Control: s vs Weight Magnitude')
+
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+    else:
+        ax.text(0.5, 0.5, 'Weight magnitude\ndata not available', ha='center', va='center', transform=ax.transAxes)
+        ax.set_title('P0.5 Control: s vs Weight Magnitude')
 
     plt.tight_layout()
     plt.savefig('figures/fig_rq1_random_labels.png', dpi=150, bbox_inches='tight')
