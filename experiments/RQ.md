@@ -907,6 +907,22 @@ Frobenius matching degrades with model size; singular-value performs at chance.
 ## RQ4 — Survives
 **Does the score survive realistic post-training modifications?**
 
+### Narrative: Why Survival Works
+
+The fingerprint is a property of the *trained weights*, not of any particular weight value. As long as a transformation preserves the gradient-coupled structure that built W_out·W_in ≈ −εI + E, the diagonal-dominance score survives. The transformations practitioners actually apply in deployment — fine-tuning, quantization, pruning, LoRA merging — all do exactly this: they perturb weights without re-running gradient descent from scratch. That is the mechanistic reason for the 100% detection rate across every realistic post-training operation we tested.
+
+**Three regimes determine whether the score survives:**
+
+*Regime A — Perturbation that respects the trained subspace:* Fine-tuning, low-bit quantization, moderate pruning, and LoRA merging all leave the dominant singular directions of W_out·W_in intact. The branch product M continues to look like −εI + E, just with a slightly larger E. Detection stays at 100% across all 21 attack configurations we tested (fine-tuning LR 10⁻⁵–10⁻³ for up to 50 epochs, quantization down to 6-bit, pruning up to 50%, LoRA ranks 8–64).
+
+*Regime B — Perturbation that scales with utility:* Aggressive perturbations degrade the score in lockstep with model utility. The Pareto frontier between fingerprint and utility is tight (ρ = −0.83 between L and eval loss). At 70% pruning the lineage score drops to "likely" (r = 0.752 with the parent's E); by then the model has already lost noticeable accuracy. This is not a weakness — it is the desired behavior. A forensic signal that an adversary can suppress *for free* would be useless; one that requires paying utility to evade is the right tradeoff.
+
+*Regime C — Perturbation that resets the structure:* Distillation, by training a new student from scratch under a teacher's soft labels, rebuilds the branch product through fresh gradient descent. The resulting E correlation collapses to ≈ 0 (essentially identical to an independent seed). This is the *only* compression operation in our audit that destroys the fingerprint, and it does so because it is not really a compression operation — it is a re-training operation.
+
+**The Hungarian-matching protocol is what makes this robust.** Even when individual block-pair scores degrade under attack (separation drops from +1.18 untouched to +0.93 after aggressive fine-tuning), the global assignment of 48 blocks still resolves correctly because the perturbation is roughly uniform across blocks — every score gets noisier, but their *ranking* is preserved. This is why we report pair accuracy rather than raw score margins as the headline robustness metric.
+
+**Brittleness threshold is ~20% relative weight noise** — the same point at which model accuracy itself collapses. Below this, both utility and fingerprint survive; above it, both fail together. The two failure modes are coupled, which is the property that makes the method forensically defensible.
+
 ### Core Finding
 **100% detection** under fine-tuning, 8-bit quantization, 30% pruning, and LoRA merging. Signal degrades only when perturbations destroy utility.
 
@@ -966,6 +982,20 @@ Suppressing the signal damages the model — no "free lunch" for attackers.
 
 ## RQ5 — Resists / Fails Correctly
 **Can the signal be suppressed, and where are the boundaries?**
+
+### Narrative: Why Resistance Works (and Where It Doesn't)
+
+A forensic method is only as useful as its failure characterization. RQ5 asks the inverse of RQ4: *given an adversary who knows the protocol, what does it take to break it?* The answer has two parts. First, the operations that *should* leave the fingerprint untouched do. Second, the operations that destroy the fingerprint also destroy the model — they cannot be applied silently. Both parts come from the same mechanism that produced the fingerprint in the first place.
+
+**Function-preserving symmetries are invariances, not vulnerabilities.** Per-block permutations, cross-layer rescaling, and orthogonal rotations all leave the branch product M unchanged or transform it predictably; the lineage score L stays at exactly 1.0. An adversary who applies these transformations has not evaded detection — they have produced a model that is provably the same function. From a provenance standpoint this is correct behavior: two weight tensors that compute the same function should not be distinguished.
+
+**The gradient-based suppression attack defines the Pareto frontier.** When the adversary explicitly optimizes Δ to minimize L while preserving utility, the result traces a sharp tradeoff: pushing L to chance level requires ≥12% eval-loss degradation, and pushing it to 0.053 (near-zero) costs a 57× increase in loss (a destroyed model). The λ sweep makes this concrete: at λ ≥ 1 the attack cannot move L below 0.91; at λ = 0 it can drive L to 0.053 but the model no longer works. There is no operating point that suppresses the fingerprint without paying utility, and this is the strongest single guarantee the method offers.
+
+**Known failure modes are architectural and procedural, not adversarial.** The fingerprint does not appear in non-residual architectures (PlainNet: 3% pair accuracy) because there is no x + f(x) coupling for gradient descent to act on. It also does not appear in degenerate residual blocks where small initialization (σ=0.02) causes branches to collapse to near-zero contribution — the fingerprint never develops because the dynamical isometry constraint is trivially satisfied by f ≈ 0. These are not weaknesses to fix; they are correct null results that calibrate when the method should not be applied.
+
+**The protocol fails correctly when assumptions are violated.** Different architectures, utility-destroying perturbations (e.g., 2-bit quantization), unavailable common ancestors, and targeted adversarial evasion all produce "cannot decide" rather than false confidence. The method does *not* distinguish two independently trained networks of the same architecture (both satisfy W_out W_in ≈ −εI + E by construction), and it does not detect training-data overlap or knowledge transfer — only weight-level derivation. These are scope statements, not failures.
+
+**Training quality assurance falls out as a free byproduct.** The same diagnostics that detect the fingerprint also detect *training pathologies*: LR too low (6% pair acc), no skip connection (3%), high weight decay (24%), small init (22%). Of five pathological conditions, four are caught by the "pair acc < 50% at epoch 10" or "negative trace < 50% at convergence" rules. This makes the protocol useful even when no provenance question is being asked — it doubles as a sanity check that residual training has converged correctly.
 
 ### Core Finding
 Function-preserving symmetries leave L = 1.0 exactly. Suppressing L to chance level requires **≥12% utility loss**; full suppression destroys the model.
