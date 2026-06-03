@@ -33,7 +33,12 @@ import os
 from pathlib import Path
 
 import numpy as np
+import torch
 from scipy.optimize import linear_sum_assignment
+
+
+# Detect GPU availability once at module load
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def diag_dominance(M):
@@ -52,15 +57,34 @@ def delta_J_norm(M):
 
 
 def diag_dominance_matrix(A_list, B_list):
-    """Compute pairwise diagonal dominance: d(i,j) = |tr(B[j] @ A[i])| / ||B[j] @ A[i]||_F"""
+    """Compute pairwise diagonal dominance: d(i,j) = |tr(B[j] @ A[i])| / ||B[j] @ A[i]||_F
+
+    Uses GPU (CUDA) if available for fast matrix operations.
+    """
     n = len(A_list)
     M = np.zeros((n, n), dtype=np.float64)
-    for i in range(n):
-        for j in range(n):
-            P = B_list[j].astype(np.float32) @ A_list[i].astype(np.float32)
-            tr = abs(np.trace(P))
-            fr = np.linalg.norm(P, 'fro') + 1e-12
-            M[i, j] = tr / fr
+
+    if DEVICE == 'cuda':
+        print(f"    (using GPU for scoring)", flush=True)
+        A_tensors = [torch.from_numpy(a.astype(np.float32)).to(DEVICE) for a in A_list]
+        B_tensors = [torch.from_numpy(b.astype(np.float32)).to(DEVICE) for b in B_list]
+
+        for i in range(n):
+            for j in range(n):
+                P = B_tensors[j] @ A_tensors[i]
+                tr = abs(float(torch.trace(P)))
+                fr = float(torch.linalg.norm(P, 'fro')) + 1e-12
+                M[i, j] = tr / fr
+
+        del A_tensors, B_tensors
+        torch.cuda.empty_cache()
+    else:
+        for i in range(n):
+            for j in range(n):
+                P = B_list[j].astype(np.float32) @ A_list[i].astype(np.float32)
+                tr = abs(np.trace(P))
+                fr = np.linalg.norm(P, 'fro') + 1e-12
+                M[i, j] = tr / fr
     return M
 
 
@@ -88,11 +112,21 @@ def evaluate(M):
 
 
 def trace_signs(A_list, B_list):
-    """Compute trace statistics for correct pairs."""
-    tr = np.array([
-        float(np.trace(B_list[i].astype(np.float32) @ A_list[i].astype(np.float32)))
-        for i in range(len(A_list))
-    ])
+    """Compute trace statistics for correct pairs. Uses GPU if available."""
+    if DEVICE == 'cuda':
+        A_tensors = [torch.from_numpy(a.astype(np.float32)).to(DEVICE) for a in A_list]
+        B_tensors = [torch.from_numpy(b.astype(np.float32)).to(DEVICE) for b in B_list]
+        tr = np.array([
+            float(torch.trace(B_tensors[i] @ A_tensors[i]))
+            for i in range(len(A_list))
+        ])
+        del A_tensors, B_tensors
+        torch.cuda.empty_cache()
+    else:
+        tr = np.array([
+            float(np.trace(B_list[i].astype(np.float32) @ A_list[i].astype(np.float32)))
+            for i in range(len(A_list))
+        ])
     return {
         'mean_trace': float(tr.mean()),
         'frac_negative': float((tr < 0).mean()),
