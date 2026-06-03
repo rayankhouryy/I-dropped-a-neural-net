@@ -850,10 +850,30 @@ The following items from the ablation issue require GPU/cluster compute we do no
 
 ### Compute-bound (defer until cluster access)
 
-| Item | Owner ask | What we'd measure | Expected delta | Resource estimate |
-|---|---|---|---|---|
-| **MoE / Mixtral-8x7B fingerprint (RQ2)** | @singh96aman | Per-expert and aggregate s, δ_J^norm; pair accuracy across experts | Tests whether experts inherit the fingerprint independently or share it via the gate | ~80 GB GPU, 1–2 hrs inference |
-| **LLaMA-2-13B fingerprint (RQ2)** | @singh96aman | Mean s, δ_J^norm, pair accuracy; extend GPT-2 d^0.87 scaling fit | Confirms or refines the scaling exponent at d = 5120 | ~30 GB GPU, < 1 hr inference |
+| Item | Owner ask | What we'd measure | Expected delta | Resource estimate | Script |
+|---|---|---|---|---|---|
+| **MoE / Mixtral-8x7B fingerprint (RQ2)** | @singh96aman | Per-expert and aggregate s, δ_J^norm; pair accuracy across experts | Tests whether experts inherit the fingerprint independently or share it via the gate | ~80 GB GPU, 1–2 hrs inference | `experiments/scripts/rq2_moe_fingerprint.py` |
+| **LLaMA-2-13B fingerprint (RQ2)** | @singh96aman | Mean s, δ_J^norm, pair accuracy; extend GPT-2 d^0.87 scaling fit | Confirms or refines the scaling exponent at d = 5120 | ~30 GB GPU, < 1 hr inference | `experiments/scripts/rq2_llama_scaling.py` |
+
+#### Run Commands (SageMaker)
+
+**LLaMA-2-13B** (ml.g5.4xlarge or ml.p3.2xlarge — 24GB GPU):
+```bash
+# Option 1: Using transformer_family_pairing.py (full analysis with random baseline)
+python experiments/scripts/transformer_family_pairing.py --model llama2-13b --seeds-random 3
+
+# Option 2: Using rq2_llama_scaling.py (scaling analysis with GPT-2 comparison)
+python experiments/scripts/rq2_llama_scaling.py --include-gpt2
+```
+
+**Mixtral-8x7B MoE** (ml.g5.12xlarge or ml.p4d.24xlarge — 96GB+ GPU):
+```bash
+# Full MoE analysis with per-expert fingerprints
+python experiments/scripts/rq2_moe_fingerprint.py --model mixtral-8x7b
+
+# Memory-efficient safetensors extraction (if model pre-downloaded)
+python experiments/scripts/rq2_moe_fingerprint.py --model mixtral-8x7b --use-safetensors
+```
 
 ### Local-runnable (script staged; pending compute time)
 

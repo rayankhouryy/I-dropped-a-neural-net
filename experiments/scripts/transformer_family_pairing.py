@@ -486,7 +486,7 @@ def aggregate_random(per_seed, paths):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--model', default='bert-base',
-                    choices=['bert-base', 'mistral-7b', 'llama2-7b', 'llama2-7b-chat', 'tinyllama', 'qwen2.5-7b', 'deepseek-r1-distill-llama-8b', 'gemma-2-9b'],
+                    choices=['bert-base', 'mistral-7b', 'llama2-7b', 'llama2-7b-chat', 'llama2-13b', 'tinyllama', 'qwen2.5-7b', 'deepseek-r1-distill-llama-8b', 'gemma-2-9b'],
                     help='which model to evaluate')
     ap.add_argument('--seeds-random', type=int, default=3)
     args = ap.parse_args()
@@ -511,6 +511,11 @@ def main():
                           model_name='NousResearch/Llama-2-7b-chat-hf',
                           family='LLaMA-2-chat')
         out_key = 'llama2_7b_chat'
+    elif args.model == 'llama2-13b':
+        out = run_mistral(args.seeds_random,
+                          model_name='NousResearch/Llama-2-13b-hf',
+                          family='LLaMA-2-13B')
+        out_key = 'llama2_13b'
     elif args.model == 'tinyllama':
         out = run_mistral(args.seeds_random,
                           model_name='TinyLlama/TinyLlama-1.1B-Chat-v1.0',
