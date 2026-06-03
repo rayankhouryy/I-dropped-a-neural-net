@@ -247,11 +247,7 @@ We directly inject weight updates that add diagonal structure to M = W_out @ W_i
 
 **Analogy:** Two rowers (W_in, W_out) who hear the same coxswain (gradient signal) naturally synchronize their strokes — not because each stroke is diagonal-shaped, but because they're responding to the same commands together. Shuffling is like giving each rower commands from different boats — they still row, but lose synchronization.
 
-**Figure:** ![Gradient coupling](figures/fig_rq1_gradient_coupling.png)
-
-Shuffling breaks this directional coupling. The gradients themselves don't need to look diagonal — they just need to be coupled between the two weight matrices of each block.
-
-**Figure:** ![Gradient coupling](figures/fig_rq1_gradient_coupling.png)
+<!-- Figure: figures/fig_rq1_gradient_coupling.png (to be generated) -->
 
 #### 10. Initialization Ablation (7 schemes tested)
 
@@ -288,20 +284,8 @@ Both networks achieve comparable eval loss, confirming PlainNet learns the task 
 
 ### Figures
 
-#### Training Emergence (Epoch 0 vs Epoch 5)
-![Training dynamics heatmaps](../paper/figures/fig_null_a_heatmaps.png)
-
-#### Null Model Verification
-![Null model](../paper/figures/fig_null_model.png)
-
-#### Training Trajectory
-![Training trajectory](../paper/figures/fig_null_b_trajectory.png)
-
-#### Margin Theorem Verification
-![Margin theorem](../paper/figures/fig_margin_theorem.png)
-
 #### ResNet vs PlainNet Control
-![Non-residual baseline](../paper/figures/fig_nonresidual_baseline.pdf)
+![Non-residual baseline](../paper/figures/fig_nonresidual_baseline.png)
 
 #### Random Labels: Fingerprint Without Task Learning
 ![Random labels](figures/fig_rq1_random_labels.png)
@@ -444,7 +428,7 @@ V/O path produces the **strongest signal in the study**.
 ![GPT-2 MLP pairing](../paper/figures/fig_gpt2_mlp_pairing.png)
 
 #### GPT-2 Attention Path Pairing
-![GPT-2 attention pairing](../paper/figures/fig_gpt2_attention_pairing.pdf)
+![GPT-2 attention pairing](../paper/figures/fig_gpt2_attention_pairing.png)
 
 #### Modern Vision Architectures (ViT, ConvNeXt)
 ![Modern vision pairing](../paper/figures/fig_modern_vision_pairing.png)
@@ -551,17 +535,13 @@ Frobenius matching degrades with model size; singular-value performs at chance.
 
 ### Figures
 
-#### Lineage Score Distributions (Three Panel)
-![Lineage three panel](../paper/figures/fig_lineage_three_panel.png)
-
 #### Branching Ancestry Recovery Heatmap
 ![Lineage branching heatmap](../paper/figures/fig_lineage_branching_heatmap.png)
 
 #### Ancestry Chains
 ![Ancestry chains](../paper/figures/fig_lineage_ancestry_chains.png)
 
-#### Method Comparison
-![Metric comparison](../paper/figures/fig_metric_comparison.png)
+<!-- Method Comparison figure missing -->
 
 ---
 
@@ -619,12 +599,6 @@ Fingerprint degradation correlates with utility loss: **ρ = -0.83**
 Suppressing the signal damages the model — no "free lunch" for attackers.
 
 ### Figures
-
-#### Attack Robustness (Fine-tuning, Noise)
-![Attack robustness](../paper/figures/fig_attack_robustness.png)
-
-#### Compression Audit Summary
-![Compression audit](../paper/figures/fig_compression_audit_summary.png)
 
 #### Lineage Attacks
 ![Lineage attacks](../paper/figures/fig_lineage_attacks.png)
@@ -705,14 +679,6 @@ Cannot provide verdict when:
 
 Correctly flags **4/5 pathological conditions**.
 
-### Figures
-
-#### Training Quality Assurance Summary
-![Training QA](../paper/figures/fig_training_qa_summary.png)
-
-#### Zero-Knowledge Proof Protocol
-![ZKP protocol](../paper/figures/fig_zkp_protocol.png)
-
 ---
 
 ## Summary Table
@@ -759,22 +725,6 @@ Correctly flags **4/5 pathological conditions**.
 ## All Figures Gallery
 
 ### Core Methodology
-![Pairing matrix](../paper/figures/fig_pairing_matrix_park.png)
-![Pair accuracy separation](../paper/figures/fig_pair_acc_sep.png)
-
 ### Deep Dives
 ![ResNet factors deep dive](../paper/figures/fig_deepdive_resnet_factors.png)
 ![ViT per-head analysis](../paper/figures/fig_deepdive_vit_perhead.png)
-
-### Additional Analysis
-![Sweep summary](../paper/figures/fig_sweep_summary.png)
-![Transformer MLP](../paper/figures/fig_transformer_mlp.png)
-![Null deep dive](../paper/figures/fig_null_deepdive.png)
-
-### Histograms and Distributions
-![Null histograms](../paper/figures/fig_null_c_histograms.png)
-![Null margins](../paper/figures/fig_null_d_margins.png)
-
-### Scaling Analysis
-![Pairing wall](../paper/figures/fig_pairing_wall.png)
-![Pairing wall theory](../paper/figures/fig_pairing_wall_theory.png)
