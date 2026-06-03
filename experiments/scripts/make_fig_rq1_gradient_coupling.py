@@ -135,7 +135,8 @@ def panel_b(ax, part_b, agg):
     ax.set_title(f"B. Shuffling $\\nabla W_{{out}}$ cuts fingerprint by {drop*100:.0f}%\n"
                  "Independent updates break the coupling",
                  fontsize=10)
-    ax.legend(loc="lower right", fontsize=8)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18),
+              fontsize=8, framealpha=0.92)
     ax.grid(True, alpha=0.3)
 
 
@@ -158,7 +159,8 @@ def panel_c(ax, part_c, agg):
     ax.set_title("C. Diagonal injection (no backprop) builds the fingerprint\n"
                  "Diagonal structure is sufficient",
                  fontsize=10)
-    ax.legend(loc="lower right", fontsize=8, framealpha=0.92)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18),
+              fontsize=8, framealpha=0.92)
     ax.grid(True, alpha=0.3)
 
 

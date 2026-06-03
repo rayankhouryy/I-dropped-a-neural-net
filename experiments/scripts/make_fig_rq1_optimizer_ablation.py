@@ -69,10 +69,9 @@ def main():
     ax.set_ylabel("Pair accuracy")
     ax.set_title("A. Fingerprint emerges only under adaptive optimizers",
                  fontsize=10)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16),
-              fontsize=8, framealpha=0.92, ncol=5)
     ax.grid(True, alpha=0.3)
     ax.set_ylim(-0.05, 1.10)
+    handles_a, labels_a = ax.get_legend_handles_labels()
 
     # Panel B: mean diagonal-dominance s
     ax = axes[1]
@@ -89,9 +88,12 @@ def main():
     ax.set_ylabel(r"Mean diagonal dominance $s$")
     ax.set_title("B. Diagonal structure climbs only with Adam/AdamW/RMSprop",
                  fontsize=10)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16),
-              fontsize=8, framealpha=0.92, ncol=5)
     ax.grid(True, alpha=0.3)
+    # Append only the sqrt(d) baseline (the 5 optimizer entries are shared with panel A)
+    handles_b, labels_b = ax.get_legend_handles_labels()
+    extra = [(h, l) for h, l in zip(handles_b, labels_b) if l not in labels_a]
+    all_handles = handles_a + [h for h, _ in extra]
+    all_labels = labels_a + [l for _, l in extra]
 
     cfg = d["config"]
     fig.suptitle(
@@ -101,6 +103,10 @@ def main():
         fontsize=11, y=1.02,
     )
     fig.tight_layout()
+    fig.legend(all_handles, all_labels,
+               loc="lower center", bbox_to_anchor=(0.5, -0.02),
+               fontsize=9, framealpha=0.95, ncol=len(all_labels))
+    fig.subplots_adjust(bottom=0.18)
 
     OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
     PAPER_PDF.parent.mkdir(parents=True, exist_ok=True)
