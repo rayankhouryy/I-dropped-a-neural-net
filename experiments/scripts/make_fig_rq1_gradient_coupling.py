@@ -117,8 +117,9 @@ def panel_a(ax, samples_per_seed, agg):
     ax.grid(True, alpha=0.3)
     lines1, labs1 = ax.get_legend_handles_labels()
     lines2, labs2 = ax2.get_legend_handles_labels()
-    ax.legend(lines1 + lines2, labs1 + labs2, loc="lower left",
-              fontsize=8, framealpha=0.92)
+    ax.legend(lines1 + lines2, labs1 + labs2,
+              loc="upper center", bbox_to_anchor=(0.5, -0.18),
+              fontsize=8, framealpha=0.92, ncol=2)
 
 
 def panel_b(ax, part_b, agg):

@@ -69,7 +69,8 @@ def main():
     ax.set_ylabel("Pair accuracy")
     ax.set_title("A. Fingerprint emerges only under adaptive optimizers",
                  fontsize=10)
-    ax.legend(loc="center", fontsize=8, framealpha=0.92, ncol=2)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16),
+              fontsize=8, framealpha=0.92, ncol=5)
     ax.grid(True, alpha=0.3)
     ax.set_ylim(-0.05, 1.10)
 
@@ -88,7 +89,8 @@ def main():
     ax.set_ylabel(r"Mean diagonal dominance $s$")
     ax.set_title("B. Diagonal structure climbs only with Adam/AdamW/RMSprop",
                  fontsize=10)
-    ax.legend(loc="upper left", fontsize=8, framealpha=0.92, ncol=2)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.16),
+              fontsize=8, framealpha=0.92, ncol=5)
     ax.grid(True, alpha=0.3)
 
     cfg = d["config"]
