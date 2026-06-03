@@ -67,8 +67,8 @@ Both conditions use identical architecture, optimizer (Adam, lr=1e-3), and train
 
 **Results (mean across 3 seeds):**
 
-| Epoch | Normal s | Shuffled s | Normal ||ΔW|| | Shuffled ||ΔW|| |
-|-------|----------|------------|---------------|-----------------|
+| Epoch | Normal s | Shuffled s | Normal ‖ΔW‖ | Shuffled ‖ΔW‖ |
+|-------|----------|------------|-------------|---------------|
 | 5 | 4.20 | 5.26 | 7.32 | **6.40** |
 | 10 | 4.44 | 5.77 | 10.21 | **7.05** |
 | 50 | 3.91 | 6.37 | 25.00 | 28.18 |
