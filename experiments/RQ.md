@@ -7,6 +7,26 @@ This document consolidates all empirical evidence from the papers supporting eac
 ## RQ1 — Exists
 **Does diagonal dominance emerge from training rather than initialization or shape compatibility?**
 
+### Narrative: Why the Fingerprint Exists
+
+Residual blocks of the form x' = x + W_out·φ(W_in·x) appear in every modern deep network we tested. After training, the inner product M = W_out·W_in develops a peculiar shape: it acts like a (typically negative) scalar multiple of the identity plus low-amplitude noise. The diagonal-dominance score s = |tr(M)| / ||M||_F captures this property in a single scale-invariant number. At initialization s ≈ 1/√d (random baseline ≈ 0.03–0.08); after training s rises by 1–2 orders of magnitude (≈ 4 for MLPs and GPT-2-small, ≈ 8 for GPT-2-XL). This is the fingerprint.
+
+**The mechanism is gradient-descent coupling, not dynamical isometry.** Earlier work attributed the emergence of structured Jacobians in residual networks to a drift toward orthogonality. Our normalized metric δ_J^norm = ||J^T J / ||J||_F^2 − I/d||_F shows the opposite for trained transformers: pretrained GPT-2 has δ_J^norm = 0.297 while its random-init counterpart sits at 0.025 — training drives the Jacobian *away* from uniform-spectrum, not toward it. The fingerprint must therefore come from somewhere other than spectral conditioning.
+
+**Three converging lines of evidence point to gradient coupling between W_in and W_out:**
+
+*Tier 1 — Necessity.* Shuffling ∇W_out across blocks before each optimizer step (Section 9 Part B) cuts the fingerprint by 68% (s: 3.90 → 1.24) while preserving task accuracy (47% vs 54%). Independence of W_in and W_out gradient updates breaks the fingerprint without breaking learning.
+
+*Tier 2 — Sufficiency.* Synthetic updates that add diagonal structure directly to M, with no backprop, build the fingerprint from scratch (s: 0.08 → 7.57 over 3000 steps; Section 9 Part C). The fingerprint does not require gradients of any specific shape — only correlated, persistent updates to both projections.
+
+*Tier 3 — Independence from task content.* Training on shuffled CIFAR-10 labels (no learnable structure, ~10% test accuracy) produces a *stronger* fingerprint than normal training (s = 5.88 vs 3.42). Gradient flow alone, not task learning, is what creates the signature. The fingerprint is also uncorrelated with cumulative weight change (Pearson r = −0.002).
+
+**The fingerprint requires the residual connection.** A non-residual PlainNet matched in depth and parameter count to a ResNet achieves comparable loss but shows no fingerprint (s ≈ chance, pair accuracy 3%; Section 12). Skip connections force every block to be a small perturbation of identity, which is what makes the diagonal structure visible — without them, blocks span the full output space and the M signature gets washed out.
+
+**Across model sizes, the fingerprint becomes more orthogonal-leaning.** Mean δ_J^norm decreases from 0.297 (GPT-2-small) to 0.122 (GPT-2-XL), even though random-init δ_J^norm is essentially constant at 0.025 across the same sizes. Trained larger models converge toward — but never reach — random-init uniformity. The within-scale "training drives away from orthogonal" finding (12× gap at d=768) coexists with an across-scale "larger trained models are closer to orthogonal" finding (5× gap at d=1600). Both are real; they live on different axes.
+
+**Remaining gaps:** We have not run the full optimizer sweep (SGD vs Adam vs RMSprop) that would test whether the gradient-coupling mechanism is optimizer-specific. We also have no learning-rate or batch-size ablation. These are queued under Pending Experiments.
+
 ### Core Finding
 The diagonal-dominance fingerprint is a **learned property** induced by gradient descent, not an artifact of initialization, matrix shapes, or residual architecture alone.
 
@@ -159,11 +179,24 @@ The original δ_J metric was misleading due to scale sensitivity. The normalized
 | MLP | 0.100 | 0.089 | Slightly better (↓11%) |
 | GPT-2 | 0.025 | **0.297** | **Much worse (↑12×)** |
 
-**Training makes GPT-2 Jacobians LESS orthogonal, not more.** This is the opposite of what the dynamical isometry hypothesis predicts.
+**Training makes GPT-2 Jacobians LESS orthogonal at every scale, but the gap shrinks.** Across all four GPT-2 sizes, pretrained δ_J^norm is 5–12× the random-init baseline (which is essentially flat at 0.024–0.026), so the within-scale message — training drives the Jacobian away from uniform-spectrum — is robust.
 
-**Why the original metric was misleading:** The absolute metric δ_J = ||J^T J - I||/√d scales with ||M||². GPT-2's trained weights are simply larger in magnitude, causing δ_J to explode. The normalized metric removes this scale dependence and reveals the true geometry.
+**Why the original metric was misleading:** The absolute metric δ_J = ||J^T J − I||_F/√d scales with ||M||². GPT-2's trained weights are larger in magnitude, causing δ_J to inflate. The normalized metric removes this scale dependence and reveals the true geometry.
 
-**Interpretation:** The diagonal dominance fingerprint reliably distinguishes trained from untrained models, but the mechanism is **NOT dynamical isometry**. Training does not make Jacobians more orthogonal — in transformers, it makes them substantially less uniform. The fingerprint must arise from a different mechanism: the co-evolution of W_in and W_out under gradient descent creates correlated diagonal structure, independent of Jacobian conditioning.
+**Cross-scale view (pretrained vs random-init, full GPT-2 family):**
+
+| Model | d | Pretrained δ_J^norm | Random-init δ_J^norm | Ratio | Pretrained median δ_J^norm |
+|-------|---|---------------------|----------------------|-------|----------------------------|
+| GPT-2-small | 768 | **0.297** | 0.025 | 11.7× | 0.207 |
+| GPT-2-medium | 1024 | **0.242** | 0.026 | 9.4× | 0.149 |
+| GPT-2-large | 1280 | **0.155** | 0.025 | 6.2× | 0.088 |
+| GPT-2-XL | 1600 | **0.122** | 0.024 | 5.1× | 0.089 |
+
+Random-init δ_J^norm is constant in d (independent W_in/W_out keep E[J^T J / ||J||_F^2] ≈ I/d). Pretrained δ_J^norm decreases monotonically with d (power-law fit δ_J^norm ∝ d^−1.28). Larger trained models converge toward — but never reach — the random-init floor at their own scale.
+
+**Interpretation:** The diagonal-dominance fingerprint reliably distinguishes trained from untrained models, but the mechanism is **NOT dynamical isometry**. The fingerprint arises from gradient-descent coupling of W_in and W_out (Section 9, Parts B and C): correlated per-block updates accumulate diagonal structure in M = W_out·W_in independent of how orthogonal J itself is. The "less orthogonal after training" observation is a side effect of growing weight norms, not the cause of the fingerprint.
+
+**Reproducibility:** Pretrained results from `results/gpt2_scaling_normalized.json`; random-init baselines from `results/gpt2_scaling_normalized_random.json` (script: `experiments/scripts/rq2_scaling_random.py`).
 
 **Figure:** ![GPT-2 Jacobian structure](figures/fig_rq1_jacobian_gpt2.png)
 
@@ -309,7 +342,7 @@ The architectures in our study differ in almost every design choice: activation 
 
 **Three tiers of evidence support this claim:**
 
-*Tier 1 — Perfect generalization:* GPT-2 (124M–1.5B), BERT, ViT, LLaMA-2, and Mistral all achieve 100% pair accuracy with AUC ≥ 0.96. The GPT-2 scaling curve (s = 4.18 at d=768 → 7.77 at d=1600) matches the √d prediction from Proposition 1 quantitatively — a rare case of theory-experiment alignment. The ViT V/O attention path produces the strongest signal in the entire study (separation +4.84, 100% negative trace), suggesting vision transformers may be particularly well-conditioned.
+*Tier 1 — Perfect generalization:* GPT-2 (124M–1.5B), BERT, ViT, LLaMA-2, and Mistral all achieve 100% pair accuracy with AUC ≥ 0.96. The GPT-2 scaling curve (mean s = 4.18 at d=768 → 7.77 at d=1600) grows monotonically with model dimension. Empirically the exponent is d^0.87 (faster than the √d prediction from Proposition 1; see GPT-2 Scaling table below). The ViT V/O attention path produces the strongest signal in the entire study (separation +4.84, 100% negative trace), suggesting vision transformers may be particularly well-conditioned.
 
 *Tier 2 — Perfect with architecture-aware factorization:* Bottleneck ResNets fail completely with naive W₃W₁ factorization but recover 91–100% with the correct W₃W₂W₁. SwiGLU architectures (Qwen, DeepSeek) show partial weakness on the gate path (68–84%) but achieve 100% with joint factorization. This is a methodological insight: the fingerprint exists but requires understanding the architecture to extract it.
 
@@ -323,7 +356,7 @@ The architectures in our study differ in almost every design choice: activation 
 
 **Post-training modifications preserve the signal.** LLaMA-2-chat (RLHF) and DeepSeek-R1-Distill (reasoning distillation) both retain 100% pair accuracy. These are aggressive transformations; the fingerprint survives because they fine-tune existing weights rather than reinitializing them.
 
-**Remaining gaps:** We have not tested mixture-of-experts (MoE) architectures or models beyond 8B parameters. The MoE case is theoretically interesting (do experts share fingerprint structure?), while larger scale would confirm the √d trend continues. These are directions for future work, not limitations of the current evidence.
+**Remaining gaps:** We have not tested mixture-of-experts (MoE) architectures (e.g., Mixtral-8x7B) or models beyond 8B parameters (e.g., LLaMA-2-13B). Both require GPU memory we do not currently have. The MoE case is theoretically interesting (do experts share fingerprint structure?) and the larger-scale case would confirm or refine the d^0.87 trend. These are queued under Pending Experiments (compute-bound).
 
 ### Core Finding
 The fingerprint generalizes across **12 architectures**, **5 families** (language, vision, audio), multiple attention mechanisms (full MHA, GQA, sliding window), and activation functions (GELU, SwiGLU).
@@ -390,17 +423,35 @@ Block pairing is fundamentally a **discrimination task**: given a model with L r
 
 **Graceful degradation:** Sub-100% paths (Qwen gate, DeepSeek gate) are rescued by joint factorization.
 
-### GPT-2 Scaling (√d Prediction)
+### GPT-2 Scaling (Normalized Metrics)
 
-| Model | Params | d | Layers | Mean s(i,i) | Predicted √d | Neg Traces |
-|-------|--------|---|--------|-------------|--------------|------------|
-| GPT-2 | 124M | 768 | 12 | **4.18** | 27.7 | 92% |
-| GPT-2-medium | 355M | 1024 | 24 | **5.46** | 32.0 | 92% |
-| GPT-2-large | 774M | 1280 | 36 | **6.98** | 35.8 | 81% |
-| GPT-2-xl | 1.5B | 1600 | 48 | **7.77** | 40.0 | 81% |
-| GPT-2 (random init) | 124M | — | 12 | 0.12 | — | 50% |
+We extend the GPT-2-small Jacobian analysis to all four pretrained sizes plus a fresh random-init baseline at each scale. Per-block s, δ_J, and δ_J^norm are computed exactly as defined in RQ1 §6; mean and median are reported across blocks. See `experiments/scripts/rq2_scaling_normalized.py` and `rq2_scaling_random.py`.
 
-Signal strength scales with √d as predicted by theory.
+| Model | Params | d | Layers | Mean s | Median s | Mean δ_J | Mean δ_J^norm | Median δ_J^norm |
+|-------|--------|---|--------|--------|----------|----------|---------------|-----------------|
+| GPT-2 | 124M | 768 | 12 | **4.18** | 4.20 | 6592 | **0.297** | 0.207 |
+| GPT-2-medium | 355M | 1024 | 24 | **5.46** | 5.90 | 7595 | **0.242** | 0.149 |
+| GPT-2-large | 774M | 1280 | 36 | **6.98** | 6.81 | 353 | **0.155** | 0.088 |
+| GPT-2-XL | 1.5B | 1600 | 48 | **7.77** | 7.48 | 190 | **0.122** | 0.089 |
+| GPT-2 (random init) | 124M | 768 | 12 | 0.035 | — | 1.04 | 0.025 | — |
+| GPT-2-XL (random init) | 1.5B | 1600 | 48 | 0.020 | — | 3.05 | 0.024 | — |
+
+**Empirical scaling exponents (pretrained, power-law fit metric ∝ d^b across the four sizes):**
+
+| Metric | Exponent b | Original √d Prediction | Verdict |
+|--------|------------|------------------------|---------|
+| Mean s | **+0.872** | +0.5 | Faster than √d |
+| Mean δ_J | −5.522 | (none) | Dominated by weight-norm decay |
+| Mean δ_J^norm | **−1.277** | (none) | Larger trained models are closer to orthogonal |
+
+**Findings:**
+
+1. The diagonal-dominance signal **grows monotonically with d**, but the empirical exponent (0.87) is meaningfully larger than the √d prediction from Proposition 1. The signal-to-noise ratio in the pairing task improves roughly linearly in d, not as √d.
+2. The absolute Jacobian deviation δ_J **decreases with model size** (35× drop from small to XL). This is a weight-norm artifact: trained transformers at larger scale have smaller per-layer ||M||, so the un-normalized metric drifts down.
+3. The normalized metric δ_J^norm also decreases with size (3× drop). Larger trained models are *closer* to orthogonal than smaller trained models. But at every scale, pretrained δ_J^norm stays 5–12× above the random-init floor (≈ 0.025), so the within-scale "training drives away from orthogonal" finding from RQ1 §3 holds at all sizes.
+4. Random-init δ_J^norm is **scale-invariant** (≈ 0.024–0.026 across all four sizes), confirming the gap is real and not a metric artifact.
+
+This nuances the original "matches √d quantitatively" claim. The fingerprint scales reliably and predictably with d, but the exact exponent is empirical, not theoretical. We mark the cleaner derivation of the scaling exponent as Pending.
 
 ### ResNet Factorization Critical Finding
 
@@ -447,8 +498,79 @@ V/O path produces the **strongest signal in the study**.
 ## RQ3 — Discriminates
 **Can the method distinguish descendants from unrelated models?**
 
+### Narrative: Why Discrimination Works
+
+The lineage task asks a sharper question than block pairing: given a suspect model, decide whether it descends from a reference model. The answer space is binary, the consequence is publishing weights with confidence about ancestry, and the cost of a false positive is reputational. A method that achieves AUROC = 1.000 deserves a careful audit of *why* it works rather than just *that* it works.
+
+**The signal exists because descendants inherit a per-block structural signature.** Each block in the reference model has a specific diagonal-dominance profile — not just a single number s, but a pattern across all L blocks. Fine-tuning, quantization, pruning, and noise injection all perturb individual weights but cannot reshape the block-level signature without retraining from scratch. Distillation, by contrast, trains a fresh student with fresh weights; the student inherits *behaviour* but not the per-block fingerprint. This is why distilled models cluster with independents (L ≈ 0.09) rather than with finetunes (L ≈ 0.99).
+
+**Two levels of discrimination compose:**
+
+*Intra-model (RQ2 block pairing):* Within a single model, discriminate L correct input-output projection pairings from L² − L incorrect ones. Achieves 91–100% across 12 architectures. The 35× separation ratio at d=768 makes Hungarian matching unambiguous.
+
+*Inter-model (lineage verification, this section):* Across model pairs, discriminate descendants from non-descendants. Achieves AUROC = 1.000 across two independent benchmarks (MLP phase 1: n=75 desc / 84 non-desc; ResNet-18 CIFAR phase 2: n=24 / 8). The CIFAR benchmark shows complete separation with a 172× gap between min-descendant (0.6947) and max-independent (0.0041).
+
+*The composition matters.* Block pairing aligns blocks between reference and suspect before computing the centered residual signature. Without reliable block correspondence, the lineage score would be meaningless because misaligned blocks could not be compared. The pairing step is a hard precondition.
+
+**Three properties make AUROC = 1.000 credible rather than suspicious:**
+
+*Persistence under aggressive transformations.* Pruning at 80% sparsity, 4-level quantization, and noise injection up to 10% all leave L > 0.45. These are not mild perturbations — they substantially change behaviour — yet the signature survives because it lives in the *coupled* structure of W_in and W_out within each block, not in individual weight values.
+
+*Distillation defeats it cleanly.* Distilled students score L = 0.078–0.098, indistinguishable from independents (L = 0.062–0.093). This is the right behaviour: a distilled student *is* a new model, not a derivative of the teacher's weights. The method correctly refuses to claim lineage where weight inheritance never occurred.
+
+*Per-class TPR/TNR is 100% with mostly tight Clopper-Pearson lower bounds.* On the ResNet-18 CIFAR benchmark, per-kind sample sizes are 2–8, which yields wide CIs for the smallest kinds (other_reference n=2, self n=2: lower bound ≈ 0.16). For kinds with n ≥ 6, lower bounds exceed 0.54. On the MLP benchmark with n = 75 descendants and 84 non-descendants, the lower bound is TPR ≥ 0.961 and FPR upper bound is ≤ 0.035 (Clopper-Pearson, complete separation).
+
+**Remaining gaps:** Sample sizes for the most aggressive transformations (high-sparsity pruning at 85%+, low-bit quantization at <16 levels) are small. Generalization to LLMs (we have only ResNet-18 + small MLPs in the lineage benchmarks) has not been demonstrated. Both are queued under Pending Experiments.
+
 ### Core Finding
-The lineage score achieves **AUROC = 1.000** with **TPR = 100% at 1% FPR**. Distilled students correctly classify as non-descendants.
+The lineage score achieves **AUROC = 1.000** with **TPR = 100% at 1% FPR** on two independent benchmarks (MLP phase 1: n=75/84; ResNet-18 CIFAR phase 2: n=24/8). Distilled students correctly classify as non-descendants.
+
+### AUROC Deep Dive (Reviewer-Requested Audit)
+
+A perfect AUROC raises the question of whether the metric is brittle, the test set is too easy, or the result is genuinely robust. We performed a structured audit on the ResNet-18 CIFAR benchmark (`results/lineage_phase2_resnet18_cifar.json`), which has the smallest sample sizes (n=32 total) and is therefore the worst-case for sampling variability.
+
+**Separation diagnostic:**
+
+| Quantity | Value |
+|---|---|
+| n descendants (noise + prune + quant + self) | 24 |
+| n non-descendants (independent + other_reference) | 8 |
+| min descendant lineage score L | 0.6947 |
+| max non-descendant lineage score L | 0.0041 |
+| Absolute gap | **0.6906** |
+| Ratio | **172×** |
+| Threshold τ_s (calibrated to 0% FPR on independents) | 0.0200 |
+
+**Bootstrap 95% AUROC CI:** [1.000, 1.000] over 5000 paired-resample iterations. With complete separation, bootstrap is degenerate, so we also report:
+
+**Clopper-Pearson 95% CIs for per-kind TPR (descendants) and TNR (non-descendants), all observed at 100%:**
+
+| Kind | Label | n | Observed | CP 95% CI |
+|------|-------|---|----------|-----------|
+| independent_same_arch | non-desc | 6 | 100% TNR | [0.541, 1.000] |
+| noise | desc | 8 | 100% TPR | [0.631, 1.000] |
+| other_reference | non-desc | 2 | 100% TNR | [0.158, 1.000] |
+| prune | desc | 8 | 100% TPR | [0.631, 1.000] |
+| quant | desc | 6 | 100% TPR | [0.541, 1.000] |
+| self | desc | 2 | 100% TPR | [0.158, 1.000] |
+
+**MLP phase 1 benchmark (larger n):** With n = 75 descendants and n = 84 non-descendants, complete separation yields TPR ≥ 0.961 (CP lower bound, 1−0.05^(1/75)) and FPR ≤ 0.035 (1−0.05^(1/84)). Per-attack breakdown:
+
+| Attack | Label | n | Mean L | Range |
+|--------|-------|---|--------|-------|
+| finetune_same | desc | 15 | 0.996 | [0.980, 0.998] |
+| quantize | desc | 15 | 0.995 | [0.976, 1.000] |
+| noise | desc | 15 | 0.993 | [0.954, 1.000] |
+| finetune_diff | desc | 15 | 0.944 | [0.912, 0.956] |
+| prune | desc | 15 | 0.810 | [0.452, 0.999] |
+| distilled_student | non-desc | 9 | 0.086 | [0.078, 0.098] |
+| independent_same_task | non-desc | 45 | 0.084 | [0.076, 0.093] |
+| independent_diff_task | non-desc | 15 | 0.073 | [0.067, 0.077] |
+| random_init | non-desc | 15 | 0.070 | [0.062, 0.078] |
+
+**Verdict:** AUROC = 1.000 is **genuine and robust**. The 172× separation gap on the smallest benchmark and the 4.6× gap (min-prune 0.452 vs max-distilled 0.098) on the largest one both leave substantial margin for label noise, transformation noise, or sample variability. The wide CP CIs on small per-kind samples (n = 2) are a sample-size limitation, not a method limitation; recommendation is to scale per-kind n to ≥ 30 in future benchmarks for narrower per-kind bounds.
+
+Reproducibility: `experiments/scripts/auroc_deepdive.py`.
 
 ### Two Levels of Discrimination
 
@@ -470,7 +592,7 @@ Block pairing (level 1) is a prerequisite for lineage verification (level 2): th
 | Independent / Random init | 75 | 0.08 | [0.01, 0.20] |
 | **Distilled student** | 9 | **0.09** | [0.03, 0.19] |
 
-**Separation ≈ 0.72** between weakest descendant and strongest non-descendant.
+**Separation = 0.354 absolute** (prune minimum 0.452 vs distilled maximum 0.098), **ratio 4.6×**, between weakest descendant and strongest non-descendant.
 
 ### Lineage Score Survival Under Transformations
 
@@ -685,9 +807,9 @@ Correctly flags **4/5 pathological conditions**.
 
 | RQ | Question | Answer | Key Metric |
 |----|----------|--------|------------|
-| RQ1 | Emerges from training? | **Yes** — gradient coupling, not task learning or dynamical isometry | Shuffled labels: s=5.88 (72% stronger than normal s=3.42); r(s, ||ΔW||) = -0.002; GPT-2 δ_J^norm: 0.025→0.297 (worse, not better) |
-| RQ2 | Generalizes? | **Yes** — 12 architectures, 5 families | 91–100% pair accuracy |
-| RQ3 | Discriminates? | **Yes** — AUROC 1.000 | TPR 100% @ 1% FPR |
+| RQ1 | Emerges from training? | **Yes** — gradient coupling, not task learning or dynamical isometry | Shuffled labels: s=5.88 (72% stronger than normal s=3.42); r(s, ||ΔW||) = -0.002; GPT-2 δ_J^norm: 0.025→0.297 within-scale (worse, not better) |
+| RQ2 | Generalizes? | **Yes** — 12 architectures, 5 families | 91–100% pair accuracy; GPT-2 s scales as d^0.87 (faster than √d) |
+| RQ3 | Discriminates? | **Yes** — AUROC 1.000 (CP TPR ≥ 0.961, FPR ≤ 0.035 on n=75/84) | TPR 100% @ 1% FPR; 172× gap on ResNet-18 CIFAR benchmark |
 | RQ4 | Survives? | **Yes** — FT, quant, prune, LoRA | 100% detection |
 | RQ5 | Resists/Fails correctly? | **Yes** — ≥12% loss to suppress | Symmetries: L = 1.0 |
 
@@ -719,6 +841,27 @@ Correctly flags **4/5 pathological conditions**.
 | **Part C** | Synthetic injection creates s=7.6 | Diagonal structure is **sufficient** |
 
 **The mechanism:** Correlated gradient *directions* (not shapes) between W_in and W_out accumulate into diagonal weight structure over many updates. The same loss signal reaching both matrices causes them to co-evolve in a coordinated way that makes their product M diagonal-dominant with negative trace.
+
+---
+
+## Pending Experiments (Issue #43)
+
+The following items from the ablation issue require GPU/cluster compute we do not currently have and are queued for the next iteration. Each item lists what we would measure, the expected delta to current results, and a rough resource estimate. Scripts that can be drafted without running are linked.
+
+### Compute-bound (defer until cluster access)
+
+| Item | Owner ask | What we'd measure | Expected delta | Resource estimate |
+|---|---|---|---|---|
+| **MoE / Mixtral-8x7B fingerprint (RQ2)** | @singh96aman | Per-expert and aggregate s, δ_J^norm; pair accuracy across experts | Tests whether experts inherit the fingerprint independently or share it via the gate | ~80 GB GPU, 1–2 hrs inference |
+| **LLaMA-2-13B fingerprint (RQ2)** | @singh96aman | Mean s, δ_J^norm, pair accuracy; extend GPT-2 d^0.87 scaling fit | Confirms or refines the scaling exponent at d = 5120 | ~30 GB GPU, < 1 hr inference |
+
+### Local-runnable (script staged; pending compute time)
+
+| Item | Script | What we'd measure | Why it matters |
+|---|---|---|---|
+| **Optimizer ablation (Issue #43, item 4)** | `experiments/scripts/rq1_optimizer_ablation.py` | Final pair accuracy, emergence epoch, eval loss for SGD, SGD+momentum, Adam, AdamW, RMSprop on 48-block MLP | Tests whether the gradient-coupling mechanism is Adam-specific or general to any first-order optimizer. If SGD also produces the fingerprint, the mechanism is fundamental; if only momentum-using optimizers do, the mechanism depends on EMAs of gradients. |
+| **Cleaner d^0.87 derivation** | (drafting) | Theoretical justification for the empirical scaling exponent | Replaces the falsified √d claim with a defensible analytical result. |
+| **Per-kind n ≥ 30 lineage benchmark** | (drafting) | Per-kind TPR / TNR with CP CIs that have lower bounds > 0.90 | Tightens the AUROC = 1.000 result on per-kind basis. |
 
 ---
 
