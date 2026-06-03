@@ -1,6 +1,6 @@
 ---
 name: paper-writing
-description: Checklist-driven academic paper drafting and review. Use when user says "write section", "draft abstract", "review introduction", "paper checklist", "claim hygiene", or asks to edit any paper section (abstract, intro, method, experiments, discussion, conclusion).
+description: Checklist-driven academic paper drafting and review. Use when user says "write section", "draft abstract", "review introduction", "paper checklist", "claim hygiene", or asks to edit any paper section (abstract, intro, method, experiments, discussion, conclusion, references, appendix).
 ---
 
 # Paper Writing Skill
@@ -32,7 +32,7 @@ Use this skill when user says:
 - "paper checklist", "section checklist"
 - "claim hygiene", "review claims"
 - "check my [section]"
-- Any request to edit: abstract, introduction, background, related work, method, experiments, discussion, limitations, conclusion
+- Any request to edit: abstract, introduction, background, related work, method, experiments, discussion, limitations, conclusion, references, appendix
 
 ---
 
@@ -160,6 +160,32 @@ This skill enforces structured checklists for each paper section. Each checklist
 | 0 | **Core contribution restated**: One sentence | 1 sentence |
 | 1 | **Key takeaway**: What should practitioner remember? | 1-2 sentences |
 | 2 | **No new information**: Only synthesis | — |
+
+---
+
+### References (Unlimited pages)
+
+| # | Criterion | Target |
+|---|-----------|--------|
+| 0 | **Completeness**: Every citation in text appears in references | All citations |
+| 1 | **No orphans**: Every reference is cited at least once | All references |
+| 2 | **Consistency**: Uniform format (venue, year, authors) | All entries |
+| 3 | **Recency**: Includes recent work (last 2-3 years) where relevant | Key citations |
+| 4 | **Foundational works**: Seminal papers in the field cited | Core citations |
+
+---
+
+### Appendix (Unlimited pages)
+
+| # | Criterion | Target |
+|---|-----------|--------|
+| 0 | **Self-contained**: Each appendix section has clear purpose | All sections labeled |
+| 1 | **Referenced from main**: Every appendix cited in main text | All appendices |
+| 2 | **Reproducibility details**: Hyperparameters, hardware, runtimes | 1 section |
+| 3 | **Additional experiments**: Ablations, sensitivity, edge cases | As needed |
+| 4 | **Proofs**: Full derivations if theorems in main text | As needed |
+| 5 | **Dataset details**: Statistics, preprocessing, splits | 1 section if applicable |
+| 6 | **Additional visualizations**: Extended figures, failure cases | As needed |
 
 ---
 
