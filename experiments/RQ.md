@@ -80,7 +80,7 @@ Both conditions use identical architecture, optimizer (Adam, lr=1e-3), and train
 
 This rules out the trivial explanation. The fingerprint measures **structural properties of the learned weights**, not cumulative gradient magnitude.
 
-**Figure:** ![Random labels with weight magnitude control](I-dropped-a-neural-net/experiments/figures/fig_rq1_random_labels.png)
+**Figure:** ![Random labels with weight magnitude control](figures/fig_rq1_random_labels.png)
 
 #### 6. Jacobian Structure Analysis (MLP)
 
@@ -121,7 +121,7 @@ $$\delta_J^{norm} = \left\|\frac{J^T J}{\|J\|_F^2} - \frac{I}{d}\right\|_F$$ (no
 
 **Key Finding:** Training increases diagonal dominance (s: 0.07→0.48), increases negative trace fraction (49%→98%), and slightly decreases the normalized Jacobian deviation (δ_J^norm: 0.100→0.089). The improvement in orthogonality is **marginal** — only a 11% reduction. The fingerprint signature (high s, negative trace) emerges strongly while Jacobians remain far from orthogonal.
 
-**Figure:** ![Jacobian structure](I-dropped-a-neural-net/experiments/figures/fig_rq1_jacobian_mlp.png)
+**Figure:** ![Jacobian structure](figures/fig_rq1_jacobian_mlp.png)
 
 #### 3. Jacobian Structure Analysis (GPT-2)
 
@@ -165,7 +165,7 @@ The original δ_J metric was misleading due to scale sensitivity. The normalized
 
 **Interpretation:** The diagonal dominance fingerprint reliably distinguishes trained from untrained models, but the mechanism is **NOT dynamical isometry**. Training does not make Jacobians more orthogonal — in transformers, it makes them substantially less uniform. The fingerprint must arise from a different mechanism: the co-evolution of W_in and W_out under gradient descent creates correlated diagonal structure, independent of Jacobian conditioning.
 
-**Figure:** ![GPT-2 Jacobian structure](I-dropped-a-neural-net/experiments/figures/fig_rq1_jacobian_gpt2.png)
+**Figure:** ![GPT-2 Jacobian structure](figures/fig_rq1_jacobian_gpt2.png)
 
 #### 4. Gradient Coupling Experiments (Section 9)
 
@@ -247,11 +247,11 @@ We directly inject weight updates that add diagonal structure to M = W_out @ W_i
 
 **Analogy:** Two rowers (W_in, W_out) who hear the same coxswain (gradient signal) naturally synchronize their strokes — not because each stroke is diagonal-shaped, but because they're responding to the same commands together. Shuffling is like giving each rower commands from different boats — they still row, but lose synchronization.
 
-**Figure:** ![Gradient coupling](I-dropped-a-neural-net/experiments/figures/fig_rq1_gradient_coupling.png)
+**Figure:** ![Gradient coupling](figures/fig_rq1_gradient_coupling.png)
 
 Shuffling breaks this directional coupling. The gradients themselves don't need to look diagonal — they just need to be coupled between the two weight matrices of each block.
 
-**Figure:** ![Gradient coupling](I-dropped-a-neural-net/experiments/figures/fig_rq1_gradient_coupling.png)
+**Figure:** ![Gradient coupling](figures/fig_rq1_gradient_coupling.png)
 
 #### 10. Initialization Ablation (7 schemes tested)
 
@@ -289,28 +289,28 @@ Both networks achieve comparable eval loss, confirming PlainNet learns the task 
 ### Figures
 
 #### Training Emergence (Epoch 0 vs Epoch 5)
-![Training dynamics heatmaps](I-dropped-a-neural-net/paper/figures/fig_null_a_heatmaps.png)
+![Training dynamics heatmaps](../paper/figures/fig_null_a_heatmaps.png)
 
 #### Null Model Verification
-![Null model](I-dropped-a-neural-net/paper/figures/fig_null_model.png)
+![Null model](../paper/figures/fig_null_model.png)
 
 #### Training Trajectory
-![Training trajectory](I-dropped-a-neural-net/paper/figures/fig_null_b_trajectory.png)
+![Training trajectory](../paper/figures/fig_null_b_trajectory.png)
 
 #### Margin Theorem Verification
-![Margin theorem](I-dropped-a-neural-net/paper/figures/fig_margin_theorem.png)
+![Margin theorem](../paper/figures/fig_margin_theorem.png)
 
 #### ResNet vs PlainNet Control
-![Non-residual baseline](I-dropped-a-neural-net/paper/figures/fig_nonresidual_baseline.pdf)
+![Non-residual baseline](../paper/figures/fig_nonresidual_baseline.pdf)
 
 #### Random Labels: Fingerprint Without Task Learning
-![Random labels](I-dropped-a-neural-net/experiments/figures/fig_rq1_random_labels.png)
+![Random labels](figures/fig_rq1_random_labels.png)
 
 #### Jacobian Orthogonality (MLP)
-![Jacobian MLP](I-dropped-a-neural-net/experiments/figures/fig_rq1_jacobian_mlp.png)
+![Jacobian MLP](figures/fig_rq1_jacobian_mlp.png)
 
 #### Jacobian Orthogonality (GPT-2)
-![Jacobian GPT-2](I-dropped-a-neural-net/experiments/figures/fig_rq1_jacobian_gpt2.png)
+![Jacobian GPT-2](figures/fig_rq1_jacobian_gpt2.png)
 
 ---
 
@@ -441,22 +441,22 @@ V/O path produces the **strongest signal in the study**.
 ### Figures
 
 #### GPT-2 MLP Pairing & Scaling
-![GPT-2 MLP pairing](I-dropped-a-neural-net/paper/figures/fig_gpt2_mlp_pairing.png)
+![GPT-2 MLP pairing](../paper/figures/fig_gpt2_mlp_pairing.png)
 
 #### GPT-2 Attention Path Pairing
-![GPT-2 attention pairing](I-dropped-a-neural-net/paper/figures/fig_gpt2_attention_pairing.pdf)
+![GPT-2 attention pairing](../paper/figures/fig_gpt2_attention_pairing.pdf)
 
 #### Modern Vision Architectures (ViT, ConvNeXt)
-![Modern vision pairing](I-dropped-a-neural-net/paper/figures/fig_modern_vision_pairing.png)
+![Modern vision pairing](../paper/figures/fig_modern_vision_pairing.png)
 
 #### ResNet Wrong vs Correct Factorization
-![ResNet factorization](I-dropped-a-neural-net/paper/figures/fig_resnet_wrong_vs_correct_factorization.png)
+![ResNet factorization](../paper/figures/fig_resnet_wrong_vs_correct_factorization.png)
 
 #### TorchVision ResNet Pairing
-![TorchVision ResNet](I-dropped-a-neural-net/paper/figures/fig_torchvision_resnet_pairing.png)
+![TorchVision ResNet](../paper/figures/fig_torchvision_resnet_pairing.png)
 
 #### Margin Scaling with Dimension
-![Margin scaling](I-dropped-a-neural-net/paper/figures/fig_deepdive_margin_scaling.png)
+![Margin scaling](../paper/figures/fig_deepdive_margin_scaling.png)
 
 ---
 
@@ -552,16 +552,16 @@ Frobenius matching degrades with model size; singular-value performs at chance.
 ### Figures
 
 #### Lineage Score Distributions (Three Panel)
-![Lineage three panel](I-dropped-a-neural-net/paper/figures/fig_lineage_three_panel.png)
+![Lineage three panel](../paper/figures/fig_lineage_three_panel.png)
 
 #### Branching Ancestry Recovery Heatmap
-![Lineage branching heatmap](I-dropped-a-neural-net/paper/figures/fig_lineage_branching_heatmap.png)
+![Lineage branching heatmap](../paper/figures/fig_lineage_branching_heatmap.png)
 
 #### Ancestry Chains
-![Ancestry chains](I-dropped-a-neural-net/paper/figures/fig_lineage_ancestry_chains.png)
+![Ancestry chains](../paper/figures/fig_lineage_ancestry_chains.png)
 
 #### Method Comparison
-![Metric comparison](I-dropped-a-neural-net/paper/figures/fig_metric_comparison.png)
+![Metric comparison](../paper/figures/fig_metric_comparison.png)
 
 ---
 
@@ -621,13 +621,13 @@ Suppressing the signal damages the model — no "free lunch" for attackers.
 ### Figures
 
 #### Attack Robustness (Fine-tuning, Noise)
-![Attack robustness](I-dropped-a-neural-net/paper/figures/fig_attack_robustness.png)
+![Attack robustness](../paper/figures/fig_attack_robustness.png)
 
 #### Compression Audit Summary
-![Compression audit](I-dropped-a-neural-net/paper/figures/fig_compression_audit_summary.png)
+![Compression audit](../paper/figures/fig_compression_audit_summary.png)
 
 #### Lineage Attacks
-![Lineage attacks](I-dropped-a-neural-net/paper/figures/fig_lineage_attacks.png)
+![Lineage attacks](../paper/figures/fig_lineage_attacks.png)
 
 ---
 
@@ -708,10 +708,10 @@ Correctly flags **4/5 pathological conditions**.
 ### Figures
 
 #### Training Quality Assurance Summary
-![Training QA](I-dropped-a-neural-net/paper/figures/fig_training_qa_summary.png)
+![Training QA](../paper/figures/fig_training_qa_summary.png)
 
 #### Zero-Knowledge Proof Protocol
-![ZKP protocol](I-dropped-a-neural-net/paper/figures/fig_zkp_protocol.png)
+![ZKP protocol](../paper/figures/fig_zkp_protocol.png)
 
 ---
 
@@ -759,22 +759,22 @@ Correctly flags **4/5 pathological conditions**.
 ## All Figures Gallery
 
 ### Core Methodology
-![Pairing matrix](I-dropped-a-neural-net/paper/figures/fig_pairing_matrix_park.png)
-![Pair accuracy separation](I-dropped-a-neural-net/paper/figures/fig_pair_acc_sep.png)
+![Pairing matrix](../paper/figures/fig_pairing_matrix_park.png)
+![Pair accuracy separation](../paper/figures/fig_pair_acc_sep.png)
 
 ### Deep Dives
-![ResNet factors deep dive](I-dropped-a-neural-net/paper/figures/fig_deepdive_resnet_factors.png)
-![ViT per-head analysis](I-dropped-a-neural-net/paper/figures/fig_deepdive_vit_perhead.png)
+![ResNet factors deep dive](../paper/figures/fig_deepdive_resnet_factors.png)
+![ViT per-head analysis](../paper/figures/fig_deepdive_vit_perhead.png)
 
 ### Additional Analysis
-![Sweep summary](I-dropped-a-neural-net/paper/figures/fig_sweep_summary.png)
-![Transformer MLP](I-dropped-a-neural-net/paper/figures/fig_transformer_mlp.png)
-![Null deep dive](I-dropped-a-neural-net/paper/figures/fig_null_deepdive.png)
+![Sweep summary](../paper/figures/fig_sweep_summary.png)
+![Transformer MLP](../paper/figures/fig_transformer_mlp.png)
+![Null deep dive](../paper/figures/fig_null_deepdive.png)
 
 ### Histograms and Distributions
-![Null histograms](I-dropped-a-neural-net/paper/figures/fig_null_c_histograms.png)
-![Null margins](I-dropped-a-neural-net/paper/figures/fig_null_d_margins.png)
+![Null histograms](../paper/figures/fig_null_c_histograms.png)
+![Null margins](../paper/figures/fig_null_d_margins.png)
 
 ### Scaling Analysis
-![Pairing wall](I-dropped-a-neural-net/paper/figures/fig_pairing_wall.png)
-![Pairing wall theory](I-dropped-a-neural-net/paper/figures/fig_pairing_wall_theory.png)
+![Pairing wall](../paper/figures/fig_pairing_wall.png)
+![Pairing wall theory](../paper/figures/fig_pairing_wall_theory.png)
