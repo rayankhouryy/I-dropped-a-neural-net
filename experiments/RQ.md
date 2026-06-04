@@ -428,6 +428,8 @@ The architectures in our study differ in almost every design choice: activation 
 
 **Post-training modifications preserve the signal.** LLaMA-2-chat (RLHF) and DeepSeek-R1-Distill (reasoning distillation) both retain 100% pair accuracy. These are aggressive transformations; the fingerprint survives because they fine-tune existing weights rather than reinitializing them.
 
+**The fingerprint survives Dense All-Reduce (DAR) routing.** DAR architectures (e.g., Qwen3) replace the per-block `x + f(x)` identity path with a cross-layer soft-attention routing mechanism. This ablates the negative-identity pressure on `W_out W_in` (negative trace drops from 99% → 2%), yet the lineage signal persists: AUROC = 1.000 on both standard residual and DAR-trained models. The underlying mechanism changes — trace concentration persists while the negative-identity component vanishes — but the fingerprint remains usable. This supports framing the method as "trained architecture-aware branch products develop trace/Frobenius concentration" rather than the narrower "training drives `W_out W_in → −εI`". See §DAR Routing Ablation below for full results.
+
 **Remaining gaps:** We have not tested mixture-of-experts (MoE) architectures (e.g., Mixtral-8x7B). The MoE case is theoretically interesting (do experts share fingerprint structure?) and is queued under Pending Experiments (compute-bound). The LLaMA-2-13B experiment has been completed and confirms the fingerprint extends to d=5120 with even stronger separation than smaller models.
 
 ### Core Finding
@@ -554,6 +556,43 @@ This confirms the fingerprint generalizes to 13B-scale models with even stronger
 | Q/K attention | 100% | 1.000 | +1.42 | — |
 
 V/O path produces the **strongest signal in the study**.
+
+### DAR Routing Ablation
+
+Dense All-Reduce (DAR) routing replaces the standard residual `h_{l+1} = h_l + f_l(h_l)` with cross-layer soft-attention: `h_l = Σ_{i<l} softmax(q_l · RMSNorm(v_i) / √d) · v_i`. This removes the per-block identity path that creates the negative-identity pressure on `W_out W_in`. We tested whether the fingerprint survives this architectural change using a depth-24 residual MLP (h=64, d=24, 4000-sample synthetic regression, 400 epochs).
+
+| Metric | Standard Residual | DAR Routing |
+|--------|-------------------|-------------|
+| Mean eval loss (refs) | 0.0062 | 0.0007 |
+| Hungarian block-pair acc | 0.786 | 0.708 |
+| Mean diag-s on correct pairs | 0.557 | 0.666 |
+| Separation (corr − off) | 0.392 | 0.420 |
+| **Negative-trace fraction** | **0.994** | **0.022** |
+| Lineage AUROC (45 desc / 36 indep) | **1.000** | **1.000** |
+| Descendant min L | 0.684 | 0.885 |
+| Independent max L | 0.101 | 0.339 |
+
+**Per-attack descendant scores (mean / min):**
+
+| Attack family | Standard | DAR |
+|---------------|----------|-----|
+| ft_same | 0.998 / 0.996 | 0.988 / 0.958 |
+| ft_diff | 0.939 / 0.907 | 0.945 / 0.920 |
+| noise (σ_rel 0.02–0.10) | 0.992 / 0.962 | 0.995 / 0.966 |
+| prune (20/50/70%) | 0.866 / 0.684 | 0.954 / 0.885 |
+| quant (32/64/128 lvls) | 0.998 / 0.992 | 0.998 / 0.991 |
+
+**Three findings:**
+
+1. **Fingerprint survives DAR.** AUROC = 1.000 on both architectures with full descendant battery (noise, prune, quant, same-target ft, different-target ft). Every descendant beats every independent.
+
+2. **Negative-identity mechanism is ablated (99% → 2%).** Removing the per-block `x + f(x)` path removes the dynamic-isometry pressure toward `-εI`. This is mechanistically clean and confirms the architectural assumption is "per-block identity path", not "residual architecture" in general.
+
+3. **DAR does NOT amplify the fingerprint.** At matched fingerprint plateau, separation is equivalent (0.420 vs 0.392). Earlier claims of DAR amplification were undertraining artifacts.
+
+**Caveat:** DAR's independent-baseline null is 3.4× wider (max L = 0.339 vs 0.101). A DAR-DiT deployment should recalibrate τ_s on a larger independent pool before using standard operating points.
+
+**Reproducibility:** `experiments/dar_fingerprint.py` + `results/dar_fingerprint_v2.json`. ~9.7 h CPU.
 
 ### Figures
 
