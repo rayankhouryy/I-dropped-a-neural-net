@@ -377,6 +377,23 @@ def random_init_mixtral(cfg_dict, seed):
     return W
 
 
+def diag_dominance_gpu(M_tensor):
+    """GPU version: s = |tr(M)| / ||M||_F"""
+    tr = abs(float(torch.trace(M_tensor)))
+    fr = float(torch.linalg.norm(M_tensor, 'fro')) + 1e-12
+    return tr / fr
+
+
+def delta_J_norm_gpu(M_tensor):
+    """GPU version: scale-invariant Jacobian orthogonality."""
+    d = M_tensor.shape[0]
+    I = torch.eye(d, device=M_tensor.device, dtype=M_tensor.dtype)
+    J = I + M_tensor
+    JTJ = J.T @ J
+    fro2 = float(torch.linalg.norm(J, 'fro') ** 2)
+    return float(torch.linalg.norm(JTJ / fro2 - I / d, 'fro'))
+
+
 def score_moe(W):
     """Compute all fingerprint metrics for MoE model."""
     n_layers = W['n_layers']
@@ -388,26 +405,54 @@ def score_moe(W):
     results = {}
 
     # 1. Per-expert fingerprint (s, delta_J_norm for each expert)
-    print("  Computing per-expert fingerprints...")
+    print("  Computing per-expert fingerprints...", flush=True)
+    if DEVICE == 'cuda':
+        print(f"    (using GPU for {n_layers * n_experts} expert blocks)", flush=True)
+
     expert_metrics = []
     for i in range(n_layers):
         layer_experts = []
         for e in range(n_experts):
             exp = W['experts'][i][e]
-            M_up = exp['W_down'].astype(np.float32) @ exp['W_up'].astype(np.float32)
-            M_gate = exp['W_down'].astype(np.float32) @ exp['W_gate'].astype(np.float32)
 
-            layer_experts.append({
-                'layer': i,
-                'expert': e,
-                's_down_up': diag_dominance(M_up),
-                's_down_gate': diag_dominance(M_gate),
-                'delta_J_norm_up': delta_J_norm(M_up),
-                'delta_J_norm_gate': delta_J_norm(M_gate),
-                'trace_up': float(np.trace(M_up)),
-                'trace_gate': float(np.trace(M_gate)),
-            })
+            if DEVICE == 'cuda':
+                W_down = torch.from_numpy(exp['W_down'].astype(np.float32)).to(DEVICE)
+                W_up = torch.from_numpy(exp['W_up'].astype(np.float32)).to(DEVICE)
+                W_gate = torch.from_numpy(exp['W_gate'].astype(np.float32)).to(DEVICE)
+
+                M_up = W_down @ W_up
+                M_gate = W_down @ W_gate
+
+                layer_experts.append({
+                    'layer': i,
+                    'expert': e,
+                    's_down_up': diag_dominance_gpu(M_up),
+                    's_down_gate': diag_dominance_gpu(M_gate),
+                    'delta_J_norm_up': delta_J_norm_gpu(M_up),
+                    'delta_J_norm_gate': delta_J_norm_gpu(M_gate),
+                    'trace_up': float(torch.trace(M_up)),
+                    'trace_gate': float(torch.trace(M_gate)),
+                })
+
+                del W_down, W_up, W_gate, M_up, M_gate
+            else:
+                M_up = exp['W_down'].astype(np.float32) @ exp['W_up'].astype(np.float32)
+                M_gate = exp['W_down'].astype(np.float32) @ exp['W_gate'].astype(np.float32)
+
+                layer_experts.append({
+                    'layer': i,
+                    'expert': e,
+                    's_down_up': diag_dominance(M_up),
+                    's_down_gate': diag_dominance(M_gate),
+                    'delta_J_norm_up': delta_J_norm(M_up),
+                    'delta_J_norm_gate': delta_J_norm(M_gate),
+                    'trace_up': float(np.trace(M_up)),
+                    'trace_gate': float(np.trace(M_gate)),
+                })
         expert_metrics.append(layer_experts)
+        if DEVICE == 'cuda' and (i + 1) % 8 == 0:
+            torch.cuda.empty_cache()
+            print(f"    layer {i+1}/{n_layers} done", flush=True)
 
     results['per_expert'] = expert_metrics
 
@@ -429,16 +474,32 @@ def score_moe(W):
     results['layer_aggregate'] = layer_agg
 
     # 3. Cross-expert similarity within each layer
-    print("  Computing cross-expert similarity...")
+    print("  Computing cross-expert similarity...", flush=True)
     cross_expert = []
     for i in range(n_layers):
         # Compute s for all expert pairs within this layer
         s_matrix = np.zeros((n_experts, n_experts))
-        for e1 in range(n_experts):
-            for e2 in range(n_experts):
-                M = W['experts'][i][e2]['W_down'].astype(np.float32) @ \
-                    W['experts'][i][e1]['W_up'].astype(np.float32)
-                s_matrix[e1, e2] = diag_dominance(M)
+
+        if DEVICE == 'cuda':
+            # Load all experts for this layer to GPU
+            W_downs = [torch.from_numpy(W['experts'][i][e]['W_down'].astype(np.float32)).to(DEVICE)
+                       for e in range(n_experts)]
+            W_ups = [torch.from_numpy(W['experts'][i][e]['W_up'].astype(np.float32)).to(DEVICE)
+                     for e in range(n_experts)]
+
+            for e1 in range(n_experts):
+                for e2 in range(n_experts):
+                    M = W_downs[e2] @ W_ups[e1]
+                    s_matrix[e1, e2] = diag_dominance_gpu(M)
+
+            del W_downs, W_ups
+            torch.cuda.empty_cache()
+        else:
+            for e1 in range(n_experts):
+                for e2 in range(n_experts):
+                    M = W['experts'][i][e2]['W_down'].astype(np.float32) @ \
+                        W['experts'][i][e1]['W_up'].astype(np.float32)
+                    s_matrix[e1, e2] = diag_dominance(M)
 
         diag_mean = float(np.diag(s_matrix).mean())
         off_diag = s_matrix[~np.eye(n_experts, dtype=bool)]

@@ -1,6 +1,33 @@
+# Training Leaves Traces: Diagonal-Dominance Fingerprints in Residual Networks
+
+## Abstract
+
+Modern model supply chains increasingly depend on checkpoints that are fine-tuned, compressed, merged, partially modified, or redistributed without reliable provenance metadata. We ask whether trained models carry an intrinsic structural trace in their weights that can support post-hoc lineage analysis. We identify a diagonal-dominance fingerprint in residual-branch products: a blockwise signature that is absent at initialization, emerges after training, and depends on residual architecture rather than superficial weight shape.
+
+We show that this fingerprint appears across residual model families when extracted with architecture-aware factorization, and intervention experiments suggest that coupled residual-branch updates play a causal role in its emergence. Using blockwise fingerprint matching, we demonstrate that the signal can separate descendants from independently trained models on controlled white-box lineage benchmarks. We position this fingerprint as a calibrated scientific signal for model lineage verification, not as a universal provenance or ownership verdict.
+
+---
+
 # Research Questions: Evidence Summary
 
 This document consolidates all empirical evidence from the papers supporting each research question.
+
+---
+
+## Projected Paper Format
+
+1. Introduction
+2. Background and Related Work
+3. Method: Diagonal-Dominance Fingerprints
+4. Experimental Setup
+5. Results
+   - 5.1 Existence after training
+   - 5.2 Dependence on residual structure & Architecture-aware generalization
+   - 5.3 Passive Model weights Provenance
+   - 5.6 Robustness and failure modes
+6. Analysis
+7. Limitations
+8. Conclusion
 
 ---
 
