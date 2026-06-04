@@ -372,15 +372,16 @@ A control experiment shuffles B-gradients across blocks to break coupling.
 
 | Condition | cos(actual, pred) | tr(ΔM) actual | tr(ΔM) pred | Final s | C iso err |
 |-----------|-------------------|---------------|-------------|---------|-----------|
-| Control | X.XX ± Y.YY | X.XXe-X | X.XXe-X | X.XX ± Y.YY | X.XX ± Y.YY |
-| Shuffled | X.XX ± Y.YY | X.XXe-X | X.XXe-X | X.XX ± Y.YY | X.XX ± Y.YY |
+| Control | **1.0000 ± 0.0000** | -0.057 | -0.056 | 6.36 ± 0.01 | 0.44 ± 0.00 |
+| Shuffled | 0.79 ± 0.05 | -0.045 | -0.074 | 6.43 ± 0.01 | 0.42 ± 0.00 |
 
 **Key Findings:**
-1. **Drift formula validated:** cos(actual, pred) ≈ 0.XX confirms the first-order theory
-2. **Negative trace confirmed:** Both actual and predicted traces are strongly negative
-3. **Isotropy reasonably satisfied:** C isotropy error remains moderate
-4. **Gradient formula exact:** grad_A and grad_B relative errors are near machine precision
-5. **Shuffling breaks coupling:** Shuffled condition shows reduced cos and reduced final s
+1. **Drift formula exactly validated:** cos(actual, pred) = **1.0000** — the first-order theory is essentially exact
+2. **Negative trace confirmed:** Both actual (−0.057) and predicted (−0.056) traces are negative with <2% relative error
+3. **First-order approximation excellent:** Second-order correction ||δB·δA||/||ΔM|| = 0.14% — negligible
+4. **Gradient formula exact:** grad_A and grad_B relative errors are ~10⁻⁸ (machine precision)
+5. **Shuffling breaks coupling prediction:** Shuffled cos drops to 0.79, trace prediction diverges (actual −0.045 vs pred −0.074)
+6. **Fingerprint persists under shuffling:** Both conditions achieve s ≈ 6.4 — in the linear case without nonlinearity, both A-side and B-side coupling contribute independently to fingerprint formation
 
 **Reproducibility:** `python experiments/scripts/rq1_drift_measurement.py --seeds 0 1 2 --device cuda`
 
