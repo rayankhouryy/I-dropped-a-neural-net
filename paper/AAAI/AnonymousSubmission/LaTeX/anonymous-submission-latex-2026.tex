@@ -303,25 +303,25 @@ Table~\ref{tab:survival} shows 100\% detection at 1\% FPR across all transformat
 
 \subsection{Comparison with Modern Baselines}\label{sec:exp-baselines}
 
-We compare against representation-similarity methods (CKA~\citep{kornblith2019similarity}, SVCCA~\citep{raghu2017svcca}), weight-space baselines (aligned Frobenius via Hungarian alignment, singular-value distance, weight cosine), and a decision-boundary baseline (IPGuard~\citep{cao2021ipguard}, adapted for regression via quantile-bin agreement) on the same 52-pair MLP benchmark used in Table~\ref{tab:survival} (Table~\ref{tab:baselines}). Five of seven methods reach AUROC$=$1.000; among them four are data-free, including ours. CKA drops to 0.829 because it confounds weight inheritance with behavioral similarity---it cannot distinguish a descendant fine-tuned on a new target from an independent model with similar activations. IPGuard collapses to chance (0.500): distilled non-descendants (which were trained to match the parent's outputs) score \emph{higher} than several true descendants, reproducing the structural limitation of decision-boundary methods on distillation. Our method matches the best baselines while requiring no probe data and remains robust under the conditions where the others fail.
+We compare against representation-similarity methods (CKA~\citep{kornblith2019similarity}, SVCCA~\citep{raghu2017svcca}), weight-space baselines (aligned Frobenius via Hungarian alignment, singular-value distance, weight cosine), and a decision-boundary baseline (IPGuard~\citep{cao2021ipguard}, adapted for regression via quantile-bin agreement) on the same 52-pair MLP benchmark used in Table~\ref{tab:survival} (Table~\ref{tab:baselines}). Five of seven methods reach AUROC$=$1.000, but the saturated score masks a sharp split on \emph{distilled non-descendants}: CKA scores them at $0.83$ (vs.\ $0.999$ for true descendants---a $1.2\times$ gap) and SVCCA at $0.89$ ($1.13\times$ gap), so any benchmark with more distillation would collapse their AUROC. All four weight-space methods, including ours, score distilled students at the non-descendant baseline (gap $\geq 9\times$). IPGuard collapses to chance (0.500): on noise-perturbed descendants its score is exactly $0.000$, ranking true descendants below independent models. Our method matches the best baselines on overall AUROC while requiring no probe data \emph{and} remains the only one that retains a large distillation gap (Table~\ref{tab:per-kind-baselines}, Appendix~\ref{app:experiments}).
 
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{@{}llc@{}}
+\begin{tabular}{@{}llcc@{}}
 \toprule
-Method & Type & AUROC \\
+Method & Type & AUROC & Distill$\downarrow$ \\
 \midrule
-\textbf{Diagonal Dominance (ours)} & Weight-space (data-free) & \textbf{1.000} \\
-Aligned Frobenius & Weight-space (data-free) & 1.000 \\
-Singular Value Dist.\ & Weight-space (data-free) & 1.000 \\
-Weight Cosine & Weight-space (data-free) & 1.000 \\
-SVCCA~\citep{raghu2017svcca} & Activation-space & 1.000 \\
-CKA~\citep{kornblith2019similarity} & Activation-space & 0.829 \\
-IPGuard~\citep{cao2021ipguard} (regr.) & Decision-boundary & 0.500 \\
+\textbf{Diagonal Dominance (ours)} & Weight-space (data-free) & \textbf{1.000} & \textbf{0.030} \\
+Aligned Frobenius & Weight-space (data-free) & 1.000 & -1.300 \\
+Singular Value Dist.\ & Weight-space (data-free) & 1.000 & -0.032 \\
+Weight Cosine & Weight-space (data-free) & 1.000 & 0.109 \\
+SVCCA~\citep{raghu2017svcca} & Activation-space & 1.000 & 0.885 \\
+CKA~\citep{kornblith2019similarity} & Activation-space & 0.829 & 0.827 \\
+IPGuard~\citep{cao2021ipguard} (regr.) & Decision-boundary & 0.500 & 0.642 \\
 \bottomrule
 \end{tabular}
-\caption{Strong-baseline comparison on the MLP lineage benchmark (52 pairs). Four data-free methods reach AUROC$=$1.000. CKA fails on fine-tunes to a new target; IPGuard's regression analogue ranks distilled non-descendants above true descendants. Full per-kind breakdown in Appendix~\ref{app:experiments}.}
+\caption{Strong-baseline comparison on the MLP lineage benchmark (52 pairs). \textbf{AUROC}: overall descendant vs.\ non-descendant separation. \textbf{Distill$\downarrow$}: mean score on distilled non-descendants (lower is better; should be far below descendant scores). CKA and SVCCA score distilled students at $0.83$/$0.89$---essentially equal to true fine-tunes ($0.999$/$0.9997$)---so they would collapse on any benchmark with more distillation. IPGuard scores noise-perturbed descendants at $0.000$, ranking them below all non-descendants. Only the weight-space methods cleanly reject distillation. Full per-kind breakdown in Table~\ref{tab:per-kind-baselines}.}
 \label{tab:baselines}
 \end{table}
 

@@ -143,6 +143,39 @@ Across the GPT-2 family, mean correct-pair score grows with hidden dimension: $d
 
 Diagonal dominance achieves 100\% pairing accuracy on all four GPT-2 variants. Frobenius norm matching degrades from 67\% (GPT-2) to 47\% (GPT-2-large). Singular-value distance performs at chance (0--8\%). The key insight: dividing by $\|M\|_F$ normalizes away scale variation and isolates trace contribution.
 
+\subsection{Per-Kind Lineage Baseline Breakdown}\label{app:per-kind-baselines}
+
+Table~\ref{tab:per-kind-baselines} reports the mean lineage score of each baseline broken down by descendant kind (fine-tune, fine-tune to a new target, noise, prune, quantize) and non-descendant kind (different-seed same-task, distilled). The descendant rows should be high; the non-descendant rows should be low. The aggregate AUROC reported in Table~\ref{tab:baselines} hides two structural failures that this breakdown exposes:
+
+\begin{itemize}[nosep]
+\item \textbf{CKA and SVCCA fail on distilled non-descendants.} CKA scores distilled students at $0.83$ and SVCCA at $0.89$---only $1.2\times$ and $1.13\times$ below the corresponding fine-tune descendants ($0.999$ and $0.9997$). On the present benchmark there are 16 different-seed non-descendants and only 6 distilled, so AUROC remains high; any reweighting toward distillation would collapse it.
+\item \textbf{IPGuard scores noise-perturbed descendants at $\mathbf{0.000}$.} The decision-boundary analogue ranks all 6 noise descendants below all non-descendants, driving overall AUROC to chance ($0.500$).
+\end{itemize}
+
+All four weight-space methods (diagonal dominance, aligned Frobenius, singular-value distance, weight cosine) score distilled non-descendants at or below the different-seed baseline---they cleanly reject distillation, while the activation- and decision-boundary methods cannot.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+ & \multicolumn{5}{c}{Descendants (should be high)} & \multicolumn{2}{c}{Non-descendants (should be low)} \\
+\cmidrule(lr){2-6} \cmidrule(lr){7-8}
+Method & FT & FT-new tgt & Noise & Prune & Quant & Diff-seed & Distilled \\
+\midrule
+\textbf{Diagonal Dominance (ours)} & 0.391 & 0.326 & 0.400 & 0.359 & 0.404 & 0.029 & \textbf{0.030} \\
+Aligned Frobenius & $-0.036$ & $-0.301$ & $-0.026$ & $-0.204$ & $-0.007$ & $-1.333$ & $-1.300$ \\
+Singular Value Dist.\ & $-0.004$ & $-0.023$ & $-0.003$ & $-0.018$ & $-0.001$ & $-0.030$ & $-0.032$ \\
+Weight Cosine & 0.999 & 0.956 & 1.000 & 0.979 & 1.000 & 0.096 & 0.109 \\
+SVCCA & 1.000 & 0.953 & 1.000 & 0.993 & 1.000 & 0.881 & \emph{0.885} \\
+CKA & 0.999 & 0.760 & 1.000 & 0.986 & 1.000 & 0.820 & \emph{0.827} \\
+IPGuard (regr.) & 0.888 & 0.110 & \emph{0.000} & 0.626 & 0.993 & 0.632 & 0.642 \\
+\bottomrule
+\end{tabular}
+\caption{Per-kind mean lineage scores on the 52-pair MLP benchmark. Each method uses its native scale; what matters is the relative gap between the rightmost columns (non-descendants) and the leftmost five (descendants). Italicized entries highlight failure modes: SVCCA and CKA give distilled non-descendants near-descendant scores; IPGuard scores noise-perturbed descendants at exactly $0.000$. All four weight-space methods (including ours) keep distilled below or at the diff-seed baseline. $n{=}6$ per descendant kind, $n{=}16$ diff-seed, $n{=}6$ distilled.}
+\label{tab:per-kind-baselines}
+\end{table*}
+
 \subsection{ResNet Factorization}
 
 For Bottleneck blocks, the naive $W_3 W_1$ achieves chance-level accuracy. The triple product $W_3 W_2 W_1$ recovers:
