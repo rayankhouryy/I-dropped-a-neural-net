@@ -43,9 +43,9 @@
 \begin{abstract}
 As foundation models are increasingly fine-tuned, merged, and redistributed, verifying whether a checkpoint derives from a protected model is critical for IP protection and compliance---yet current methods require hashes, metadata, or watermarks that fail when checkpoints are adapted or records are incomplete. We ask whether \emph{weight-level lineage} can be verified from weights alone: given a reference and suspect checkpoint of compatible architecture, did the suspect inherit the reference's weights?
 
-We find that trained residual architectures expose such a signal. Training couples a residual block's input and output projections so that their product exhibits diagonal dominance absent from mismatched or random pairings. We formalize this with the score $s(M)=|\mathrm{tr}(M)|/\|M\|_F$, prove a $\sqrt{d}$ upper bound and observe empirical growth $s \propto d^{0.87}$ across GPT-2 through LLaMA-2-13B, and build a two-level pipeline: diagonal dominance recovers block correspondences; centered residual signatures detect checkpoint lineage.
+We find that trained residual architectures expose such a signal. Training couples a residual block's input and output projections so that their product exhibits diagonal dominance absent from mismatched or random pairings. We formalize this with the score $s(M)=|\mathrm{tr}(M)|/\|M\|_F$, prove a $\sqrt{d}$ upper bound and observe empirical growth $s \propto d^{0.87}$ across GPT-2~\citep{radford2019gpt2} through LLaMA-2-13B, and build a two-level pipeline: diagonal dominance recovers block correspondences; centered residual signatures detect checkpoint lineage.
 
-Across 12 architectures (GPT-2, BERT, Mistral, LLaMA-2, Qwen, DeepSeek, Whisper, ResNet, ViT, ConvNeXt) spanning 5 families and 280+ pairs, the fingerprint recovers 91--100\% of block correspondences, and the lineage score achieves AUROC$=$1.000 (TPR$=$100\% at 1\% FPR). The signal persists under fine-tuning, quantization, pruning, and RLHF; suppressing it below the detection threshold incurs 12--100\% eval-loss degradation. The method detects weight inheritance, not functional imitation: distilled students correctly classify as non-descendants because they share no weights.
+Across 12 architectures (GPT-2, BERT~\citep{devlin2019bert}, Mistral~\citep{jiang2023mistral}, LLaMA-2, Qwen~\citep{yang2024qwen2}, DeepSeek~\citep{deepseek2025r1}, Whisper~\citep{radford2023whisper}, ResNet, ViT~\citep{dosovitskiy2021vit}, ConvNeXt~\citep{liu2022convnext}) spanning 5 families and 280+ pairs, the fingerprint recovers 91--100\% of block correspondences, and the lineage score achieves AUROC$=$1.000 (TPR$=$100\% at 1\% FPR). The signal persists under fine-tuning, quantization, pruning, and RLHF; suppressing it below the detection threshold incurs 12--100\% eval-loss degradation. The method detects weight inheritance, not functional imitation: distilled students correctly classify as non-descendants because they share no weights.
 \end{abstract}
 
 \section{Introduction}
@@ -60,13 +60,13 @@ This enables \emph{passive weight-level lineage verification}: given reference a
 
 \textbf{Two tasks, one mechanism.} \emph{Block correspondence} asks which input projection pairs with which output projection within a model; the diagonal-dominance score suffices. \emph{Checkpoint lineage} asks whether one model descends from another; this requires centered residual signatures and is reported as AUROC. Both share the same mechanism but have different failure modes. The method applies to residual architectures and detects weight inheritance, not functional imitation---distilled students correctly classify as non-descendants.
 
-Across 12 architectures (GPT-2, BERT, LLaMA-2, Mistral, ResNet, ViT, Whisper) spanning 5 families and 280+ checkpoint pairs, block correspondence achieves 91--100\% accuracy, and lineage detection achieves AUROC$=$1.000 with TPR$=$100\% at 1\% FPR. No prior method addresses passive weight-level lineage for post-hoc checkpoints; existing watermarks require insertion before training and fail under fine-tuning~\citep{lukas2022sok}, while decision-boundary fingerprints confuse distillation with weight inheritance~\citep{cao2021ipguard}.
+Across 12 architectures (GPT-2, BERT, LLaMA-2, Mistral, ResNet, ViT, Whisper) spanning 5 families and 280+ checkpoint pairs, block correspondence achieves 91--100\% accuracy, and lineage detection achieves AUROC$=$1.000 with TPR$=$100\% at 1\% FPR. No prior method addresses passive weight-level lineage for post-hoc checkpoints; existing watermarks require insertion before training and fail under fine-tuning~\citep{lukas2022sok}, while decision-boundary fingerprints confuse distillation~\citep{hinton2015distilling} with weight inheritance~\citep{cao2021ipguard}.
 
-We contribute: (1) formalization of diagonal dominance with a $\sqrt{d}$ upper-bound proof and empirical $d^{0.87}$ scaling verified on GPT-2 through LLaMA-2-13B; (2) a passive verification protocol using Hungarian matching and centered signatures; (3) validation across 12 architectures (incl.\ MoE) with robustness under fine-tuning, quantization, pruning, and RLHF; (4) head-to-head comparison against representation-similarity baselines (CKA, SVCCA) and decision-boundary baselines (IPGuard), showing the weight-only fingerprint matches the best activation-space methods without requiring probe data.
+We contribute: (1) formalization of diagonal dominance with a $\sqrt{d}$ upper-bound proof and empirical $d^{0.87}$ scaling verified on GPT-2 through LLaMA-2-13B; (2) a passive verification protocol using Hungarian matching and centered signatures; (3) validation across 12 architectures (incl.\ MoE~\citep{jiang2024mixtral}) with robustness under fine-tuning, quantization~\citep{dettmers2022llmint8}, pruning~\citep{han2015deep}, and RLHF~\citep{ouyang2022rlhf}; (4) head-to-head comparison against representation-similarity baselines (CKA, SVCCA) and decision-boundary baselines (IPGuard), showing the weight-only fingerprint matches the best activation-space methods without requiring probe data.
 
 \section{Background and Problem Setting}\label{sec:background}
 
-We define \emph{passive model provenance}: given a reference checkpoint $R$ and suspect $S$ with missing or untrusted metadata, determine whether $S$ shares weight-level lineage with $R$ after post-training transformations. This is a white-box task---the verifier accesses both weight sets. The method detects \emph{weight-level lineage} (parameters derived via fine-tuning, pruning, or quantization), not behavioral equivalence. Distilled students and model-extraction copies produce similar outputs but share no weights; our method correctly classifies them as non-descendants.
+We define \emph{passive model provenance}: given a reference checkpoint $R$ and suspect $S$ with missing or untrusted metadata, determine whether $S$ shares weight-level lineage with $R$ after post-training transformations. This is a white-box task---the verifier accesses both weight sets. The method detects \emph{weight-level lineage} (parameters derived via fine-tuning, pruning, or quantization), not behavioral equivalence. Distilled students~\citep{hinton2015distilling} and model-extraction copies~\citep{tramer2016stealing} produce similar outputs but share no weights; our method correctly classifies them as non-descendants.
 
 Table~\ref{tab:comparison} positions our approach against prior methods. Cryptographic hashes fail after any modification. Metadata can be falsified or lost. Watermarks~\citep{uchida2017embedding,adi2018turning} require insertion before deployment and lack robustness~\citep{lukas2022sok}. Decision-boundary fingerprints~\citep{cao2021ipguard} confuse distillation with weight inheritance. Our key differentiator: we read a signal that training \emph{leaves}, rather than one that must be \emph{inserted}.
 
@@ -224,7 +224,7 @@ Transformation & Parameters & Detection \\
 Fine-tuning & LR $10^{-5}$--$10^{-3}$ & 100\% \\
 Quantization & 8-bit / 6-bit & 100\% / 94\% \\
 Pruning & 30\% / 50\% & 100\% / 98\% \\
-LoRA merge & rank 8--64 & 100\% \\
+LoRA merge~\citep{hu2022lora} & rank 8--64 & 100\% \\
 \bottomrule
 \end{tabular}
 \caption{Verification robustness at 95\% confidence threshold.}
@@ -259,7 +259,7 @@ ResNet-50/101/152 & 5--35 & $91$--$100\%$ & 0.96--1.00 \\
 \label{tab:transformer-family}
 \end{table}
 
-\textbf{Key findings:} (1) The fingerprint transfers across GELU, SwiGLU, causal/bidirectional attention, and grouped-query attention. (2) RLHF and reasoning distillation preserve the signal (LLaMA-2 base$\to$chat: 100\% accuracy). (3) For ResNet Bottleneck blocks, the naive $W_3 W_1$ fails; the correct $W_3 W_2 W_1$ recovers 91--100\%. (4) Mean correct-pair $s(i,i)$ grows from $4.18$ at $d{=}768$ (GPT-2) to $23.83$ at $d{=}5120$ (LLaMA-2-13B), an empirical $d^{0.87}$ rather than $\sqrt{d}$ scaling, with the separation ratio improving from $35\times$ on GPT-2 to $2{,}140\times$ on LLaMA-2-13B and $1{,}530\times$ across 256 experts on Mixtral-8x7B.
+\textbf{Key findings:} (1) The fingerprint transfers across GELU~\citep{hendrycks2016gelu}, SwiGLU~\citep{shazeer2020swiglu}, causal/bidirectional attention, and grouped-query attention~\citep{ainslie2023gqa}. (2) RLHF and reasoning distillation preserve the signal (LLaMA-2 base$\to$chat: 100\% accuracy). (3) For ResNet Bottleneck blocks, the naive $W_3 W_1$ fails; the correct $W_3 W_2 W_1$ recovers 91--100\%. (4) Mean correct-pair $s(i,i)$ grows from $4.18$ at $d{=}768$ (GPT-2) to $23.83$ at $d{=}5120$ (LLaMA-2-13B), an empirical $d^{0.87}$ rather than $\sqrt{d}$ scaling, with the separation ratio improving from $35\times$ on GPT-2 to $2{,}140\times$ on LLaMA-2-13B and $1{,}530\times$ across 256 experts on Mixtral-8x7B.
 
 \begin{figure}[t]
 \centering
@@ -299,7 +299,7 @@ Independent / Distilled & 0.08 & 0.01 & --- \\
 
 Table~\ref{tab:survival} shows 100\% detection at 1\% FPR across all transformations. The weakest descendant (85\% pruning, $\mathcal{L}{=}0.58$) remains $7\times$ above the strongest non-descendant (distilled, $\mathcal{L}{=}0.19$). Fingerprint degradation correlates with utility loss ($\rho{=}-0.83$): suppressing the signal damages the model.
 
-\textbf{Real architectures:} On CIFAR-10 ResNet-18, the method achieves AUROC$=$1.000 with $>$100$\times$ separation between descendants and independents (Appendix~\ref{app:experiments}).
+\textbf{Real architectures:} On CIFAR-10~\citep{krizhevsky2009cifar} ResNet-18, the method achieves AUROC$=$1.000 with $>$100$\times$ separation between descendants and independents (Appendix~\ref{app:experiments}).
 
 \subsection{Comparison with Modern Baselines}\label{sec:exp-baselines}
 
@@ -358,8 +358,10 @@ We test whether the fingerprint can be suppressed without destroying model utili
 
 Training leaves traces. Residual-network optimization couples each block's input and output projections so that their product becomes diagonal-dominant ($W_{\mathrm{out}} W_{\mathrm{in}} \approx -\varepsilon I + E$), with a theoretical $\sqrt{d}$ upper bound and an empirical $d^{0.87}$ growth observed from GPT-2 through LLaMA-2-13B and Mixtral-8x7B. Across 12 architectures spanning 5 families, the fingerprint recovers 91--100\% of block correspondences and achieves AUROC$=$1.000 for lineage detection, surviving fine-tuning, quantization, pruning, and RLHF. Among modern baselines, it matches the best representation-similarity methods (CKA, SVCCA) on a 52-pair MLP benchmark while requiring no probe data, and correctly classifies distilled students as non-descendants where decision-boundary fingerprints fail. Suppressing the fingerprint below the detection threshold requires $\ge$12\% utility loss. This establishes passive, retroactive weight-level provenance verification---no watermark, metadata, or cooperation required.
 
+\clearpage
 \bibliography{aaai2026}
 
+\clearpage
 \input{appendix}
 
 \end{document}
