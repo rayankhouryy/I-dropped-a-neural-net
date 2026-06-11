@@ -580,7 +580,7 @@ We analyze fingerprint scaling across model dimension d, extending from GPT-2 (d
 | GPT-2 (random init) | 124M | 768 | 12 | 0.035 | — | — | — |
 | LLaMA-2-13B (random) | 13B | 5120 | 40 | 0.012 | — | — | — |
 
-*LLaMA-2-7B mean s estimated from pair accuracy; full scaling metrics pending.
+*LLaMA-2-7B mean $s$ estimated from pair accuracy only; direct s measurement subsumed by the 13B run.
 
 **Key scaling findings:**
 
@@ -1170,16 +1170,27 @@ Correctly flags **4/5 pathological conditions**.
 
 ---
 
-## Pending Experiments (Issue #43)
+## Pending Experiments (Issue #43, Issue #44)
 
-The following items from the ablation issue require GPU/cluster compute we do not currently have and are queued for the next iteration. Each item lists what we would measure, the expected delta to current results, and a rough resource estimate. Scripts that can be drafted without running are linked.
+The following items require GPU/cluster compute we do not currently have and are queued for the next iteration. Each item lists what we would measure, the expected delta to current results, and a rough resource estimate. Scripts that can be drafted without running are linked.
 
-### Compute-bound (defer until cluster access)
+### Completed since this section was first written
 
-| Item | Owner ask | What we'd measure | Expected delta | Resource estimate | Script |
-|---|---|---|---|---|---|
-| ~~**MoE / Mixtral-8x7B fingerprint (RQ2)**~~ | ~~@singh96aman~~ | ~~Per-expert and aggregate s, δ_J^norm; pair accuracy across experts~~ | **✅ COMPLETED** — 100% layer pairing, 1,530× separation vs random, confirms fingerprint survives MoE routing | — | `results/rq2_moe_mixtral.json` |
-| ~~**LLaMA-2-13B fingerprint (RQ2)**~~ | ~~@singh96aman~~ | ~~Mean s, δ_J^norm, pair accuracy~~ | **✅ COMPLETED** — 100% pair accuracy, 2,140× separation ratio, confirms d^0.87 scaling at d=5120 | — | `results/transformer_family_pairing_llama2_13b.json` |
+| Item | Status |
+|---|---|
+| **MoE / Mixtral-8x7B fingerprint (RQ2)** | ✅ Done — 100% layer pairing, 1,530× separation vs random. See `results/rq2_moe_mixtral.json`. |
+| **LLaMA-2-13B fingerprint (RQ2)** | ✅ Done — 100% pair accuracy, 2,140× separation, confirms d^0.87 scaling at d=5120. See `results/transformer_family_pairing_llama2_13b.json`. |
+| **Strong baselines on MLP (RQ3, Issue #44)** | ✅ Done — 7 methods scored; 5 reach AUROC=1.000, CKA=0.829, IPGuard(regr.)=0.500. See `results/lineage_baselines_mlp.json`. |
+| **Drift measurement / theory validation** | ✅ Done — cos=1.0000 between predicted and measured drift, validates Theorem. See `results/diagonal_drift_validation.json`. |
+
+### Still compute-bound (defer until cluster access)
+
+| Item | What we'd measure | Why it matters | Resource ask |
+|---|---|---|---|
+| **HuggingFace LLaMA family lineage (Issue #44)** | Diagonal-dominance + all baselines on Llama-2-7b → chat / copies vs OpenLLaMA / Mistral, 36+ pairs per family | Validates lineage AUROC at LLM scale on a public benchmark with known ground truth | ~30 GB GPU + ~10 GB downloads per checkpoint |
+| **HuggingFace BERT family lineage (Issue #44)** | Same baselines on bert-base → fine-tunes vs DistilBERT, TinyBERT, 36+ pairs | Second public benchmark; tests distillation boundary on real models | ~5 GB GPU |
+| **ResNet re-scoring under new baselines (Issue #44)** | Add activation hooks to `lineage_phase2_resnet.py`; re-score under CKA/SVCCA/IPGuard | Fills the ResNet column of Table 5 in `experiments/docs/POC_lineage_baselines.md` | CPU-feasible but slow |
+| **UAP fingerprint baseline (Issue #44)** | Adds Peng et al.\ 2022 to the baselines library | Closes the last gap in the spec's baseline list | GPU for the UAP attack budget |
 
 #### Run Commands (Archived — Completed on SageMaker ml.g5.12xlarge)
 
@@ -1204,6 +1215,33 @@ python experiments/scripts/rq2_moe_fingerprint.py --model mixtral-8x7b --use-saf
 ## All Figures Gallery
 
 ### Core Methodology
+- Null heatmaps: `paper/figures/fig_null_a_heatmaps.{pdf,png}`
+- Margin theorem verification: `paper/figures/fig_margin_theorem.{pdf,png}` (≡ `fig_deepdive_margin_scaling`)
+- Non-residual baseline: `paper/figures/fig_nonresidual_baseline.{pdf,png}`
+- ResNet wrong-vs-correct factorization: `paper/figures/fig_resnet_wrong_vs_correct_factorization.{pdf,png}`
+- ResNet extraction ablation: `paper/figures/fig_resnet_extraction_ablation.{pdf,png}`
+
+### Cross-Architecture (RQ2)
+- GPT-2 MLP pairing: `paper/figures/fig_gpt2_mlp_pairing.{pdf,png}`
+- GPT-2 attention pairing: `paper/figures/fig_gpt2_attention_pairing.{pdf,png}`
+- Modern vision pairing: `paper/figures/fig_modern_vision_pairing.{pdf,png}`
+- Torchvision ResNet pairing: `paper/figures/fig_torchvision_resnet_pairing.{pdf,png}`
+- DAR cross-layer routing (RQ2 ablation): `paper/figures/fig_dar_fingerprint.{pdf,png}`
+
+### Lineage (RQ3)
+- Three-panel summary: `paper/figures/fig_lineage_three_panel.{pdf,png}`
+- Score distributions: `paper/figures/fig_lineage_score_distributions.{pdf,png}`
+- ROC: `paper/figures/fig_lineage_roc.{pdf,png}`
+- Utility tradeoff: `paper/figures/fig_lineage_utility_tradeoff.{pdf,png}`
+- Branching heatmap: `paper/figures/fig_lineage_branching_heatmap.{pdf,png}`
+- Ancestry chains: `paper/figures/fig_lineage_ancestry_chains.{pdf,png}`
+- Attack robustness: `paper/figures/fig_lineage_attacks.{pdf,png}`
+- **Strong baselines AUROC (issue #44):** `paper/figures/fig_lineage_baselines_auroc.png`
+
+### Mechanism / Ablations (RQ1, issue #43)
+- Gradient coupling: `paper/figures/fig_rq1_gradient_coupling.pdf`
+- Optimizer ablation: `paper/figures/fig_rq1_optimizer_ablation.pdf`
+
 ### Deep Dives
 ![ResNet factors deep dive](../paper/figures/fig_deepdive_resnet_factors.png)
 ![ViT per-head analysis](../paper/figures/fig_deepdive_vit_perhead.png)
