@@ -35,3 +35,9 @@ draft.pdf
 checkpoints/
 data/
 *.pt
+
+# Large signature artifacts (not committed; reproducible from scripts)
+sigs/
+sigs_real_llm/
+sigs_minimal/
+

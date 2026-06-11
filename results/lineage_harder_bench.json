@@ -1,0 +1,954 @@
+{
+  "config": {
+    "n_refs": 2,
+    "n_donors_per_ref": 2,
+    "graft_ks": [
+      0,
+      4,
+      8,
+      12,
+      16
+    ],
+    "merge_ws": [
+      0.0,
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "depth": 16,
+    "hidden": 48,
+    "in_dim": 16,
+    "epochs": 120,
+    "out": "results/lineage_harder_bench.json"
+  },
+  "n_pairs": 40,
+  "auroc": {
+    "graft": {
+      "diagonal_dominance": 0.9791666666666666,
+      "aligned_frobenius": 1.0,
+      "singular_value_dist": 1.0,
+      "weight_cosine": 1.0,
+      "cka": 0.8125,
+      "svcca": 1.0,
+      "ipguard_regr": 0.05208333333333333
+    },
+    "merge": {
+      "diagonal_dominance": 1.0,
+      "aligned_frobenius": 1.0,
+      "singular_value_dist": 0.44791666666666663,
+      "weight_cosine": 1.0,
+      "cka": 0.78125,
+      "svcca": 1.0,
+      "ipguard_regr": 0.44791666666666663
+    },
+    "all": {
+      "diagonal_dominance": 0.984375,
+      "aligned_frobenius": 1.0,
+      "singular_value_dist": 0.6953125,
+      "weight_cosine": 1.0,
+      "cka": 0.7994791666666665,
+      "svcca": 0.9583333333333334,
+      "ipguard_regr": 0.25651041666666663
+    }
+  },
+  "spearman_with_fraction": {
+    "graft": {
+      "diagonal_dominance": 0.9572173526639411,
+      "aligned_frobenius": 0.984731927834662,
+      "singular_value_dist": 0.984731927834662,
+      "weight_cosine": 0.981761387347632,
+      "cka": 0.7323943713270298,
+      "svcca": 0.9724227787367289,
+      "ipguard_regr": -0.8341831633625929
+    },
+    "merge": {
+      "diagonal_dominance": 0.963353361334864,
+      "aligned_frobenius": 0.984731927834662,
+      "singular_value_dist": 0.23387383286073224,
+      "weight_cosine": 0.963353361334864,
+      "cka": 0.7447035204249631,
+      "svcca": 0.984731927834662,
+      "ipguard_regr": 0.2154917503421052
+    }
+  },
+  "pairs": [
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "graft",
+      "param": 0,
+      "fraction": 0.0,
+      "label": 0,
+      "blocks_from_ref": [],
+      "scores": {
+        "diagonal_dominance": 0.029271424754707558,
+        "aligned_frobenius": -1.3210279563935856,
+        "singular_value_dist": -0.028617443615605635,
+        "weight_cosine": 0.1162752984201336,
+        "cka": 0.8305310098940961,
+        "svcca": 0.873205409602976,
+        "ipguard_regr": 0.6225
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "graft",
+      "param": 4,
+      "fraction": 0.25,
+      "label": 0,
+      "blocks_from_ref": [
+        0,
+        11,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.1269964334026593,
+        "aligned_frobenius": -0.9950662234585218,
+        "singular_value_dist": -0.021615230914377167,
+        "weight_cosine": 0.33256742055239524,
+        "cka": 0.8156757502853014,
+        "svcca": 0.8818213353456928,
+        "ipguard_regr": 0.3
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "graft",
+      "param": 8,
+      "fraction": 0.5,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        4,
+        6,
+        8,
+        11,
+        12,
+        13,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.24168891705073986,
+        "aligned_frobenius": -0.6681848846508555,
+        "singular_value_dist": -0.016712556571411664,
+        "weight_cosine": 0.5482144935686051,
+        "cka": 0.8287110446787335,
+        "svcca": 0.9098089382388741,
+        "ipguard_regr": 0.175
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "graft",
+      "param": 12,
+      "fraction": 0.75,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        1,
+        2,
+        3,
+        6,
+        7,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.27965636882991696,
+        "aligned_frobenius": -0.3401155666082393,
+        "singular_value_dist": -0.00882145322320867,
+        "weight_cosine": 0.7705967983594968,
+        "cka": 0.9209151333545602,
+        "svcca": 0.948409965720308,
+        "ipguard_regr": 0.2225
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "graft",
+      "param": 16,
+      "fraction": 1.0,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.3675211268397992,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.9999999999987461,
+        "cka": 1.0,
+        "svcca": 1.0,
+        "ipguard_regr": 0.1775
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "merge",
+      "param": 0.0,
+      "fraction": 0.0,
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.029271424754707558,
+        "aligned_frobenius": -1.3210279563935856,
+        "singular_value_dist": -0.028617443615605635,
+        "weight_cosine": 0.1162752984201336,
+        "cka": 0.8305310098940961,
+        "svcca": 0.873205409602976,
+        "ipguard_regr": 0.6225
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "merge",
+      "param": 0.25,
+      "fraction": 0.25,
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.03248246160001034,
+        "aligned_frobenius": -1.1021386369607038,
+        "singular_value_dist": -0.14275996959567336,
+        "weight_cosine": 0.1283768660385204,
+        "cka": 0.8100567188954008,
+        "svcca": 0.921845664612603,
+        "ipguard_regr": 0.2225
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "merge",
+      "param": 0.5,
+      "fraction": 0.5,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.11586313989782787,
+        "aligned_frobenius": -0.856288188373457,
+        "singular_value_dist": -0.19082255372010465,
+        "weight_cosine": 0.5176734694517863,
+        "cka": 0.8052841655761034,
+        "svcca": 0.9424152686832334,
+        "ipguard_regr": 0.15
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "merge",
+      "param": 0.75,
+      "fraction": 0.75,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.26788427005369986,
+        "aligned_frobenius": -0.5093909635632767,
+        "singular_value_dist": -0.1412511394171688,
+        "weight_cosine": 0.9097784431067371,
+        "cka": 0.9152278149644923,
+        "svcca": 0.970970094335924,
+        "ipguard_regr": 0.2325
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 0,
+      "regime": "merge",
+      "param": 1.0,
+      "fraction": 1.0,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.3675211268397992,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.9999999999987461,
+        "cka": 1.0,
+        "svcca": 1.0,
+        "ipguard_regr": 1.0
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "graft",
+      "param": 0,
+      "fraction": 0.0,
+      "label": 0,
+      "blocks_from_ref": [],
+      "scores": {
+        "diagonal_dominance": 0.02373014240155024,
+        "aligned_frobenius": -1.3343523345063149,
+        "singular_value_dist": -0.026742407172578864,
+        "weight_cosine": 0.11471907351401356,
+        "cka": 0.8479002776689445,
+        "svcca": 0.8668621222896888,
+        "ipguard_regr": 0.645
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "graft",
+      "param": 4,
+      "fraction": 0.25,
+      "label": 0,
+      "blocks_from_ref": [
+        9,
+        10,
+        13,
+        14
+      ],
+      "scores": {
+        "diagonal_dominance": 0.09078148271948977,
+        "aligned_frobenius": -0.9984738956871408,
+        "singular_value_dist": -0.02027024454473962,
+        "weight_cosine": 0.3313140394450831,
+        "cka": 0.8245861825364379,
+        "svcca": 0.8765113705994916,
+        "ipguard_regr": 0.2825
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "graft",
+      "param": 8,
+      "fraction": 0.5,
+      "label": 1,
+      "blocks_from_ref": [
+        1,
+        2,
+        4,
+        7,
+        10,
+        11,
+        12,
+        14
+      ],
+      "scores": {
+        "diagonal_dominance": 0.1822948663272974,
+        "aligned_frobenius": -0.6850574180558233,
+        "singular_value_dist": -0.016940397998762537,
+        "weight_cosine": 0.5436181116328633,
+        "cka": 0.82804215976824,
+        "svcca": 0.8994053354556024,
+        "ipguard_regr": 0.24
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "graft",
+      "param": 12,
+      "fraction": 0.75,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        1,
+        2,
+        5,
+        6,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.2770619120380425,
+        "aligned_frobenius": -0.35058427924747865,
+        "singular_value_dist": -0.007444590988446972,
+        "weight_cosine": 0.7587310781111555,
+        "cka": 0.8963686459871304,
+        "svcca": 0.9348359859909761,
+        "ipguard_regr": 0.19
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "graft",
+      "param": 16,
+      "fraction": 1.0,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.3675211268397992,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.9999999999987461,
+        "cka": 1.0,
+        "svcca": 1.0,
+        "ipguard_regr": 0.1675
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "merge",
+      "param": 0.0,
+      "fraction": 0.0,
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.02373014240155024,
+        "aligned_frobenius": -1.3343523345063149,
+        "singular_value_dist": -0.026742407172578864,
+        "weight_cosine": 0.11471907351401356,
+        "cka": 0.8479002776689445,
+        "svcca": 0.8668621222896888,
+        "ipguard_regr": 0.645
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "merge",
+      "param": 0.25,
+      "fraction": 0.25,
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.025325587897465397,
+        "aligned_frobenius": -1.1089661784866134,
+        "singular_value_dist": -0.14163455244174533,
+        "weight_cosine": 0.12665638052042266,
+        "cka": 0.8027842393868205,
+        "svcca": 0.9188350237090126,
+        "ipguard_regr": 0.2
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "merge",
+      "param": 0.5,
+      "fraction": 0.5,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.09337019119120624,
+        "aligned_frobenius": -0.8632103312654454,
+        "singular_value_dist": -0.19135679803406977,
+        "weight_cosine": 0.5052233759853798,
+        "cka": 0.7907639145169543,
+        "svcca": 0.9401960101456975,
+        "ipguard_regr": 0.1675
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "merge",
+      "param": 0.75,
+      "fraction": 0.75,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.23521493491253653,
+        "aligned_frobenius": -0.5123024609092708,
+        "singular_value_dist": -0.14253003821518986,
+        "weight_cosine": 0.9084941473579882,
+        "cka": 0.9061934816749504,
+        "svcca": 0.969481648329765,
+        "ipguard_regr": 0.24
+      }
+    },
+    {
+      "ref": 0,
+      "donor": 1,
+      "regime": "merge",
+      "param": 1.0,
+      "fraction": 1.0,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.3675211268397992,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.9999999999987461,
+        "cka": 1.0,
+        "svcca": 1.0,
+        "ipguard_regr": 1.0
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "graft",
+      "param": 0,
+      "fraction": 0.0,
+      "label": 0,
+      "blocks_from_ref": [],
+      "scores": {
+        "diagonal_dominance": 0.033868065644813886,
+        "aligned_frobenius": -1.3014275371426145,
+        "singular_value_dist": -0.03067234256812935,
+        "weight_cosine": 0.11253112273013201,
+        "cka": 0.798038915224879,
+        "svcca": 0.8746379082111504,
+        "ipguard_regr": 0.595
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "graft",
+      "param": 4,
+      "fraction": 0.25,
+      "label": 0,
+      "blocks_from_ref": [
+        5,
+        9,
+        10,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.08693060803977863,
+        "aligned_frobenius": -0.9864067173457625,
+        "singular_value_dist": -0.02342819782487911,
+        "weight_cosine": 0.33025536183856025,
+        "cka": 0.7490992556682157,
+        "svcca": 0.8834699524702143,
+        "ipguard_regr": 0.1875
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "graft",
+      "param": 8,
+      "fraction": 0.5,
+      "label": 1,
+      "blocks_from_ref": [
+        2,
+        4,
+        7,
+        9,
+        10,
+        11,
+        13,
+        14
+      ],
+      "scores": {
+        "diagonal_dominance": 0.12077736774216859,
+        "aligned_frobenius": -0.6674511702470884,
+        "singular_value_dist": -0.016729447133076506,
+        "weight_cosine": 0.5308671801036675,
+        "cka": 0.7755155449184683,
+        "svcca": 0.8974255825545123,
+        "ipguard_regr": 0.1925
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "graft",
+      "param": 12,
+      "fraction": 0.75,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        10,
+        12,
+        13,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.35764943715179653,
+        "aligned_frobenius": -0.34289064858321233,
+        "singular_value_dist": -0.007217166958923245,
+        "weight_cosine": 0.7596200811087508,
+        "cka": 0.8717709714250884,
+        "svcca": 0.9504218919287919,
+        "ipguard_regr": 0.1375
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "graft",
+      "param": 16,
+      "fraction": 1.0,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.4443020090371118,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.999999999998751,
+        "cka": 1.0,
+        "svcca": 1.0,
+        "ipguard_regr": 0.14
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "merge",
+      "param": 0.0,
+      "fraction": 0.0,
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.033868065644813886,
+        "aligned_frobenius": -1.3014275371426145,
+        "singular_value_dist": -0.03067234256812935,
+        "weight_cosine": 0.11253112273013201,
+        "cka": 0.798038915224879,
+        "svcca": 0.8746379082111504,
+        "ipguard_regr": 0.595
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "merge",
+      "param": 0.25,
+      "fraction": 0.25,
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.0451171160949247,
+        "aligned_frobenius": -1.0804791164176588,
+        "singular_value_dist": -0.13836672644605,
+        "weight_cosine": 0.15536649274696399,
+        "cka": 0.8059155503705457,
+        "svcca": 0.9224150956983316,
+        "ipguard_regr": 0.1825
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "merge",
+      "param": 0.5,
+      "fraction": 0.5,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.16894311878045282,
+        "aligned_frobenius": -0.8327055514993031,
+        "singular_value_dist": -0.17832886137869872,
+        "weight_cosine": 0.5593774265769303,
+        "cka": 0.8161596649910641,
+        "svcca": 0.9406995420276254,
+        "ipguard_regr": 0.16
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "merge",
+      "param": 0.75,
+      "fraction": 0.75,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.3260322620148712,
+        "aligned_frobenius": -0.49382784449947875,
+        "singular_value_dist": -0.13107883683966584,
+        "weight_cosine": 0.9167809194344891,
+        "cka": 0.9122160063126478,
+        "svcca": 0.9682424188878416,
+        "ipguard_regr": 0.2025
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 0,
+      "regime": "merge",
+      "param": 1.0,
+      "fraction": 1.0,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.4443020090371118,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.999999999998751,
+        "cka": 1.0,
+        "svcca": 1.0,
+        "ipguard_regr": 1.0
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "graft",
+      "param": 0,
+      "fraction": 0.0,
+      "label": 0,
+      "blocks_from_ref": [],
+      "scores": {
+        "diagonal_dominance": 0.019875349480947525,
+        "aligned_frobenius": -1.357973007527483,
+        "singular_value_dist": -0.029190884604080692,
+        "weight_cosine": 0.07018729436568846,
+        "cka": 0.7904855546118824,
+        "svcca": 0.8821758544895437,
+        "ipguard_regr": 0.6225
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "graft",
+      "param": 4,
+      "fraction": 0.25,
+      "label": 0,
+      "blocks_from_ref": [
+        0,
+        2,
+        4,
+        11
+      ],
+      "scores": {
+        "diagonal_dominance": 0.12464923810566128,
+        "aligned_frobenius": -1.006554565251159,
+        "singular_value_dist": -0.023092163714136218,
+        "weight_cosine": 0.3122359037422091,
+        "cka": 0.7930514761277987,
+        "svcca": 0.895107616944987,
+        "ipguard_regr": 0.2275
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "graft",
+      "param": 8,
+      "fraction": 0.5,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        4,
+        6,
+        7,
+        8,
+        11,
+        13,
+        14
+      ],
+      "scores": {
+        "diagonal_dominance": 0.25394623278851725,
+        "aligned_frobenius": -0.67194908144323,
+        "singular_value_dist": -0.014989018028949568,
+        "weight_cosine": 0.5324768721717068,
+        "cka": 0.7811101389385668,
+        "svcca": 0.9085852008199213,
+        "ipguard_regr": 0.1475
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "graft",
+      "param": 12,
+      "fraction": 0.75,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        12,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.3928226823107128,
+        "aligned_frobenius": -0.357014733921243,
+        "singular_value_dist": -0.010510139869515834,
+        "weight_cosine": 0.7549719491969198,
+        "cka": 0.8975364089185799,
+        "svcca": 0.9538496668576424,
+        "ipguard_regr": 0.0725
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "graft",
+      "param": 16,
+      "fraction": 1.0,
+      "label": 1,
+      "blocks_from_ref": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "scores": {
+        "diagonal_dominance": 0.4443020090371118,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.999999999998751,
+        "cka": 1.0,
+        "svcca": 1.0,
+        "ipguard_regr": 0.05
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "merge",
+      "param": 0.0,
+      "fraction": 0.0,
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.019875349480947525,
+        "aligned_frobenius": -1.357973007527483,
+        "singular_value_dist": -0.029190884604080692,
+        "weight_cosine": 0.07018729436568846,
+        "cka": 0.7904855546118824,
+        "svcca": 0.8821758544895437,
+        "ipguard_regr": 0.6225
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "merge",
+      "param": 0.25,
+      "fraction": 0.25,
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.034140999608608696,
+        "aligned_frobenius": -1.1149542685542948,
+        "singular_value_dist": -0.13577368915898066,
+        "weight_cosine": 0.10569372148674763,
+        "cka": 0.8075180911063842,
+        "svcca": 0.9187240267512191,
+        "ipguard_regr": 0.17
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "merge",
+      "param": 0.5,
+      "fraction": 0.5,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.15392028875959507,
+        "aligned_frobenius": -0.856689946581802,
+        "singular_value_dist": -0.1829402639986834,
+        "weight_cosine": 0.5188295932141067,
+        "cka": 0.7956192055199844,
+        "svcca": 0.9393702569897955,
+        "ipguard_regr": 0.125
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "merge",
+      "param": 0.75,
+      "fraction": 0.75,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.33373677536982316,
+        "aligned_frobenius": -0.5073114566445907,
+        "singular_value_dist": -0.13544427167034842,
+        "weight_cosine": 0.9103243830054129,
+        "cka": 0.9024568447967565,
+        "svcca": 0.966488467766874,
+        "ipguard_regr": 0.1425
+      }
+    },
+    {
+      "ref": 1,
+      "donor": 1,
+      "regime": "merge",
+      "param": 1.0,
+      "fraction": 1.0,
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.4443020090371118,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.999999999998751,
+        "cka": 1.0,
+        "svcca": 1.0,
+        "ipguard_regr": 1.0
+      }
+    }
+  ],
+  "wall_seconds": 111.69801664352417
+}

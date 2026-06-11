@@ -20,6 +20,7 @@
 \usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{pifont}
+\usepackage{placeins}
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 
@@ -45,7 +46,7 @@ As foundation models are increasingly fine-tuned, merged, and redistributed, ver
 
 We find that trained residual architectures expose such a signal. Training couples a residual block's input and output projections so that their product exhibits diagonal dominance absent from mismatched or random pairings. We formalize this with the score $s(M)=|\mathrm{tr}(M)|/\|M\|_F$, prove a $\sqrt{d}$ upper bound and observe empirical growth $s \propto d^{0.87}$ across GPT-2~\citep{radford2019gpt2} through LLaMA-2-13B, and build a two-level pipeline: diagonal dominance recovers block correspondences; centered residual signatures detect checkpoint lineage.
 
-Across 12 architectures (GPT-2, BERT~\citep{devlin2019bert}, Mistral~\citep{jiang2023mistral}, LLaMA-2, Qwen~\citep{yang2024qwen2}, DeepSeek~\citep{deepseek2025r1}, Whisper~\citep{radford2023whisper}, ResNet, ViT~\citep{dosovitskiy2021vit}, ConvNeXt~\citep{liu2022convnext}) spanning 5 families and 280+ pairs, the fingerprint recovers 91--100\% of block correspondences, and the lineage score achieves AUROC$=$1.000 (TPR$=$100\% at 1\% FPR). The signal persists under fine-tuning, quantization, pruning, and RLHF; suppressing it below the detection threshold incurs 12--100\% eval-loss degradation. The method detects weight inheritance, not functional imitation: distilled students correctly classify as non-descendants because they share no weights.
+Across 12 architectures (GPT-2, BERT~\citep{devlin2019bert}, Mistral~\citep{jiang2023mistral}, LLaMA-2, Qwen~\citep{yang2024qwen2}, DeepSeek~\citep{deepseek2025r1}, Whisper~\citep{radford2023whisper}, ResNet, ViT~\citep{dosovitskiy2021vit}, ConvNeXt~\citep{liu2022convnext}) spanning 5 families and 280+ pairs, the fingerprint recovers 91--100\% of block correspondences. On a 52-pair MLP lineage benchmark, the centered residual signature reaches AUROC$=$1.000 and remains the only data-free method that combines per-block correspondence with closed-form margin analysis; it ties three other data-free weight-space baselines on aggregate AUROC and outperforms activation- and decision-boundary methods on distillation-sensitive diagnostics. Under the evaluated transformations the signal persists through fine-tuning, quantization, pruning, and RLHF, and under the tested gradient-based suppression attack the fingerprint cannot be driven below the detection threshold without $\geq 12\%$ eval-loss degradation. The method detects weight inheritance, not functional imitation: distilled students correctly classify as non-descendants because they share no weights.
 \end{abstract}
 
 \section{Introduction}
@@ -60,9 +61,9 @@ This enables \emph{passive weight-level lineage verification}: given reference a
 
 \textbf{Two tasks, one mechanism.} \emph{Block correspondence} asks which input projection pairs with which output projection within a model; the diagonal-dominance score suffices. \emph{Checkpoint lineage} asks whether one model descends from another; this requires centered residual signatures and is reported as AUROC. Both share the same mechanism but have different failure modes. The method applies to residual architectures and detects weight inheritance, not functional imitation---distilled students correctly classify as non-descendants.
 
-Across 12 architectures (GPT-2, BERT, LLaMA-2, Mistral, ResNet, ViT, Whisper) spanning 5 families and 280+ checkpoint pairs, block correspondence achieves 91--100\% accuracy, and lineage detection achieves AUROC$=$1.000 with TPR$=$100\% at 1\% FPR. No prior method addresses passive weight-level lineage for post-hoc checkpoints; existing watermarks require insertion before training and fail under fine-tuning~\citep{lukas2022sok}, while decision-boundary fingerprints confuse distillation~\citep{hinton2015distilling} with weight inheritance~\citep{cao2021ipguard}.
+Across 12 architectures (GPT-2, BERT, LLaMA-2, Mistral, ResNet, ViT, Whisper) spanning 5 families and 280+ checkpoint pairs, block correspondence achieves 91--100\% accuracy. Lineage detection, evaluated on the 52-pair MLP benchmark and a CIFAR-10 ResNet-18 benchmark, achieves AUROC$=$1.000 with TPR$=$100\% at 1\% FPR under the tested fine-tune, noise, prune, and quantize transformations. No prior method addresses passive weight-level lineage for post-hoc checkpoints; existing watermarks require insertion before training and fail under fine-tuning~\citep{lukas2022sok}, while decision-boundary fingerprints confuse distillation~\citep{hinton2015distilling} with weight inheritance~\citep{cao2021ipguard}.
 
-We contribute: (1) formalization of diagonal dominance with a $\sqrt{d}$ upper-bound proof and empirical $d^{0.87}$ scaling verified on GPT-2 through LLaMA-2-13B; (2) a passive verification protocol using Hungarian matching and centered signatures; (3) validation across 12 architectures (incl.\ MoE~\citep{jiang2024mixtral}) with robustness under fine-tuning, quantization~\citep{dettmers2022llmint8}, pruning~\citep{han2015deep}, and RLHF~\citep{ouyang2022rlhf}; (4) head-to-head comparison against representation-similarity baselines (CKA, SVCCA) and decision-boundary baselines (IPGuard), showing the weight-only fingerprint matches the best activation-space methods without requiring probe data.
+We contribute: (1) formalization of a training-induced residual-product signature with a $\sqrt{d}$ upper-bound proof and empirical $s \propto d^{0.87}$ scaling verified on GPT-2 through LLaMA-2-13B; (2) a passive verification protocol using Hungarian matching and centered residual signatures, providing not only a scalar lineage score but per-block correspondence; (3) validation across 12 architectures (incl.\ MoE~\citep{jiang2024mixtral}) with robustness under fine-tuning, quantization~\citep{dettmers2022llmint8}, pruning~\citep{han2015deep}, and RLHF~\citep{ouyang2022rlhf}; (4) head-to-head comparison against representation-similarity (CKA, SVCCA), decision-boundary (IPGuard), and three weight-space baselines, showing that the residual-product signature is competitive with the best data-free weight-space detectors while retaining a substantially larger distillation rejection gap than activation-space methods and providing mechanistic interpretability that simple weight cosines do not.
 
 \section{Background and Problem Setting}\label{sec:background}
 
@@ -119,7 +120,7 @@ Training imprints characteristic structure on residual network weights. At initi
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{../../../figures/fig_null_a_heatmaps.pdf}
-\caption{Diagonal dominance emergence. Left: At initialization, no diagonal structure. Right: After a small number of training epochs, 100\% pair accuracy. The fingerprint is learned, not an initialization artifact.}
+\caption{Initialization heatmaps. Score matrices $s(i,j)$ at \emph{initialization} under 8 schemes (orthogonal, Kaiming uniform/normal, Xavier uniform/normal, Gaussian $\sigma{=}0.02$, uniform); pair accuracies span $1.67$--$3.33\%$ (chance for 48 blocks is $2.1\%$). No scheme exhibits diagonal structure before training, including orthogonal init---which satisfies dynamical isometry by construction. Trained heatmaps reach $100\%$ pair accuracy (Appendix~\ref{app:experiments}, Table~\ref{tab:init-ablation-full}). The fingerprint is therefore learned, not an initialization artifact.}
 \label{fig:training-dynamics}
 \end{figure}
 
@@ -227,7 +228,7 @@ Pruning & 30\% / 50\% & 100\% / 98\% \\
 LoRA merge~\citep{hu2022lora} & rank 8--64 & 100\% \\
 \bottomrule
 \end{tabular}
-\caption{Verification robustness at 95\% confidence threshold.}
+\caption{Verification robustness at the strict $\tau{=}3.0$ z-score threshold (FPR$<0.13\%$, per-block descendant detection on a 24-block null calibrated against 50 unrelated models). Stricter than the $1\%$-FPR per-\emph{model} setting reported in Table~\ref{tab:survival}, hence the $94\%$ / $98\%$ entries; at $1\%$ FPR the same transformations yield $15/15$ and $45/45$ per-model detection.}
 \label{tab:robustness}
 \end{table}
 
@@ -259,7 +260,7 @@ ResNet-50/101/152 & 5--35 & $91$--$100\%$ & 0.96--1.00 \\
 \label{tab:transformer-family}
 \end{table}
 
-\textbf{Key findings:} (1) The fingerprint transfers across GELU~\citep{hendrycks2016gelu}, SwiGLU~\citep{shazeer2020swiglu}, causal/bidirectional attention, and grouped-query attention~\citep{ainslie2023gqa}. (2) RLHF and reasoning distillation preserve the signal (LLaMA-2 base$\to$chat: 100\% accuracy). (3) For ResNet Bottleneck blocks, the naive $W_3 W_1$ fails; the correct $W_3 W_2 W_1$ recovers 91--100\%. (4) Mean correct-pair $s(i,i)$ grows from $4.18$ at $d{=}768$ (GPT-2) to $23.83$ at $d{=}5120$ (LLaMA-2-13B), an empirical $d^{0.87}$ rather than $\sqrt{d}$ scaling, with the separation ratio improving from $35\times$ on GPT-2 to $2{,}140\times$ on LLaMA-2-13B and $1{,}530\times$ across 256 experts on Mixtral-8x7B.
+\textbf{Key findings:} (1) The fingerprint transfers across GELU~\citep{hendrycks2016gelu}, SwiGLU~\citep{shazeer2020swiglu}, causal/bidirectional attention, and grouped-query attention~\citep{ainslie2023gqa}. (2) RLHF and reasoning distillation preserve the signal (LLaMA-2 base$\to$chat: 100\% accuracy). (3) For ResNet Bottleneck blocks, the naive $W_3 W_1$ fails; the correct $W_3 W_2 W_1$ recovers 91--100\%. (4) Mean correct-pair $s(i,i)$ grows from $4.18$ at $d{=}768$ (GPT-2) to $23.83$ at $d{=}5120$ (LLaMA-2-13B), an empirical $d^{0.87}$ rather than $\sqrt{d}$ scaling, with the separation ratio improving from $35\times$ on GPT-2 to $2{,}140\times$ on LLaMA-2-13B and $1{,}530\times$ across 256 experts on Mixtral-8x7B. (5) As a preliminary real-LLM lineage check at the 7B scale, the residual-signature score $\mathcal{L}$ correctly identifies LLaMA-2-7B base$\to$chat ($\mathcal{L}=0.995$) and three local transformations of the base as DESCENDANT, and, under the proxy null in App.~\ref{app:real-llm}, rejects a branch-product-compatible Llama-3-family model (DeepSeek-R1-Distill-Llama-8B, $\mathcal{L}=-0.0002$) as NON-DESCENDANT; details in App.~\ref{app:real-llm}.
 
 \begin{figure}[t]
 \centering
@@ -303,27 +304,27 @@ Table~\ref{tab:survival} shows 100\% detection at 1\% FPR across all transformat
 
 \subsection{Comparison with Modern Baselines}\label{sec:exp-baselines}
 
-We compare against representation-similarity methods (CKA~\citep{kornblith2019similarity}, SVCCA~\citep{raghu2017svcca}), weight-space baselines (aligned Frobenius via Hungarian alignment, singular-value distance, weight cosine), and a decision-boundary baseline (IPGuard~\citep{cao2021ipguard}, adapted for regression via quantile-bin agreement) on the same 52-pair MLP benchmark used in Table~\ref{tab:survival} (Table~\ref{tab:baselines}). Five of seven methods reach AUROC$=$1.000, but the saturated score masks a sharp split on \emph{distilled non-descendants}: CKA scores them at $0.83$ (vs.\ $0.999$ for true descendants---a $1.2\times$ gap) and SVCCA at $0.89$ ($1.13\times$ gap), so any benchmark with more distillation would collapse their AUROC. All four weight-space methods, including ours, score distilled students at the non-descendant baseline (gap $\geq 9\times$). IPGuard collapses to chance (0.500): on noise-perturbed descendants its score is exactly $0.000$, ranking true descendants below independent models. Our method matches the best baselines on overall AUROC while requiring no probe data \emph{and} remains the only one that retains a large distillation gap (Table~\ref{tab:per-kind-baselines}, Appendix~\ref{app:experiments}).
+We compare against representation-similarity methods (CKA~\citep{kornblith2019similarity}, SVCCA~\citep{raghu2017svcca}), weight-space baselines (aligned Frobenius via Hungarian alignment, singular-value distance, weight cosine), and a decision-boundary baseline (IPGuard~\citep{cao2021ipguard}, adapted for regression via quantile-bin agreement) on the same 52-pair MLP benchmark used in Table~\ref{tab:survival} (Table~\ref{tab:baselines}). Four data-free weight-space methods---including ours, weight cosine, and aligned Frobenius---reach AUROC$=$1.000 on this benchmark, so the headline number cannot itself distinguish them. The standardized Gap-$Z$ column makes the fragility of the non-weight-space methods explicit: IPGuard ranks true descendants \emph{below} distilled non-descendants (Gap-$Z=-3.5$), reproducing the structural distillation failure of decision-boundary methods; CKA's Gap-$Z=+8.6$ is large in standard-deviation units only because $\sigma_{\text{distill}}=0.014$ is tiny, while the underlying raw ratio is $0.999/0.827 \approx 1.21\times$, so any benchmark reweighted toward distillation would push CKA's AUROC well below $1.000$. We do not claim that diagonal dominance beats weight cosine on aggregate AUROC; on a benchmark where descendants are mild perturbations of the reference, a flattened cosine is a strong baseline. The contribution is rather that the residual-product signature (i) yields per-block correspondence as a by-product (only aligned Frobenius shares this; weight cosine and the activation methods do not), (ii) admits the closed-form margin analysis of Proposition~\ref{prop:margin}, and (iii) is competitive with the strongest data-free weight-space baselines while remaining interpretable in terms of trained residual geometry. The harder synthetic regime of Appendix~\ref{app:harder-bench} (layer grafts and linear merges) reinforces this positioning: three of the four data-free weight-space methods including ours (diagonal dominance, aligned Frobenius, weight cosine) remain at or near AUROC$=$1.000, while singular-value distance fails the merge regime ($0.448$) because spectral statistics are not linear in the weight-blend mixture, CKA drops to $\approx 0.80$, and IPGuard collapses (AUROC $0.05$ on grafts). The diagonal-dominance score additionally retains a near-perfect Spearman correlation ($\rho \approx 0.96$) with the fraction of reference blocks present in the suspect, supporting the interpretability claim that it tracks partial overlap monotonically rather than merely clearing a threshold.
 
-\begin{table}[t]
+\begin{table*}[!t]
 \centering
 \small
-\begin{tabular}{@{}llcc@{}}
+\begin{tabular}{@{}llcccc@{}}
 \toprule
-Method & Type & AUROC & Distill$\downarrow$ \\
+Method & Type & Data-free & AUROC & Gap-$Z\uparrow$ & Block Corr.\ \\
 \midrule
-\textbf{Diagonal Dominance (ours)} & Weight-space (data-free) & \textbf{1.000} & \textbf{0.030} \\
-Aligned Frobenius & Weight-space (data-free) & 1.000 & -1.300 \\
-Singular Value Dist.\ & Weight-space (data-free) & 1.000 & -0.032 \\
-Weight Cosine & Weight-space (data-free) & 1.000 & 0.109 \\
-SVCCA~\citep{raghu2017svcca} & Activation-space & 1.000 & 0.885 \\
-CKA~\citep{kornblith2019similarity} & Activation-space & 0.829 & 0.827 \\
-IPGuard~\citep{cao2021ipguard} (regr.) & Decision-boundary & 0.500 & 0.642 \\
+Diagonal Dominance (ours) & Weight-space     & \cmark & 1.000 & $+53.0$ & \cmark \\
+Aligned Frobenius         & Weight-space     & \cmark & 1.000 & $+72.0$ & \cmark \\
+Singular Value Distance   & Weight-space     & \cmark & 1.000 & $\phantom{+}+7.9$ & \xmark \\
+Weight Cosine             & Weight-space     & \cmark & 1.000 & $+76.3$ & \xmark \\
+SVCCA~\citep{raghu2017svcca}             & Activation-space & \xmark & 1.000 & $+45.4$ & \xmark \\
+CKA~\citep{kornblith2019similarity}      & Activation-space & \xmark & 0.829 & $\phantom{+}+8.6$ & \xmark \\
+IPGuard~\citep{cao2021ipguard} (regression analogue) & Decision-boundary & \xmark & 0.500 & $\phantom{+}-3.5$ & \xmark \\
 \bottomrule
 \end{tabular}
-\caption{Strong-baseline comparison on the MLP lineage benchmark (52 pairs). \textbf{AUROC}: overall descendant vs.\ non-descendant separation. \textbf{Distill$\downarrow$}: mean score on distilled non-descendants (lower is better; should be far below descendant scores). CKA and SVCCA score distilled students at $0.83$/$0.89$---essentially equal to true fine-tunes ($0.999$/$0.9997$)---so they would collapse on any benchmark with more distillation. IPGuard scores noise-perturbed descendants at $0.000$, ranking them below all non-descendants. Only the weight-space methods cleanly reject distillation. Full per-kind breakdown in Table~\ref{tab:per-kind-baselines}.}
+\caption{Strong-baseline comparison on the MLP lineage benchmark (52 pairs). \textbf{AUROC}: overall descendant vs.\ non-descendant separation; saturated for the four data-free weight-space methods. \textbf{Gap-$Z$}: standardized distillation rejection, $(\mu_{\text{desc}}-\mu_{\text{distill}})/\sigma_{\text{distill}}$, where $\mu_{\text{desc}}$ averages over the five descendant kinds; large positive values mean distilled non-descendants are cleanly below true descendants. IPGuard scores at $-3.5$ because descendants are ranked \emph{below} distilled. CKA scores at $+8.6$: large in $\sigma$ units only because $\sigma_{\text{distill}}\!=\!0.014$ is tiny; the underlying ratio is $0.999$/$0.827 \approx 1.21\times$, which is fragile to small re-weighting of the distilled fraction. Gap-$Z$ is scale-sensitive when $\sigma_{\text{distill}}$ is very small (CKA) or when raw scores are uniformly compressed (singular-value distance, where $+7.9$ understates the gap); the decisive cross-method evidence is the raw per-kind adjacency reported in Table~\ref{tab:per-kind-baselines}, where all four weight-space methods place distilled students at or below the diff-seed baseline while CKA and SVCCA do not. \textbf{Block Corr.}: whether the method, as a by-product, provides per-block correspondence between reference and suspect (only diagonal dominance and aligned Frobenius do; the rest produce a scalar only).}
 \label{tab:baselines}
-\end{table}
+\end{table*}
 
 \section{Robustness and Boundary Cases}\label{sec:boundaries}
 
@@ -350,18 +351,28 @@ We test whether the fingerprint can be suppressed without destroying model utili
 
 \textbf{Weight-level, not behavioral.} The signature is a property of weights, not function. Distilled students ($\mathcal{L} \approx 0.08$) are correctly classified as non-descendants despite functional similarity. The method cannot detect training-data overlap or knowledge transfer.
 
+\textbf{Symmetric, no direction.} $\mathcal{L}(A,B) = \mathcal{L}(B,A)$ by construction, so the protocol establishes \emph{whether} two checkpoints share weight lineage but not \emph{which} descends from which. Directional attribution requires either training-time metadata or comparison against a third candidate ancestor (App.~\ref{app:verification}, branching tree).
+
+\textbf{DAR ceiling.} Under DAR cross-layer routing, the independent-model ceiling rises from $0.10$ to $0.34$, a $3.4\times$ reduction in non-descendant rejection headroom. AUROC remains $1.000$ on the tested 81-pair benchmark, but the smaller margin means the verification threshold $\tau$ would need to be re-calibrated per architecture rather than applied universally.
+
+\textbf{Lineage validation scope.} Lineage AUROC is reported on the synthetic MLP zoo and a CIFAR-10 ResNet-18 benchmark, with real-architecture evidence from block-correspondence pairing on Transformer families (Table~\ref{tab:transformer-family}) and a preliminary 5-pair real-LLM lineage test on LLaMA-2-7B (App.~\ref{app:real-llm}). The latter correctly identifies the LLaMA-2-7B base $\to$ chat RLHF pair as DESCENDANT ($\mathcal{L}=0.995$, $z=+25.8$), recovers all three local transformations of the base (int8 quant, 30\% prune, 1\% noise: $\mathcal{L}\in[0.986,1.000]$), and rejects a branch-product-compatible real independent (DeepSeek-R1-Distill-Llama-8B, a DeepSeek-distilled Llama-3-family checkpoint that does not inherit from LLaMA-2-7B; $\mathcal{L}=-0.0002$, $z=-1.8$, NON-DESCENDANT) under a within-model block-shuffle proxy null. Scaling to a multi-family cross-model null (Mistral-7B, OpenLLaMA-7B, Yi-6B, Qwen-7B) and additional descendants (Vicuna, CodeLlama as a continued-pretraining stress test) is the most important remaining extension. The per-block branch products fit comfortably in memory at 7B scale, so the gap is engineering rather than methodological.
+
 \textbf{Attacks.} Function-preserving symmetries (permutations, rescaling) leave $\mathcal{L} = 1$ exactly---these are invariances, not vulnerabilities. Gradient-based suppression requires $\ge$12\% utility loss to reach the detection threshold; full suppression destroys the model.
 
 \textbf{Positioning.} This complements watermarking: watermarks require forethought; diagonal dominance offers passive, retroactive verification for checkpoints never watermarked.
 
 \section{Conclusion}
 
-Training leaves traces. Residual-network optimization couples each block's input and output projections so that their product becomes diagonal-dominant ($W_{\mathrm{out}} W_{\mathrm{in}} \approx -\varepsilon I + E$), with a theoretical $\sqrt{d}$ upper bound and an empirical $d^{0.87}$ growth observed from GPT-2 through LLaMA-2-13B and Mixtral-8x7B. Across 12 architectures spanning 5 families, the fingerprint recovers 91--100\% of block correspondences and achieves AUROC$=$1.000 for lineage detection, surviving fine-tuning, quantization, pruning, and RLHF. Among modern baselines, it matches the best representation-similarity methods (CKA, SVCCA) on a 52-pair MLP benchmark while requiring no probe data, and correctly classifies distilled students as non-descendants where decision-boundary fingerprints fail. Suppressing the fingerprint below the detection threshold requires $\ge$12\% utility loss. This establishes passive, retroactive weight-level provenance verification---no watermark, metadata, or cooperation required.
+Training leaves traces. Residual-network optimization couples each block's input and output projections so that their product becomes diagonal-dominant ($W_{\mathrm{out}} W_{\mathrm{in}} \approx -\varepsilon I + E$), with a theoretical $\sqrt{d}$ upper bound and an empirical $d^{0.87}$ growth observed from GPT-2 through LLaMA-2-13B and Mixtral-8x7B. Across 12 architectures spanning 5 families, the fingerprint recovers 91--100\% of block correspondences and achieves AUROC$=$1.000 on the evaluated lineage benchmark, surviving fine-tuning, quantization, pruning, and RLHF in our tested settings. Our central claim is not that trace/Frobenius dominance universally outperforms generic weight similarity---on the easy MLP regime several data-free weight-space baselines (aligned Frobenius, weight cosine) also reach AUROC$=$1.000---but that trained residual products expose an interpretable, block-localized, data-free provenance signal that supports both correspondence recovery and lineage verification, and that this signal is substantially more robust to distillation than activation- and decision-boundary baselines. Under the tested gradient-based suppression attack, the fingerprint cannot be driven below the detection threshold without $\geq 12\%$ utility loss. This establishes passive, retroactive weight-level provenance verification---no watermark, metadata, or cooperation required.
+
+\section*{Reproducibility Statement}
+
+All results in this paper are produced by deterministic scripts with fixed seeds. The 52-pair MLP lineage benchmark (Tables~\ref{tab:survival}, \ref{tab:baselines}) is constructed from $2$ trained reference checkpoints, each paired with $5$ descendant kinds $\times 6$ derivative seeds $=30$ true-descendant pairs (fine-tune, fine-tune to a new target, $\sigma_{\text{rel}} \in [0.01,0.15]$ Gaussian noise, $10$--$85\%$ magnitude pruning, and $16$--$256$-level uniform quantization), plus $16$ different-seed same-task pairs and $6$ distilled-student pairs as non-descendants. The expanded 159-pair set used in Table~\ref{tab:score-distributions} and Figure~\ref{fig:lineage-three-panel} draws from the full $24$-checkpoint MLP zoo with the same transformation grid. Exact parameters are listed in Appendix~\ref{app:experiments}; null calibration uses the $50$ different-seed pairs from Appendix~\ref{app:verification}. Real-architecture pairing (Table~\ref{tab:transformer-family}) loads public HuggingFace checkpoints. Code, configuration files, baseline implementations (aligned Frobenius, singular-value distance, weight cosine, CKA, SVCCA, IPGuard regression analogue), the per-pair score JSONs, and the plotting scripts will be released upon acceptance.
 
 \clearpage
+\raggedbottom
 \bibliography{aaai2026}
 
-\clearpage
 \input{appendix}
 
 \end{document}

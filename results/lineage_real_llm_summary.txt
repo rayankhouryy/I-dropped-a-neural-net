@@ -1,0 +1,6 @@
+Null mu=0.0637 sigma=0.0361
+  descendant  base vs llama2-7b-chat                    L=+0.994584  z=  +25.8  DESCENDANT  (expected DESCENDANT)
+  desc-local  base vs base+quant-int8                   L=+0.999913  z=  +25.9  DESCENDANT  (expected DESCENDANT)
+  desc-local  base vs base+prune-30                     L=+0.985879  z=  +25.6  DESCENDANT  (expected DESCENDANT)
+  desc-local  base vs base+noise-1pct                   L=+0.999901  z=  +25.9  DESCENDANT  (expected DESCENDANT)
+ independent  base vs deepseek-r1-distill-llama-8b      L=-0.000163  z=   -1.8  NON-DESCENDANT  (expected NON-DESCENDANT)
