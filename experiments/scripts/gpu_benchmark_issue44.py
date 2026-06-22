@@ -471,11 +471,11 @@ def run_llama_benchmark(device: str = "cuda", resume: bool = False,
 
     print(f"  Collecting activations ({n_samples} samples)...")
     ref_acts = collect_llm_activations(ref_model, tokenizer, PROBE_TEXTS, n_samples, device)
-    print(f"  Collected {len(ref_acts)} layer activations")
+    print(f"  Activations: {'skipped' if ref_acts is None else f'{len(ref_acts)} layers'}")
 
     print("  Collecting logits...")
     ref_logits = collect_llm_logits(ref_model, tokenizer, PROBE_TEXTS, n_samples, device)
-    print(f"  Logits shape: {ref_logits.shape}")
+    print(f"  Logits shape: {ref_logits.shape if ref_logits is not None else 'skipped'}")
 
     ref_pack = {"Ms": ref_Ms, "acts": ref_acts, "logits": ref_logits}
 
@@ -618,11 +618,11 @@ def run_bert_benchmark(device: str = "cuda", resume: bool = False,
 
     print(f"  Collecting activations ({n_samples} samples)...")
     ref_acts = collect_bert_activations(ref_model, tokenizer, PROBE_TEXTS, n_samples, device)
-    print(f"  Collected {len(ref_acts)} layer activations")
+    print(f"  Activations: {'skipped' if ref_acts is None else f'{len(ref_acts)} layers'}")
 
     print("  Collecting logits...")
     ref_logits = collect_bert_logits(ref_model, tokenizer, PROBE_TEXTS, n_samples, device)
-    print(f"  Logits shape: {ref_logits.shape}")
+    print(f"  Logits shape: {ref_logits.shape if ref_logits is not None else 'skipped'}")
 
     ref_pack = {"Ms": ref_Ms, "acts": ref_acts, "logits": ref_logits}
 
