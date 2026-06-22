@@ -308,23 +308,32 @@ def score_pair(ref_pack: dict, sus_pack: dict, tau_s: float = 0.5) -> dict:
     ref_Ms, sus_Ms = ref_pack["Ms"], sus_pack["Ms"]
     shapes_match = (len(ref_Ms) == len(sus_Ms) and
                     all(r.shape == s.shape for r, s in zip(ref_Ms, sus_Ms)))
+    print(f"      [score] shapes_match={shapes_match}, L={len(ref_Ms)}", flush=True)
 
     if shapes_match:
+        print(f"      [score] computing diagonal_dominance...", flush=True)
         try:
             scores["diagonal_dominance"], _, _ = ldet.lineage_score(ref_Ms, sus_Ms, tau_s)
-        except Exception:
+        except Exception as e:
+            print(f"      [score] diagonal_dominance failed: {e}", flush=True)
             scores["diagonal_dominance"] = float("nan")
+        print(f"      [score] computing aligned_frobenius...", flush=True)
         try:
             scores["aligned_frobenius"] = lbase.aligned_frobenius(ref_Ms, sus_Ms)
-        except Exception:
+        except Exception as e:
+            print(f"      [score] aligned_frobenius failed: {e}", flush=True)
             scores["aligned_frobenius"] = float("nan")
+        print(f"      [score] computing singular_value_dist...", flush=True)
         try:
             scores["singular_value_dist"] = lbase.singular_value_distance(ref_Ms, sus_Ms)
-        except Exception:
+        except Exception as e:
+            print(f"      [score] singular_value_dist failed: {e}", flush=True)
             scores["singular_value_dist"] = float("nan")
+        print(f"      [score] computing weight_cosine...", flush=True)
         try:
             scores["weight_cosine"] = lbase.weight_cosine(ref_Ms, sus_Ms)
-        except Exception:
+        except Exception as e:
+            print(f"      [score] weight_cosine failed: {e}", flush=True)
             scores["weight_cosine"] = float("nan")
     else:
         # Architecture mismatch - weight-space methods not applicable
@@ -335,28 +344,35 @@ def score_pair(ref_pack: dict, sus_pack: dict, tau_s: float = 0.5) -> dict:
 
     ref_acts, sus_acts = ref_pack.get("acts"), sus_pack.get("acts")
     if ref_acts and sus_acts and len(ref_acts) == len(sus_acts):
+        print(f"      [score] computing cka (acts: {len(ref_acts)} layers)...", flush=True)
         try:
             scores["cka"] = lbase.cka_lineage_score(ref_acts, sus_acts)
-        except Exception:
+        except Exception as e:
+            print(f"      [score] cka failed: {e}", flush=True)
             scores["cka"] = float("nan")
+        print(f"      [score] computing svcca...", flush=True)
         try:
             scores["svcca"] = lbase.svcca_lineage_score(ref_acts, sus_acts)
-        except Exception:
+        except Exception as e:
+            print(f"      [score] svcca failed: {e}", flush=True)
             scores["svcca"] = float("nan")
     else:
         scores["cka"] = float("nan")
         scores["svcca"] = float("nan")
 
     if ref_pack.get("logits") is not None and sus_pack.get("logits") is not None:
+        print(f"      [score] computing ipguard_regr...", flush=True)
         try:
             scores["ipguard_regr"] = lbase.ipguard_match_rate(
                 ref_pack["logits"], sus_pack["logits"]
             )
-        except Exception:
+        except Exception as e:
+            print(f"      [score] ipguard_regr failed: {e}", flush=True)
             scores["ipguard_regr"] = float("nan")
     else:
         scores["ipguard_regr"] = float("nan")
 
+    print(f"      [score] done", flush=True)
     return scores
 
 
