@@ -170,7 +170,16 @@ def extract_bert_branch_products(model) -> list[np.ndarray]:
 
 def collect_llm_activations(model, tokenizer, probe_texts: list[str],
                             n_samples: int = 1024, device: str = "cuda") -> list[np.ndarray]:
-    """Collect hidden states from all transformer layers."""
+    """Collect hidden states from all transformer layers.
+
+    Note: For 7B models, use n_samples=128-256 to keep runtime reasonable.
+    Each forward pass takes ~0.5-1s on GPU.
+    """
+    # Cap samples for large models to avoid hour-long collection
+    effective_samples = min(n_samples, 256)
+    if effective_samples < n_samples:
+        print(f"      [acts] Capping samples from {n_samples} to {effective_samples} for LLM", flush=True)
+
     layers = model.model.layers if hasattr(model, "model") else model.layers
     L = len(layers)
     all_acts = [[] for _ in range(L)]
@@ -185,8 +194,11 @@ def collect_llm_activations(model, tokenizer, probe_texts: list[str],
         hooks.append(layer.register_forward_hook(make_hook(i)))
 
     model.eval()
+    print(f"      [acts] Collecting {effective_samples} samples from {L} layers...", flush=True)
     with torch.no_grad():
-        for text in probe_texts[:n_samples]:
+        for i, text in enumerate(probe_texts[:effective_samples]):
+            if i % 50 == 0:
+                print(f"      [acts] Sample {i}/{effective_samples}", flush=True)
             inputs = tokenizer(text, return_tensors="pt", truncation=True,
                                max_length=512, padding=True).to(device)
             _ = model(**inputs)
@@ -229,10 +241,18 @@ def collect_bert_activations(model, tokenizer, probe_texts: list[str],
 def collect_llm_logits(model, tokenizer, probe_texts: list[str],
                        n_samples: int = 1024, device: str = "cuda") -> np.ndarray:
     """Collect output logits for IPGuard scoring."""
+    # Cap samples for large models
+    effective_samples = min(n_samples, 256)
+    if effective_samples < n_samples:
+        print(f"      [logits] Capping samples from {n_samples} to {effective_samples} for LLM", flush=True)
+
     all_logits = []
     model.eval()
+    print(f"      [logits] Collecting {effective_samples} samples...", flush=True)
     with torch.no_grad():
-        for text in probe_texts[:n_samples]:
+        for i, text in enumerate(probe_texts[:effective_samples]):
+            if i % 50 == 0:
+                print(f"      [logits] Sample {i}/{effective_samples}", flush=True)
             inputs = tokenizer(text, return_tensors="pt", truncation=True,
                                max_length=512, padding=True).to(device)
             out = model(**inputs)
