@@ -1,0 +1,193 @@
+{
+  "config": {
+    "benchmark": "llama",
+    "reference": [
+      "llama2-7b-base",
+      "NousResearch/Llama-2-7b-hf"
+    ],
+    "n_samples": 1024,
+    "device": "cuda:0"
+  },
+  "n_pairs": 7,
+  "auroc": {
+    "diagonal_dominance": 1.0,
+    "aligned_frobenius": 0.6666666666666666,
+    "singular_value_dist": 0.6666666666666666,
+    "weight_cosine": 1.0,
+    "cka": NaN,
+    "svcca": NaN,
+    "ipguard_regr": 1.0
+  },
+  "per_kind": {
+    "diagonal_dominance": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": 0.7756455534188369,
+        "std": 0.3105572853154614
+      },
+      "non_descendant": {
+        "n": 4,
+        "mean": 0.00041941859068086394,
+        "std": 4.971001253381584e-05
+      }
+    },
+    "aligned_frobenius": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": -0.6965700922568812,
+        "std": 0.8570202140091179
+      },
+      "non_descendant": {
+        "n": 4,
+        "mean": -1.216938075258011,
+        "std": 0.26441917179640956
+      }
+    },
+    "singular_value_dist": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": -0.04758332528687784,
+        "std": 0.06545972577572866
+      },
+      "non_descendant": {
+        "n": 4,
+        "mean": -0.0694942442583593,
+        "std": 0.0353518990114032
+      }
+    },
+    "weight_cosine": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": 0.8017774553216875,
+        "std": 0.27452517722431047
+      },
+      "non_descendant": {
+        "n": 4,
+        "mean": 0.13288587248224812,
+        "std": 0.029520328758679416
+      }
+    },
+    "cka": {},
+    "svcca": {},
+    "ipguard_regr": {
+      "descendant_finetune": {
+        "n": 2,
+        "mean": 0.25472802734375,
+        "std": 0.052523925781249994
+      },
+      "non_descendant": {
+        "n": 2,
+        "mean": 0.13308642578125,
+        "std": 0.0050624999999999976
+      }
+    }
+  },
+  "pairs": [
+    {
+      "ref": "llama2-7b-base",
+      "sus": "llama2-7b-chat",
+      "kind": "descendant_finetune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.9945828744471693,
+        "aligned_frobenius": -0.09713417633834162,
+        "singular_value_dist": -0.002033997220089325,
+        "weight_cosine": 0.9953112322305016,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": 0.307251953125
+      }
+    },
+    {
+      "ref": "llama2-7b-base",
+      "sus": "vicuna-7b",
+      "kind": "descendant_finetune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.9959018969451073,
+        "aligned_frobenius": -0.08402004800379245,
+        "singular_value_dist": -0.000562519678980564,
+        "weight_cosine": 0.9964803205152633,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": 0.2022041015625
+      }
+    },
+    {
+      "ref": "llama2-7b-base",
+      "sus": "codellama-7b",
+      "kind": "descendant_finetune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.33645188886423394,
+        "aligned_frobenius": -1.9085560524285092,
+        "singular_value_dist": -0.14015345896156362,
+        "weight_cosine": 0.41354081321929803,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": NaN
+      }
+    },
+    {
+      "ref": "llama2-7b-base",
+      "sus": "mistral-7b",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.0003935741470648004,
+        "aligned_frobenius": -0.9952293280401493,
+        "singular_value_dist": -0.12818236540004338,
+        "weight_cosine": 0.158076981519685,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": 0.13814892578125
+      }
+    },
+    {
+      "ref": "llama2-7b-base",
+      "sus": "open-llama-7b",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.00044889204148042483,
+        "aligned_frobenius": -1.6617893921512559,
+        "singular_value_dist": -0.05229939455865388,
+        "weight_cosine": 0.08936757221577395,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": 0.12802392578125
+      }
+    },
+    {
+      "ref": "llama2-7b-base",
+      "sus": "yi-6b",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.0004821840258085874,
+        "aligned_frobenius": -1.167520743306529,
+        "singular_value_dist": -0.03463692379079414,
+        "weight_cosine": 0.12218213513169356,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": NaN
+      }
+    },
+    {
+      "ref": "llama2-7b-base",
+      "sus": "deepseek-r1-distill-llama-8b",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.00035302414836964314,
+        "aligned_frobenius": -1.0432128375341103,
+        "singular_value_dist": -0.06285829328394582,
+        "weight_cosine": 0.16191680106183998,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": NaN
+      }
+    }
+  ],
+  "wall_seconds": 530.4769623279572
+}

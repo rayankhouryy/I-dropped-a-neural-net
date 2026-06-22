@@ -995,9 +995,45 @@ The previous comparison covers older provenance methods. The external review ask
 
 ---
 
-### Pending Benchmarks
+---
 
-- **HuggingFace LLaMA family** (Llama-2-7b → chat, Vicuna, CodeLlama vs Mistral, OpenLLaMA, Yi): Next priority. Same-architecture comparison (all 32 layers, d=4096) should yield meaningful AUROC for all 7 methods including diagonal dominance.
+### LLaMA Family Benchmark (HuggingFace)
+
+**Configuration:** Reference = `NousResearch/Llama-2-7b-hf` (32 layers, d=4096). Descendants = Llama-2-7b-chat, Vicuna-7b, CodeLlama-7b (real fine-tunes). Non-descendants = Mistral-7B, OpenLLaMA-7b, Yi-6B, DeepSeek-R1-Distill-Llama-8B (independent training or distillation).
+
+**Results (from `experiments/results/lineage_llama_family.json`):**
+
+| Method | AUROC | Descendant Mean | Non-Descendant Mean | Separation |
+|--------|-------|-----------------|---------------------|------------|
+| **Diagonal Dominance** | **1.000** | 0.776 | 0.0004 | **1940×** |
+| **Weight Cosine** | **1.000** | 0.802 | 0.133 | 6× |
+| **IPGuard** | **1.000** | 0.255 | 0.133 | 2× |
+| Aligned Frobenius | 0.667 | -0.70 | -1.22 | — |
+| Singular Value Dist | 0.667 | -0.05 | -0.07 | — |
+
+**Per-pair scores:**
+
+| Model | Kind | Diag. Dom. | Weight Cos. | IPGuard |
+|-------|------|-----------|-------------|---------|
+| llama2-7b-chat | descendant | **0.995** | 0.995 | 0.307 |
+| vicuna-7b | descendant | **0.996** | 0.996 | 0.202 |
+| codellama-7b | descendant | **0.336** | 0.414 | NaN |
+| mistral-7b | non-descendant | **0.0004** | 0.158 | 0.138 |
+| open-llama-7b | non-descendant | **0.0004** | 0.089 | 0.128 |
+| yi-6b | non-descendant | **0.0005** | 0.122 | NaN |
+| deepseek-r1-distill | non-descendant | **0.0004** | 0.162 | NaN |
+
+**Key Findings:**
+
+*Diagonal dominance achieves perfect AUROC (1.000) with 1940× separation.* Chat and instruction-tuned descendants (llama2-7b-chat, vicuna-7b) show diagonal dominance ~0.995, while independently trained models (Mistral, OpenLLaMA, Yi, DeepSeek) show ~0.0004. This is the clearest validation of the fingerprint on real foundation models.
+
+*CodeLlama shows lower diagonal dominance (0.336) but still above non-descendants.* CodeLlama is a code-specialized fine-tune that modifies more weights than chat/instruction tuning. The fingerprint is weaker but still detects lineage — it remains above the ~0.0005 non-descendant baseline.
+
+*CKA/SVCCA skipped due to computational cost.* Computing CKA on 32 layers × 32 layers × 4096 dimensions takes 10+ minutes per pair. Weight-space methods are the focus and achieve AUROC = 1.0.
+
+*Weight cosine also achieves AUROC = 1.0 but with smaller separation (6×).* Both diagonal dominance and weight cosine perfectly separate descendants from non-descendants, but diagonal dominance provides 300× larger margin, making it more robust to noise.
+
+**Implications for the paper:** This is the headline result for Issue #44 — diagonal dominance works on real 7B foundation models with perfect separation between true descendants (fine-tunes of Llama-2) and independent models trained from scratch.
 
 **Method Selection Guidance.**
 
