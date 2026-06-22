@@ -479,25 +479,23 @@ def run_llama_benchmark(device: str = "cuda", resume: bool = False,
 
     ref_pack = {"Ms": ref_Ms, "acts": ref_acts, "logits": ref_logits}
 
+    # Process transforms first (need ref_model), then delete it
+    transform_specs = [s for s in pair_specs if s["transform"]]
+    other_specs = [s for s in pair_specs if not s["transform"]]
+
     pairs = checkpoint["pairs"].copy()
 
-    for i, spec in enumerate(pair_specs):
+    # First: process transforms while ref_model is in memory
+    for i, spec in enumerate(transform_specs):
         pair_key = f"{spec['ref']}|{spec['sus']}"
         if pair_key in completed:
-            print(f"\n[{i+2}/{len(pair_specs)+1}] Skipping (already done): {spec['sus']}")
+            print(f"\n[transform {i+1}/{len(transform_specs)}] Skipping (already done): {spec['sus']}")
             continue
 
-        print(f"\n[{i+2}/{len(pair_specs)+1}] Processing: {spec['sus']}")
-
-        if spec["transform"]:
-            print(f"  Applying transform: {spec['transform']}")
-            sus_model = apply_transform(ref_model, spec["transform"])
-        else:
-            print(f"  Loading from: {spec['repo']}")
-            sus_model = AutoModelForCausalLM.from_pretrained(
-                spec["repo"], torch_dtype=torch.float16,
-                low_cpu_mem_usage=True, trust_remote_code=True
-            ).to(device)
+        print(f"\n[transform {i+1}/{len(transform_specs)}] Processing: {spec['sus']}")
+        print(f"  Applying transform: {spec['transform']}")
+        sus_model = apply_transform(ref_model, spec["transform"])
+        sus_model = sus_model.to(device)
 
         print("  Extracting branch products...")
         sus_Ms = extract_llama_branch_products(sus_model)
@@ -521,16 +519,60 @@ def run_llama_benchmark(device: str = "cuda", resume: bool = False,
             "scores": scores
         })
 
-        if not spec["transform"]:
-            del sus_model
-            clear_gpu_memory()
+        del sus_model
+        clear_gpu_memory()
 
         checkpoint["completed_pairs"].append(pair_key)
         checkpoint["pairs"] = pairs
         save_checkpoint("llama", checkpoint)
 
+    # Now delete ref_model to free GPU memory for loading other models
+    print("\n  Freeing reference model from GPU...")
     del ref_model
     clear_gpu_memory()
+
+    # Second: process other models (load from HuggingFace)
+    for i, spec in enumerate(other_specs):
+        pair_key = f"{spec['ref']}|{spec['sus']}"
+        if pair_key in completed:
+            print(f"\n[model {i+1}/{len(other_specs)}] Skipping (already done): {spec['sus']}")
+            continue
+
+        print(f"\n[model {i+1}/{len(other_specs)}] Processing: {spec['sus']}")
+        print(f"  Loading from: {spec['repo']}")
+        sus_model = AutoModelForCausalLM.from_pretrained(
+            spec["repo"], torch_dtype=torch.float16,
+            low_cpu_mem_usage=True, trust_remote_code=True
+        ).to(device)
+
+        print("  Extracting branch products...")
+        sus_Ms = extract_llama_branch_products(sus_model)
+
+        print("  Collecting activations...")
+        sus_acts = collect_llm_activations(sus_model, tokenizer, PROBE_TEXTS, n_samples, device)
+
+        print("  Collecting logits...")
+        sus_logits = collect_llm_logits(sus_model, tokenizer, PROBE_TEXTS, n_samples, device)
+
+        sus_pack = {"Ms": sus_Ms, "acts": sus_acts, "logits": sus_logits}
+
+        print("  Scoring pair...")
+        scores = score_pair(ref_pack, sus_pack)
+        for m, v in scores.items():
+            print(f"    {m:24s}: {v:.4f}")
+
+        pairs.append({
+            "ref": spec["ref"], "sus": spec["sus"],
+            "kind": spec["kind"], "label": spec["label"],
+            "scores": scores
+        })
+
+        del sus_model
+        clear_gpu_memory()
+
+        checkpoint["completed_pairs"].append(pair_key)
+        checkpoint["pairs"] = pairs
+        save_checkpoint("llama", checkpoint)
 
     auroc = compute_auroc(pairs)
     per_kind = compute_per_kind(pairs)
