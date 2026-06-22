@@ -787,7 +787,12 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
         raise
 
     def collect_resnet_activations(model, dataloader, n_samples=1024):
-        """Collect activations from ResNet BasicBlocks."""
+        """Collect activations from ResNet BasicBlocks.
+
+        Uses global average pooling to reduce (batch, C, H, W) -> (batch, C)
+        instead of flattening, which would create 65k-dim vectors that are
+        too large for CKA/SVCCA.
+        """
         all_acts = []
         hooks = []
         block_count = 0
@@ -796,8 +801,10 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
             for block in stage:
                 def make_hook(sink_idx):
                     def hook(module, inp, out):
-                        x = inp[0]
-                        all_acts.append(x.detach().float().cpu().numpy())
+                        x = inp[0]  # (batch, C, H, W)
+                        # Global average pool: (batch, C, H, W) -> (batch, C)
+                        pooled = x.mean(dim=(2, 3))
+                        all_acts.append(pooled.detach().float().cpu().numpy())
                     return hook
                 hooks.append(block.register_forward_hook(make_hook(block_count)))
                 block_count += 1
@@ -827,10 +834,9 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
         result = []
         for acts in per_block:
             stacked = np.vstack(acts)[:n_samples]
-            flat = stacked.reshape(stacked.shape[0], -1)
-            result.append(flat)
+            result.append(stacked)  # Already (n_samples, C), no flatten needed
 
-        print(f"      [acts] processed into {len(result)} layers", flush=True)
+        print(f"      [acts] processed into {len(result)} layers, shape {result[0].shape}", flush=True)
         return result
 
     def collect_resnet_preds(model, dataloader, n_samples=1024):
