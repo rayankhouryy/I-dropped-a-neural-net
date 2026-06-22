@@ -280,8 +280,12 @@ def apply_transform(model, transform: str, seed: int = 0):
     elif transform == "prune":
         for p in model.parameters():
             if p.numel() > 1000:
-                mask = torch.abs(p.data) > torch.quantile(torch.abs(p.data).float(), 0.3)
-                p.data = p.data * mask
+                flat = torch.abs(p.data).flatten().float()
+                k = int(flat.numel() * 0.3)
+                if k > 0:
+                    threshold = flat.kthvalue(k).values.item()
+                    mask = torch.abs(p.data) > threshold
+                    p.data = p.data * mask
 
     elif transform == "noise":
         for p in model.parameters():
