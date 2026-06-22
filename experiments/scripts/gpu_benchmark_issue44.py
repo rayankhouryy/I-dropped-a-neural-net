@@ -763,7 +763,9 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
 
     try:
         dataset = CIFAR10(root="./data", train=False, download=True, transform=transform)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=False)
+        dataloader = torch.utils.data.DataLoader(
+            dataset, batch_size=64, shuffle=False, num_workers=0, pin_memory=False
+        )
     except Exception as e:
         print(f"WARNING: Could not load CIFAR-10: {e}")
         raise
@@ -871,7 +873,8 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
                 sus_model = magnitude_prune(ref_model, sparsity=0.3)
             else:
                 sus_model = fake_quantize(ref_model, levels=256)
-            print(f"    Transform applied", flush=True)
+            sus_model = sus_model.to(device)  # Ensure model is on GPU after transform
+            print(f"    Transform applied, model on {next(sus_model.parameters()).device}", flush=True)
 
             print(f"    Extracting branch products...", flush=True)
             sus_Ms = extract_branch_products(sus_model)
