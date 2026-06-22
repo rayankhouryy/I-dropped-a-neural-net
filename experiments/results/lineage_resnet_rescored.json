@@ -1,0 +1,325 @@
+{
+  "config": {
+    "benchmark": "resnet",
+    "n_refs": 2,
+    "n_independents": 4,
+    "n_samples": 1024,
+    "device": "cuda:0"
+  },
+  "n_pairs": 14,
+  "auroc": {
+    "diagonal_dominance": NaN,
+    "aligned_frobenius": NaN,
+    "singular_value_dist": 1.0,
+    "weight_cosine": NaN,
+    "cka": 1.0,
+    "svcca": 1.0,
+    "ipguard_regr": 1.0
+  },
+  "per_kind": {
+    "diagonal_dominance": {},
+    "aligned_frobenius": {},
+    "singular_value_dist": {
+      "descendant_noise": {
+        "n": 2,
+        "mean": -0.0003516732567064754,
+        "std": 1.2384782350807776e-05
+      },
+      "descendant_prune": {
+        "n": 2,
+        "mean": -0.005333585870532536,
+        "std": 0.00010637677533771855
+      },
+      "descendant_quant": {
+        "n": 2,
+        "mean": -0.0003620399912661396,
+        "std": 1.3733947904838022e-05
+      },
+      "non_descendant": {
+        "n": 8,
+        "mean": -0.007316346094152935,
+        "std": 0.0004625473198395113
+      }
+    },
+    "weight_cosine": {},
+    "cka": {
+      "descendant_noise": {
+        "n": 2,
+        "mean": 0.9999214507940146,
+        "std": 1.2054957047424875e-05
+      },
+      "descendant_prune": {
+        "n": 2,
+        "mean": 0.9931878634832543,
+        "std": 0.002149384455321812
+      },
+      "descendant_quant": {
+        "n": 2,
+        "mean": 0.9999725336042256,
+        "std": 1.4755244813258184e-05
+      },
+      "non_descendant": {
+        "n": 8,
+        "mean": 0.8253128019849787,
+        "std": 0.09550321924500121
+      }
+    },
+    "svcca": {
+      "descendant_noise": {
+        "n": 2,
+        "mean": 0.9988189045133453,
+        "std": 2.8281374631733414e-05
+      },
+      "descendant_prune": {
+        "n": 2,
+        "mean": 0.9591368433436793,
+        "std": 0.0019412812580199001
+      },
+      "descendant_quant": {
+        "n": 2,
+        "mean": 0.9988736358152679,
+        "std": 8.217479282951468e-05
+      },
+      "non_descendant": {
+        "n": 8,
+        "mean": 0.9275043378854755,
+        "std": 0.00854456051823046
+      }
+    },
+    "ipguard_regr": {
+      "descendant_noise": {
+        "n": 2,
+        "mean": 0.95625,
+        "std": 0.0020507812499999667
+      },
+      "descendant_prune": {
+        "n": 2,
+        "mean": 0.447607421875,
+        "std": 0.0023925781250000167
+      },
+      "descendant_quant": {
+        "n": 2,
+        "mean": 0.95439453125,
+        "std": 0.0023437500000000333
+      },
+      "non_descendant": {
+        "n": 8,
+        "mean": 0.14493408203125,
+        "std": 0.05940983277563316
+      }
+    }
+  },
+  "pairs": [
+    {
+      "ref": "ref0",
+      "sus": "ref0+noise",
+      "kind": "descendant_noise",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.00033928847435566763,
+        "weight_cosine": NaN,
+        "cka": 0.999933505751062,
+        "svcca": 0.998847185887977,
+        "ipguard_regr": 0.95419921875
+      }
+    },
+    {
+      "ref": "ref0",
+      "sus": "ref0+prune",
+      "kind": "descendant_prune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.005227209095194817,
+        "weight_cosine": NaN,
+        "cka": 0.9910384790279324,
+        "svcca": 0.9610781246016992,
+        "ipguard_regr": 0.45
+      }
+    },
+    {
+      "ref": "ref0",
+      "sus": "ref0+quant",
+      "kind": "descendant_quant",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.0003483060433613016,
+        "weight_cosine": NaN,
+        "cka": 0.9999872888490388,
+        "svcca": 0.9987914610224384,
+        "ipguard_regr": 0.95673828125
+      }
+    },
+    {
+      "ref": "ref0",
+      "sus": "ind0",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.006923533252385817,
+        "weight_cosine": NaN,
+        "cka": 0.9413565477326594,
+        "svcca": 0.9136588506016213,
+        "ipguard_regr": 0.15625
+      }
+    },
+    {
+      "ref": "ref0",
+      "sus": "ind1",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.007582329505411526,
+        "weight_cosine": NaN,
+        "cka": 0.6434657729184592,
+        "svcca": 0.9409265964629883,
+        "ipguard_regr": 0.0345703125
+      }
+    },
+    {
+      "ref": "ref0",
+      "sus": "ind2",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.008048734572167865,
+        "weight_cosine": NaN,
+        "cka": 0.7728987987640021,
+        "svcca": 0.9211391405411042,
+        "ipguard_regr": 0.23515625
+      }
+    },
+    {
+      "ref": "ref0",
+      "sus": "ind3",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.007283163351675357,
+        "weight_cosine": NaN,
+        "cka": 0.7404042082548894,
+        "svcca": 0.9255133203988164,
+        "ipguard_regr": 0.1072265625
+      }
+    },
+    {
+      "ref": "ref1",
+      "sus": "ref1+noise",
+      "kind": "descendant_noise",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.0003640580390572832,
+        "weight_cosine": NaN,
+        "cka": 0.9999093958369671,
+        "svcca": 0.9987906231387136,
+        "ipguard_regr": 0.95830078125
+      }
+    },
+    {
+      "ref": "ref1",
+      "sus": "ref1+prune",
+      "kind": "descendant_prune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.005439962645870254,
+        "weight_cosine": NaN,
+        "cka": 0.995337247938576,
+        "svcca": 0.9571955620856594,
+        "ipguard_regr": 0.44521484375
+      }
+    },
+    {
+      "ref": "ref1",
+      "sus": "ref1+quant",
+      "kind": "descendant_quant",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.0003757739391709776,
+        "weight_cosine": NaN,
+        "cka": 0.9999577783594122,
+        "svcca": 0.9989558106080975,
+        "ipguard_regr": 0.95205078125
+      }
+    },
+    {
+      "ref": "ref1",
+      "sus": "ind0",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.007128445372242547,
+        "weight_cosine": NaN,
+        "cka": 0.8587314460654829,
+        "svcca": 0.9195623910827513,
+        "ipguard_regr": 0.1412109375
+      }
+    },
+    {
+      "ref": "ref1",
+      "sus": "ind1",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.006460748124949337,
+        "weight_cosine": NaN,
+        "cka": 0.9399770411055189,
+        "svcca": 0.9357850035392206,
+        "ipguard_regr": 0.18212890625
+      }
+    },
+    {
+      "ref": "ref1",
+      "sus": "ind2",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.007363858907328265,
+        "weight_cosine": NaN,
+        "cka": 0.8714913352582838,
+        "svcca": 0.9322119501552117,
+        "ipguard_regr": 0.10205078125
+      }
+    },
+    {
+      "ref": "ref1",
+      "sus": "ind3",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": -0.007739955667062763,
+        "weight_cosine": NaN,
+        "cka": 0.8341772657805336,
+        "svcca": 0.9312374503020899,
+        "ipguard_regr": 0.20087890625
+      }
+    }
+  ],
+  "wall_seconds": 51.84869599342346
+}

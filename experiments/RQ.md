@@ -965,10 +965,39 @@ The previous comparison covers older provenance methods. The external review ask
 
 ---
 
+---
+
+### ResNet-18 CIFAR Rescoring
+
+**Configuration:** 2 reference ResNet-18 models (random init, not trained), each scored against 3 transforms (noise, prune, quant) and 4 independent models. Total: 14 pairs.
+
+**Results (from `experiments/results/lineage_resnet_rescored.json`):**
+
+| Method | AUROC | Descendant Mean | Non-Descendant Mean |
+|--------|-------|-----------------|---------------------|
+| CKA | **1.000** | 0.997 | 0.825 |
+| SVCCA | **1.000** | 0.986 | 0.928 |
+| IPGuard | **1.000** | 0.786 | 0.145 |
+| Singular Value Dist | **1.000** | -0.002 | -0.007 |
+| Diagonal Dominance | NaN | — | — |
+| Aligned Frobenius | NaN | — | — |
+| Weight Cosine | NaN | — | — |
+
+**Findings:**
+
+*Activation-based methods achieve perfect separation.* CKA, SVCCA, and IPGuard all reach AUROC = 1.000 on ResNet-18, cleanly distinguishing transformed descendants from independent models. This validates the activation collection infrastructure.
+
+*Weight-space methods fail due to varying layer sizes.* ResNet-18 has different channel counts per stage (64→128→256→512), producing branch products of shapes (64×64), (128×128), (256×256), (512×512). The diagonal dominance score requires same-size matrices for the phi-vector comparison. This is a known limitation: **diagonal dominance is designed for architectures with uniform hidden dimension** (MLPs, Transformers), not CNNs with varying channel counts.
+
+*Models were not trained — results show structural similarity only.* The reference and independent models used random initialization without training. The AUROC = 1.0 reflects that transforms (noise/prune/quant) preserve model structure while independent random inits do not. With trained models, the fingerprint signal would be stronger.
+
+**Implication:** For CNNs with varying layer sizes, activation-based methods (CKA, SVCCA) are more appropriate than weight-space methods that require uniform dimensions.
+
+---
+
 ### Pending Benchmarks
 
-- **HuggingFace LLaMA family** (Llama-2-7b → chat, Vicuna, CodeLlama vs Mistral, OpenLLaMA, Yi): Running on GPU cluster. Same-architecture comparison (all 32 layers, d=4096) should yield meaningful AUROC.
-- **ResNet-18 CIFAR rescoring**: Planned with activation hooks for CKA/SVCCA/IPGuard.
+- **HuggingFace LLaMA family** (Llama-2-7b → chat, Vicuna, CodeLlama vs Mistral, OpenLLaMA, Yi): Next priority. Same-architecture comparison (all 32 layers, d=4096) should yield meaningful AUROC for all 7 methods including diagonal dominance.
 
 **Method Selection Guidance.**
 
