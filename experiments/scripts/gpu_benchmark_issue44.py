@@ -304,30 +304,56 @@ def score_pair(ref_pack: dict, sus_pack: dict, tau_s: float = 0.5) -> dict:
     """Score a (reference, suspect) pair across all 7 methods."""
     scores = {}
 
-    scores["diagonal_dominance"], _, _ = ldet.lineage_score(
-        ref_pack["Ms"], sus_pack["Ms"], tau_s
-    )
-    scores["aligned_frobenius"] = lbase.aligned_frobenius(
-        ref_pack["Ms"], sus_pack["Ms"]
-    )
-    scores["singular_value_dist"] = lbase.singular_value_distance(
-        ref_pack["Ms"], sus_pack["Ms"]
-    )
-    scores["weight_cosine"] = lbase.weight_cosine(
-        ref_pack["Ms"], sus_pack["Ms"]
-    )
+    # Check if branch products have compatible shapes
+    ref_Ms, sus_Ms = ref_pack["Ms"], sus_pack["Ms"]
+    shapes_match = (len(ref_Ms) == len(sus_Ms) and
+                    all(r.shape == s.shape for r, s in zip(ref_Ms, sus_Ms)))
 
-    if ref_pack.get("acts") and sus_pack.get("acts"):
-        scores["cka"] = lbase.cka_lineage_score(ref_pack["acts"], sus_pack["acts"])
-        scores["svcca"] = lbase.svcca_lineage_score(ref_pack["acts"], sus_pack["acts"])
+    if shapes_match:
+        try:
+            scores["diagonal_dominance"], _, _ = ldet.lineage_score(ref_Ms, sus_Ms, tau_s)
+        except Exception:
+            scores["diagonal_dominance"] = float("nan")
+        try:
+            scores["aligned_frobenius"] = lbase.aligned_frobenius(ref_Ms, sus_Ms)
+        except Exception:
+            scores["aligned_frobenius"] = float("nan")
+        try:
+            scores["singular_value_dist"] = lbase.singular_value_distance(ref_Ms, sus_Ms)
+        except Exception:
+            scores["singular_value_dist"] = float("nan")
+        try:
+            scores["weight_cosine"] = lbase.weight_cosine(ref_Ms, sus_Ms)
+        except Exception:
+            scores["weight_cosine"] = float("nan")
+    else:
+        # Architecture mismatch - weight-space methods not applicable
+        scores["diagonal_dominance"] = float("nan")
+        scores["aligned_frobenius"] = float("nan")
+        scores["singular_value_dist"] = float("nan")
+        scores["weight_cosine"] = float("nan")
+
+    ref_acts, sus_acts = ref_pack.get("acts"), sus_pack.get("acts")
+    if ref_acts and sus_acts and len(ref_acts) == len(sus_acts):
+        try:
+            scores["cka"] = lbase.cka_lineage_score(ref_acts, sus_acts)
+        except Exception:
+            scores["cka"] = float("nan")
+        try:
+            scores["svcca"] = lbase.svcca_lineage_score(ref_acts, sus_acts)
+        except Exception:
+            scores["svcca"] = float("nan")
     else:
         scores["cka"] = float("nan")
         scores["svcca"] = float("nan")
 
     if ref_pack.get("logits") is not None and sus_pack.get("logits") is not None:
-        scores["ipguard_regr"] = lbase.ipguard_match_rate(
-            ref_pack["logits"], sus_pack["logits"]
-        )
+        try:
+            scores["ipguard_regr"] = lbase.ipguard_match_rate(
+                ref_pack["logits"], sus_pack["logits"]
+            )
+        except Exception:
+            scores["ipguard_regr"] = float("nan")
     else:
         scores["ipguard_regr"] = float("nan")
 
