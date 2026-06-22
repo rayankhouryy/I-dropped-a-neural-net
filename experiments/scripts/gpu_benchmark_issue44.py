@@ -72,7 +72,10 @@ LLAMA_NONDESCENDANTS = [
     ("deepseek-r1-distill-llama-8b", "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"),
 ]
 
-LLAMA_LOCAL_TRANSFORMS = ["quant", "prune", "noise"]
+# Local transforms disabled for LLaMA - deepcopy of 7B model needs 14GB extra
+# which doesn't fit in 22GB GPU with the ref model already loaded.
+# We have real fine-tuned models (chat, vicuna, codellama) as descendants.
+LLAMA_LOCAL_TRANSFORMS = []
 
 # ============================================================================
 # BERT Family Configuration
