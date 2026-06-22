@@ -147,13 +147,14 @@ def eval_accuracy(model: nn.Module, ev_loader) -> float:
 
 # ---------------------------------------------------------------- transforms
 def add_gaussian_noise(model: nn.Module, sigma_rel: float, seed: int) -> nn.Module:
-    g = torch.Generator().manual_seed(seed)
+    g = torch.Generator(device='cpu').manual_seed(seed)
     m = copy.deepcopy(model)
     with torch.no_grad():
         for p in m.parameters():
             if p.requires_grad and p.dim() >= 2:
                 std = p.detach().std().item() * sigma_rel
-                p.add_(torch.randn(p.shape, generator=g) * std)
+                noise = torch.randn(p.shape, generator=g, device=p.device) * std
+                p.add_(noise)
     return m
 
 
