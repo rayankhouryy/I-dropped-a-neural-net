@@ -786,18 +786,22 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
                 hooks.append(block.register_forward_hook(make_hook(block_count)))
                 block_count += 1
 
+        print(f"      [acts] registered {block_count} hooks", flush=True)
         model.eval()
         collected = 0
         with torch.no_grad():
-            for x, _ in dataloader:
+            for batch_idx, (x, _) in enumerate(dataloader):
                 if collected >= n_samples:
                     break
                 x = x.to(device)
                 _ = model(x)
                 collected += x.size(0)
+                if batch_idx % 5 == 0:
+                    print(f"      [acts] batch {batch_idx}, collected {collected}", flush=True)
 
         for h in hooks:
             h.remove()
+        print(f"      [acts] done collection, processing {len(all_acts)} activations", flush=True)
 
         n_blocks = block_count
         per_block = [[] for _ in range(n_blocks)]
@@ -810,20 +814,25 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
             flat = stacked.reshape(stacked.shape[0], -1)
             result.append(flat)
 
+        print(f"      [acts] processed into {len(result)} layers", flush=True)
         return result
 
     def collect_resnet_preds(model, dataloader, n_samples=1024):
         all_preds = []
         model.eval()
         collected = 0
+        print(f"      [preds] starting collection, target={n_samples}", flush=True)
         with torch.no_grad():
-            for x, _ in dataloader:
+            for batch_idx, (x, _) in enumerate(dataloader):
                 if collected >= n_samples:
                     break
                 x = x.to(device)
                 out = model(x)
                 all_preds.append(out.detach().float().cpu().numpy())
                 collected += x.size(0)
+                if batch_idx % 5 == 0:
+                    print(f"      [preds] batch {batch_idx}, collected {collected}", flush=True)
+        print(f"      [preds] done, collected {collected}", flush=True)
         return np.vstack(all_preds)[:n_samples]
 
     checkpoint = load_checkpoint("resnet") if resume else {"completed_pairs": [], "pairs": []}
