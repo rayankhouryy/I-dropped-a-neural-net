@@ -847,26 +847,37 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
 
     for ref_i, ref_model in enumerate(refs):
         print(f"\n[ref {ref_i}] Extracting reference pack...")
+        print(f"    Extracting branch products...", flush=True)
         ref_Ms = extract_branch_products(ref_model)
+        print(f"    Extracted {len(ref_Ms)} layers", flush=True)
+        print(f"    Collecting activations...", flush=True)
         ref_acts = collect_resnet_activations(ref_model, dataloader, n_samples)
+        print(f"    Collected {len(ref_acts)} layer activations", flush=True)
+        print(f"    Collecting predictions...", flush=True)
         ref_preds = collect_resnet_preds(ref_model, dataloader, n_samples)
+        print(f"    Predictions shape: {ref_preds.shape}", flush=True)
         ref_pack = {"Ms": ref_Ms, "acts": ref_acts, "logits": ref_preds}
 
         for tfm in ["noise", "prune", "quant"]:
             pair_key = f"ref{ref_i}|{tfm}"
             if pair_key in completed:
+                print(f"  Skipping {tfm} (already done)", flush=True)
                 continue
 
-            print(f"  Transform: {tfm}")
+            print(f"  Transform: {tfm}", flush=True)
             if tfm == "noise":
                 sus_model = add_gaussian_noise(ref_model, sigma_rel=0.01, seed=ref_i * 100)
             elif tfm == "prune":
                 sus_model = magnitude_prune(ref_model, sparsity=0.3)
             else:
                 sus_model = fake_quantize(ref_model, levels=256)
+            print(f"    Transform applied", flush=True)
 
+            print(f"    Extracting branch products...", flush=True)
             sus_Ms = extract_branch_products(sus_model)
+            print(f"    Collecting activations...", flush=True)
             sus_acts = collect_resnet_activations(sus_model, dataloader, n_samples)
+            print(f"    Collecting predictions...", flush=True)
             sus_preds = collect_resnet_preds(sus_model, dataloader, n_samples)
             sus_pack = {"Ms": sus_Ms, "acts": sus_acts, "logits": sus_preds}
 
