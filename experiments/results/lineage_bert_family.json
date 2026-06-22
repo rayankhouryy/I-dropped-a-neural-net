@@ -1,0 +1,320 @@
+{
+  "config": {
+    "benchmark": "bert",
+    "reference": [
+      "bert-base",
+      "google-bert/bert-base-uncased"
+    ],
+    "n_samples": 1024,
+    "device": "cuda:0"
+  },
+  "n_pairs": 8,
+  "auroc": {
+    "diagonal_dominance": 0.0,
+    "aligned_frobenius": 0.0,
+    "singular_value_dist": 0.0,
+    "weight_cosine": 0.0,
+    "cka": NaN,
+    "svcca": NaN,
+    "ipguard_regr": NaN
+  },
+  "per_kind": {
+    "diagonal_dominance": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": 0.9241484161148441,
+        "std": 0.0042899090366296045
+      },
+      "descendant_noise": {
+        "n": 1,
+        "mean": 0.9334607637956296,
+        "std": 0.0
+      },
+      "descendant_prune": {
+        "n": 1,
+        "mean": 0.9247256988779085,
+        "std": 0.0
+      },
+      "descendant_quant": {
+        "n": 1,
+        "mean": 0.9234027326454158,
+        "std": 0.0
+      },
+      "non_descendant": {
+        "n": 1,
+        "mean": 0.9335275568114035,
+        "std": 0.0
+      }
+    },
+    "aligned_frobenius": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": -0.0864000541271653,
+        "std": 0.022880030240673144
+      },
+      "descendant_noise": {
+        "n": 1,
+        "mean": -0.011389626111734113,
+        "std": 0.0
+      },
+      "descendant_prune": {
+        "n": 1,
+        "mean": -0.1302199477906067,
+        "std": 0.0
+      },
+      "descendant_quant": {
+        "n": 1,
+        "mean": -0.13543508936925655,
+        "std": 0.0
+      },
+      "non_descendant": {
+        "n": 1,
+        "mean": 0.0,
+        "std": 0.0
+      }
+    },
+    "singular_value_dist": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": -0.00015109752449612185,
+        "std": 5.166319554719157e-05
+      },
+      "descendant_noise": {
+        "n": 1,
+        "mean": -2.34365015788877e-05,
+        "std": 0.0
+      },
+      "descendant_prune": {
+        "n": 1,
+        "mean": -0.0005783946505745431,
+        "std": 0.0
+      },
+      "descendant_quant": {
+        "n": 1,
+        "mean": -0.0008075836265652198,
+        "std": 0.0
+      },
+      "non_descendant": {
+        "n": 1,
+        "mean": 0.0,
+        "std": 0.0
+      }
+    },
+    "weight_cosine": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": 0.9952515515866952,
+        "std": 0.0021993878358565174
+      },
+      "descendant_noise": {
+        "n": 1,
+        "mean": 0.9999305991343305,
+        "std": 0.0
+      },
+      "descendant_prune": {
+        "n": 1,
+        "mean": 0.9908130518123127,
+        "std": 0.0
+      },
+      "descendant_quant": {
+        "n": 1,
+        "mean": 0.990075308640716,
+        "std": 0.0
+      },
+      "non_descendant": {
+        "n": 1,
+        "mean": 0.9999999999999742,
+        "std": 0.0
+      }
+    },
+    "cka": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": 0.9160908868871371,
+        "std": 0.027965944051964883
+      },
+      "descendant_noise": {
+        "n": 1,
+        "mean": 0.9999076164340807,
+        "std": 0.0
+      },
+      "descendant_prune": {
+        "n": 1,
+        "mean": 0.9676767445993474,
+        "std": 0.0
+      },
+      "descendant_quant": {
+        "n": 1,
+        "mean": 0.9950449970156606,
+        "std": 0.0
+      }
+    },
+    "svcca": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": 1.0000000000000013,
+        "std": 1.8129866073473578e-16
+      },
+      "descendant_noise": {
+        "n": 1,
+        "mean": 1.0000000000000016,
+        "std": 0.0
+      },
+      "descendant_prune": {
+        "n": 1,
+        "mean": 1.0000000000000016,
+        "std": 0.0
+      },
+      "descendant_quant": {
+        "n": 1,
+        "mean": 1.0000000000000013,
+        "std": 0.0
+      }
+    },
+    "ipguard_regr": {
+      "descendant_finetune": {
+        "n": 3,
+        "mean": 0.19460762871636286,
+        "std": 0.024446436829037597
+      },
+      "descendant_noise": {
+        "n": 1,
+        "mean": 0.9557571411132812,
+        "std": 0.0
+      },
+      "descendant_prune": {
+        "n": 1,
+        "mean": 0.39513270060221356,
+        "std": 0.0
+      },
+      "descendant_quant": {
+        "n": 1,
+        "mean": 0.6859842936197916,
+        "std": 0.0
+      }
+    }
+  },
+  "pairs": [
+    {
+      "ref": "bert-base",
+      "sus": "bert-sst2",
+      "kind": "descendant_finetune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.9285433207953981,
+        "aligned_frobenius": -0.05438166307574492,
+        "singular_value_dist": -7.821219422558748e-05,
+        "weight_cosine": 0.9983165578033426,
+        "cka": 0.9292485589299092,
+        "svcca": 1.0000000000000016,
+        "ipguard_regr": 0.2213109334309896
+      }
+    },
+    {
+      "ref": "bert-base",
+      "sus": "bert-mnli",
+      "kind": "descendant_finetune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.9255729230441433,
+        "aligned_frobenius": -0.09836441942406256,
+        "singular_value_dist": -0.00018313279417178042,
+        "weight_cosine": 0.9941775928575819,
+        "cka": 0.877211930279481,
+        "svcca": 1.000000000000001,
+        "ipguard_regr": 0.16223907470703125
+      }
+    },
+    {
+      "ref": "bert-base",
+      "sus": "bert-squad",
+      "kind": "descendant_finetune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.9183290045049911,
+        "aligned_frobenius": -0.10645407988168842,
+        "singular_value_dist": -0.0001919475850909976,
+        "weight_cosine": 0.9932605040991613,
+        "cka": 0.941812171452021,
+        "svcca": 1.0000000000000013,
+        "ipguard_regr": 0.20027287801106772
+      }
+    },
+    {
+      "ref": "bert-base",
+      "sus": "bert-base+quant",
+      "kind": "descendant_quant",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.9234027326454158,
+        "aligned_frobenius": -0.13543508936925655,
+        "singular_value_dist": -0.0008075836265652198,
+        "weight_cosine": 0.990075308640716,
+        "cka": 0.9950449970156606,
+        "svcca": 1.0000000000000013,
+        "ipguard_regr": 0.6859842936197916
+      }
+    },
+    {
+      "ref": "bert-base",
+      "sus": "bert-base+prune",
+      "kind": "descendant_prune",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.9247256988779085,
+        "aligned_frobenius": -0.1302199477906067,
+        "singular_value_dist": -0.0005783946505745431,
+        "weight_cosine": 0.9908130518123127,
+        "cka": 0.9676767445993474,
+        "svcca": 1.0000000000000016,
+        "ipguard_regr": 0.39513270060221356
+      }
+    },
+    {
+      "ref": "bert-base",
+      "sus": "bert-base+noise",
+      "kind": "descendant_noise",
+      "label": 1,
+      "scores": {
+        "diagonal_dominance": 0.9334607637956296,
+        "aligned_frobenius": -0.011389626111734113,
+        "singular_value_dist": -2.34365015788877e-05,
+        "weight_cosine": 0.9999305991343305,
+        "cka": 0.9999076164340807,
+        "svcca": 1.0000000000000016,
+        "ipguard_regr": 0.9557571411132812
+      }
+    },
+    {
+      "ref": "bert-base",
+      "sus": "distilbert",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": 0.9335275568114035,
+        "aligned_frobenius": -0.0,
+        "singular_value_dist": -0.0,
+        "weight_cosine": 0.9999999999999742,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": NaN
+      }
+    },
+    {
+      "ref": "bert-base",
+      "sus": "bert-tiny",
+      "kind": "non_descendant",
+      "label": 0,
+      "scores": {
+        "diagonal_dominance": NaN,
+        "aligned_frobenius": NaN,
+        "singular_value_dist": NaN,
+        "weight_cosine": NaN,
+        "cka": NaN,
+        "svcca": NaN,
+        "ipguard_regr": NaN
+      }
+    }
+  ],
+  "wall_seconds": 18.18159031867981
+}

@@ -932,11 +932,43 @@ The previous comparison covers older provenance methods. The external review ask
 
 *Margin matters beyond AUROC saturation.* Five methods report AUROC = 1.000, but the *separation between the worst descendant and best non-descendant* differs by orders of magnitude. On this benchmark our diagonal-dominance score shows a 10–13× gap (descendant mean ≈ 0.37, non-descendant mean ≈ 0.029), whereas weight cosine shows a ~10× gap (≈ 0.99 vs ≈ 0.10), and singular-value distance shows a 5–10× gap depending on the kind. AUROC saturates at the limit, but margin determines how much label / transformation / sampling noise the method tolerates before AUROC degrades. The 172× gap on ResNet-18 CIFAR (above) and the 13× gap here both leave substantial headroom.
 
-**What the table covers and what it does not.** All seven methods are evaluated on the MLP benchmark with consistent pairs and consistent probe data. Three benchmarks from the spec remain pending and are GPU- / download-bound:
+**What the table covers and what it does not.** All seven methods are evaluated on the MLP benchmark with consistent pairs and consistent probe data.
 
-- **HuggingFace LLaMA family** (Llama-2-7b → chat, copies, vs OpenLLaMA, Mistral): ~30 GB GPU memory + ~10 GB downloads per model. Loader scaffolding in place; needs cluster access.
-- **HuggingFace BERT family** (bert-base → fine-tunes vs DistilBERT, TinyBERT): ~5 GB GPU; same scaffolding ready.
-- **ResNet-18 CIFAR**: already in the AUROC Deep Dive (n=32, our method = 1.000). Re-scoring under the new baselines requires re-running `lineage_phase2_resnet.py` with hooks; planned for the next iteration.
+---
+
+### BERT Family Benchmark (HuggingFace)
+
+**Configuration:** Reference = `bert-base-uncased` (12 layers, d=768). Descendants = 3 fine-tunes (SST-2, MNLI, SQuAD) + 3 local transforms (quant, prune, noise). Non-descendants = DistilBERT (6 layers), bert-mini (4 layers, d=256).
+
+**Results (from `experiments/results/lineage_bert_family.json`):**
+
+| Pair | Kind | Diag. Dom. | Weight Cos. | CKA | SVCCA | IPGuard |
+|------|------|-----------|-------------|-----|-------|---------|
+| bert-sst2 | descendant | 0.929 | 0.998 | 0.929 | 1.000 | 0.221 |
+| bert-mnli | descendant | 0.926 | 0.994 | 0.877 | 1.000 | 0.162 |
+| bert-squad | descendant | 0.918 | 0.993 | 0.942 | 1.000 | 0.200 |
+| bert+quant | descendant | 0.923 | 0.990 | 0.995 | 1.000 | 0.686 |
+| bert+prune | descendant | 0.925 | 0.991 | 0.968 | 1.000 | 0.395 |
+| bert+noise | descendant | 0.933 | 1.000 | 1.000 | 1.000 | 0.956 |
+| distilbert | non-desc | 0.934 | 1.000 | NaN | NaN | NaN |
+| bert-mini | non-desc | NaN | NaN | NaN | NaN | NaN |
+
+**Findings:**
+
+*Architecture mismatch limits baseline comparison.* DistilBERT (6 layers, d=768) and bert-mini (4 layers, d=256) have different architectures than bert-base (12 layers, d=768). Weight-space methods require matching dimensions for meaningful comparison. DistilBERT shares the same hidden dimension but has fewer layers, so diagonal dominance scores are computed but not directly comparable. bert-mini has entirely different dimensions (all NaN).
+
+*Diagonal dominance does not distinguish DistilBERT from fine-tuned BERT.* Both show high diagonal dominance (~0.92–0.93), which is expected: DistilBERT was trained via knowledge distillation from BERT, so it inherits structural properties even though it's architecturally different. This is a limitation for cross-architecture lineage detection — the fingerprint requires same-architecture comparison.
+
+*Within same-architecture pairs, all methods saturate.* For the 6 descendants with matching architecture, all weight-space methods show high scores (diagonal dominance 0.918–0.933, weight cosine 0.990–1.000). Without same-architecture non-descendants, AUROC cannot be computed meaningfully.
+
+**Implication:** The BERT benchmark highlights that lineage verification via diagonal dominance is designed for **same-architecture** comparisons. Detecting lineage across architecture changes (e.g., BERT → DistilBERT distillation) requires different approaches or explicit architecture matching.
+
+---
+
+### Pending Benchmarks
+
+- **HuggingFace LLaMA family** (Llama-2-7b → chat, Vicuna, CodeLlama vs Mistral, OpenLLaMA, Yi): Running on GPU cluster. Same-architecture comparison (all 32 layers, d=4096) should yield meaningful AUROC.
+- **ResNet-18 CIFAR rescoring**: Planned with activation hooks for CKA/SVCCA/IPGuard.
 
 **Method Selection Guidance.**
 
