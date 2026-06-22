@@ -844,20 +844,11 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
     torch.manual_seed(0)
     np.random.seed(0)
 
-    refs = []
     for ref_i in range(n_refs):
-        print(f"\n[ref {ref_i}] Training reference model...")
+        print(f"\n[ref {ref_i}] Creating and processing reference model...", flush=True)
+        torch.manual_seed(ref_i)
         ref_model = make_cifar_resnet18(num_classes=10).to(device)
-        refs.append(ref_model)
 
-    independents = []
-    for ind_i in range(n_independents):
-        print(f"\n[ind {ind_i}] Training independent model...")
-        ind_model = make_cifar_resnet18(num_classes=10).to(device)
-        independents.append(ind_model)
-
-    for ref_i, ref_model in enumerate(refs):
-        print(f"\n[ref {ref_i}] Extracting reference pack...")
         print(f"    Extracting branch products...", flush=True)
         ref_Ms = extract_branch_products(ref_model)
         print(f"    Extracted {len(ref_Ms)} layers", flush=True)
@@ -882,49 +873,74 @@ def run_resnet_rescoring(device: str = "cuda", resume: bool = False,
                 sus_model = magnitude_prune(ref_model, sparsity=0.3)
             else:
                 sus_model = fake_quantize(ref_model, levels=256)
-            sus_model = sus_model.to(device)  # Ensure model is on GPU after transform
+            sus_model = sus_model.to(device)
             print(f"    Transform applied, model on {next(sus_model.parameters()).device}", flush=True)
 
             print(f"    Extracting branch products...", flush=True)
             sus_Ms = extract_branch_products(sus_model)
             print(f"    Collecting activations...", flush=True)
             sus_acts = collect_resnet_activations(sus_model, dataloader, n_samples)
+            print(f"    Collected {len(sus_acts)} layer activations", flush=True)
             print(f"    Collecting predictions...", flush=True)
             sus_preds = collect_resnet_preds(sus_model, dataloader, n_samples)
+            print(f"    Predictions shape: {sus_preds.shape}", flush=True)
             sus_pack = {"Ms": sus_Ms, "acts": sus_acts, "logits": sus_preds}
 
+            print(f"    Scoring pair...", flush=True)
             scores = score_pair(ref_pack, sus_pack)
+            print(f"    Scores: {scores}", flush=True)
             pairs.append({
                 "ref": f"ref{ref_i}", "sus": f"ref{ref_i}+{tfm}",
                 "kind": f"descendant_{tfm}", "label": 1,
                 "scores": scores
             })
 
+            del sus_model
+            clear_gpu_memory()
+
             checkpoint["completed_pairs"].append(pair_key)
             checkpoint["pairs"] = pairs
             save_checkpoint("resnet", checkpoint)
 
-        for ind_i, ind_model in enumerate(independents):
+        # Process independents one at a time
+        for ind_i in range(n_independents):
             pair_key = f"ref{ref_i}|ind{ind_i}"
             if pair_key in completed:
+                print(f"  Skipping ind{ind_i} (already done)", flush=True)
                 continue
 
-            print(f"  Independent: ind{ind_i}")
+            print(f"  Independent: ind{ind_i}", flush=True)
+            torch.manual_seed(1000 + ref_i * 100 + ind_i)
+            ind_model = make_cifar_resnet18(num_classes=10).to(device)
+
+            print(f"    Extracting branch products...", flush=True)
             ind_Ms = extract_branch_products(ind_model)
+            print(f"    Collecting activations...", flush=True)
             ind_acts = collect_resnet_activations(ind_model, dataloader, n_samples)
+            print(f"    Collected {len(ind_acts)} layer activations", flush=True)
+            print(f"    Collecting predictions...", flush=True)
             ind_preds = collect_resnet_preds(ind_model, dataloader, n_samples)
+            print(f"    Predictions shape: {ind_preds.shape}", flush=True)
             ind_pack = {"Ms": ind_Ms, "acts": ind_acts, "logits": ind_preds}
 
+            print(f"    Scoring pair...", flush=True)
             scores = score_pair(ref_pack, ind_pack)
+            print(f"    Scores: {scores}", flush=True)
             pairs.append({
                 "ref": f"ref{ref_i}", "sus": f"ind{ind_i}",
                 "kind": "non_descendant", "label": 0,
                 "scores": scores
             })
 
+            del ind_model
+            clear_gpu_memory()
+
             checkpoint["completed_pairs"].append(pair_key)
             checkpoint["pairs"] = pairs
             save_checkpoint("resnet", checkpoint)
+
+        del ref_model
+        clear_gpu_memory()
 
     auroc = compute_auroc(pairs)
     per_kind = compute_per_kind(pairs)
