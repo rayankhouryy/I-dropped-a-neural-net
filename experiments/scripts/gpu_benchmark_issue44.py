@@ -169,44 +169,16 @@ def extract_bert_branch_products(model) -> list[np.ndarray]:
 # ============================================================================
 
 def collect_llm_activations(model, tokenizer, probe_texts: list[str],
-                            n_samples: int = 1024, device: str = "cuda") -> list[np.ndarray]:
+                            n_samples: int = 1024, device: str = "cuda") -> list[np.ndarray] | None:
     """Collect hidden states from all transformer layers.
 
-    Note: For 7B models, use n_samples=128-256 to keep runtime reasonable.
-    Each forward pass takes ~0.5-1s on GPU.
+    DISABLED for LLaMA: CKA/SVCCA on 32 layers × 4096 dims takes 10+ minutes
+    per pair (32×32 = 1024 comparisons). Weight-space methods are the focus.
+
+    Returns None to skip activation-based scoring.
     """
-    # Cap samples for large models to avoid hour-long collection
-    effective_samples = min(n_samples, 256)
-    if effective_samples < n_samples:
-        print(f"      [acts] Capping samples from {n_samples} to {effective_samples} for LLM", flush=True)
-
-    layers = model.model.layers if hasattr(model, "model") else model.layers
-    L = len(layers)
-    all_acts = [[] for _ in range(L)]
-    hooks = []
-
-    for i, layer in enumerate(layers):
-        def make_hook(idx):
-            def hook(module, inp, out):
-                h = out[0] if isinstance(out, tuple) else out
-                all_acts[idx].append(h[:, -1, :].detach().float().cpu().numpy())
-            return hook
-        hooks.append(layer.register_forward_hook(make_hook(i)))
-
-    model.eval()
-    print(f"      [acts] Collecting {effective_samples} samples from {L} layers...", flush=True)
-    with torch.no_grad():
-        for i, text in enumerate(probe_texts[:effective_samples]):
-            if i % 50 == 0:
-                print(f"      [acts] Sample {i}/{effective_samples}", flush=True)
-            inputs = tokenizer(text, return_tensors="pt", truncation=True,
-                               max_length=512, padding=True).to(device)
-            _ = model(**inputs)
-
-    for h in hooks:
-        h.remove()
-
-    return [np.vstack(acts) for acts in all_acts]
+    print(f"      [acts] SKIPPED - CKA/SVCCA too slow for LLaMA (32×32×4096)", flush=True)
+    return None
 
 
 def collect_bert_activations(model, tokenizer, probe_texts: list[str],
@@ -239,19 +211,19 @@ def collect_bert_activations(model, tokenizer, probe_texts: list[str],
 
 
 def collect_llm_logits(model, tokenizer, probe_texts: list[str],
-                       n_samples: int = 1024, device: str = "cuda") -> np.ndarray:
-    """Collect output logits for IPGuard scoring."""
-    # Cap samples for large models
-    effective_samples = min(n_samples, 256)
-    if effective_samples < n_samples:
-        print(f"      [logits] Capping samples from {n_samples} to {effective_samples} for LLM", flush=True)
+                       n_samples: int = 1024, device: str = "cuda") -> np.ndarray | None:
+    """Collect output logits for IPGuard scoring.
+
+    For 7B models, uses only 128 samples (128 forward passes × ~0.5s = ~1 min).
+    """
+    effective_samples = min(n_samples, 128)
+    print(f"      [logits] Collecting {effective_samples} samples...", flush=True)
 
     all_logits = []
     model.eval()
-    print(f"      [logits] Collecting {effective_samples} samples...", flush=True)
     with torch.no_grad():
         for i, text in enumerate(probe_texts[:effective_samples]):
-            if i % 50 == 0:
+            if i % 25 == 0:
                 print(f"      [logits] Sample {i}/{effective_samples}", flush=True)
             inputs = tokenizer(text, return_tensors="pt", truncation=True,
                                max_length=512, padding=True).to(device)
