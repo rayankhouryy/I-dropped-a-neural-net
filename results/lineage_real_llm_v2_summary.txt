@@ -1,0 +1,9 @@
+Cross-model null (n=4): mu=-0.000039 sigma=0.000088 max=0.000023
+ descendant  base vs llama2-7b-chat                  L=+0.994584  z=+11332.9  DESCENDANT  (expected DESCENDANT)
+ descendant  base vs base+quant-int8                 L=+0.999913  z=+11393.6  DESCENDANT  (expected DESCENDANT)
+ descendant  base vs base+prune-30                   L=+0.985879  z=+11233.7  DESCENDANT  (expected DESCENDANT)
+ descendant  base vs base+noise-1pct                 L=+0.999901  z=+11393.5  DESCENDANT  (expected DESCENDANT)
+independent  base vs deepseek-r1-distill-llama-8b    L=-0.000163  z=    -1.4  NON-DESCENDANT  (expected NON-DESCENDANT)
+independent  base vs mistral-7b-v0.1                 L=-0.000039  z=    +0.0  NON-DESCENDANT  (expected NON-DESCENDANT)
+independent  base vs qwen1.5-7b                      L=+0.000023  z=    +0.7  NON-DESCENDANT  (expected NON-DESCENDANT)
+independent  base vs yi-6b                           L=+0.000023  z=    +0.7  NON-DESCENDANT  (expected NON-DESCENDANT)

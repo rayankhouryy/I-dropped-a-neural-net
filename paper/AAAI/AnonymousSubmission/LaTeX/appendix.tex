@@ -178,38 +178,44 @@ IPGuard (regr.)     & $0.888$ & $0.110$ & \emph{0.000} & $0.626$ & $0.993$ & $0.
 \label{tab:per-kind-baselines}
 \end{table*}
 
-\subsection{Preliminary Real-LLM Lineage Validation}\label{app:real-llm}
+\subsection{Real-LLM Lineage Validation}\label{app:real-llm}
 
-To take a first step beyond block-correspondence pairing on real foundation models, we evaluate $\mathcal{L}(\cdot,\cdot)$ on five real-LLM pairs at the 7B-parameter scale. We extract the per-layer SwiGLU branch product $M_\ell = W_{\text{down}}^{(\ell)} W_{\text{up}}^{(\ell)} \in \mathbb{R}^{d\times d}$, form the centered residual signature $\phi_\ell = \mathrm{vec}(M_\ell - \tfrac{\mathrm{tr}(M_\ell)}{d}I) / \|\cdot\|$ in fp32, and score $\mathcal{L}(A,B) = \tfrac{1}{L}\sum_\ell \langle \phi_\ell^A, \phi_\ell^B\rangle$. Streaming weights via \texttt{safe\_open} keeps peak RAM under $2$\,GB; total runtime is ${\approx}12$ minutes on CPU.
+To move beyond block-correspondence pairing on real foundation models, we evaluate $\mathcal{L}(\cdot,\cdot)$ on eight reference-vs-model pairs at the 7B-parameter scale---four descendants and four independently-trained negatives. We extract the per-layer SwiGLU branch product $M_\ell = W_{\text{down}}^{(\ell)} W_{\text{up}}^{(\ell)} \in \mathbb{R}^{d\times d}$, form the centered residual signature $\phi_\ell = \mathrm{vec}(M_\ell - \tfrac{\mathrm{tr}(M_\ell)}{d}I) / \|\cdot\|$ in fp32, and score $\mathcal{L}(A,B) = \tfrac{1}{L}\sum_\ell \langle \phi_\ell^A, \phi_\ell^B\rangle$. Streaming weights via \texttt{safe\_open} keeps peak RAM under $2$\,GB; total runtime is ${\approx}20$ minutes on CPU for all nine models.
 
-\textit{Architecture compatibility.} The strict compatibility check (App.~\ref{app:verification}) requires $\mathrm{arch}(A) = \mathrm{arch}(B)$. The branch-product comparison only requires matching hidden size $d$ and depth $L$; the intermediate width $d_{\text{ff}}$ contracts inside $M_\ell$ and may differ across families. We deliberately relax to this weaker compatibility (matching $d$, $L$, MLP structure) so that cross-family negatives, which differ in $d_{\text{ff}}$, can be scored. All five models below have $L=32$ and $d=4096$; intermediate widths range over $11008$ (LLaMA-2) and $14336$ (Llama-3).
+\textit{Architecture compatibility.} The strict compatibility check (App.~\ref{app:verification}) requires $\mathrm{arch}(A) = \mathrm{arch}(B)$. The branch-product comparison only requires matching hidden size $d$ and depth $L$; the intermediate width $d_{\text{ff}}$ contracts inside $M_\ell$ and may differ across families. We deliberately relax to this weaker compatibility (matching $d$, $L$, MLP structure) so that cross-family negatives can be scored. All nine models have $L=32$ and $d=4096$; intermediate widths range over $11008$ (LLaMA-2, Qwen1.5, Yi) and $14336$ (Llama-3, Mistral).
 
-\textit{Pairs.} The reference is LLaMA-2-7B base. We test it against: (i) the official RLHF descendant Llama-2-7B-chat; (ii) three local transformations of the base MLP weights (per-channel symmetric int8 quantization, $30\%$ magnitude pruning, $1\%$ Gaussian noise); and (iii) a real branch-product-compatible independent, DeepSeek-R1-Distill-Llama-8B---which is \emph{behaviorally} distilled from DeepSeek-R1 reasoning traces but \emph{weight-derived} from Meta's Llama-3.1-8B (trained from scratch). Its NON-DESCENDANT verdict w.r.t.\ LLaMA-2 is therefore a real-world demonstration that the method tracks weight inheritance rather than behavioral/distillation pedigree---consistent with Section~\ref{sec:exp-baselines}, where weight-space methods correctly place same-task distilled models near the diff-seed independent baseline.
+\textit{Pairs.} The reference is LLaMA-2-7B base. \emph{Descendants:} the official RLHF descendant Llama-2-7B-chat, plus three local transformations of the base MLP weights (per-channel symmetric int8 quantization, $30\%$ magnitude pruning, $1\%$ Gaussian noise). \emph{Negatives:} four independently-trained 7B-class checkpoints with no LLaMA-2 ancestry---Mistral-7B-v0.1, Qwen1.5-7B, Yi-6B, and DeepSeek-R1-Distill-Llama-8B. The last is \emph{behaviorally} distilled from DeepSeek-R1 reasoning traces but \emph{weight-derived} from Meta's Llama-3.1-8B; its NON-DESCENDANT verdict w.r.t.\ LLaMA-2 is a real-world demonstration that the method tracks weight inheritance rather than behavioral/distillation pedigree, consistent with Section~\ref{sec:exp-baselines}.
 
-\textit{Decision thresholds.} We use the App.~\ref{app:verification} z-score rule: $z > 3.0$ $\Rightarrow$ DESCENDANT (corresponds to one-sided $p < 0.0013$ under the proxy null), $z < 1.645$ $\Rightarrow$ NON-DESCENDANT (one-sided $p > 0.05$), $1.645 \le z \le 3.0$ $\Rightarrow$ INCONCLUSIVE. The DeepSeek pair at $z = -1.8$ is comfortably below the NON-DESCENDANT threshold; the four descendant pairs at $z \ge +25.6$ are far above the DESCENDANT threshold.
+\textit{Null.} Unlike the single-independent case, we now estimate a genuine cross-model null directly from the four negatives: $\mu_0 = -3.9\times10^{-5}$, $\sigma_0 = 8.8\times10^{-5}$, with all four scores within $\pm 1.6\times10^{-4}$ of zero. This is the same construction as the App.~\ref{app:verification} cross-model null, now instantiated on real foundation-model weights rather than the synthetic zoo. The four independents span three distinct from-scratch pre-training lineages (Mistral, Qwen, Yi) plus a Llama-3 derivative, so the null is not dominated by any one family.
 
-\textit{Null.} The cross-model null defined in App.~\ref{app:verification} cannot be estimated with a single real independent. As a preliminary proxy, we use a within-model block-shuffle null on the reference ($n{=}20$ random permutations of the $32$ block signatures, identity permutation excluded), yielding $\mu_0 = 0.064$, $\sigma_0 = 0.036$. This is a stand-in to be replaced by a multi-model cross-family null (Mistral-7B, OpenLLaMA-7B, Yi-6B, Qwen-7B, Amber) once the negative set is expanded.
+\textit{Decision thresholds.} We use the App.~\ref{app:verification} z-score rule: $z > 3.0$ $\Rightarrow$ DESCENDANT, $z < 1.645$ $\Rightarrow$ NON-DESCENDANT, $1.645 \le z \le 3.0$ $\Rightarrow$ INCONCLUSIVE. The four negatives sit within the null by construction ($z \in [-1.4, +0.7]$); the four descendants land at $z > 10^4$---the magnitude is bounded only by the null's sub-$10^{-4}$ spread, so we report the raw $\mathcal{L}$ as the primary evidence. The decisive fact is absolute separation: the smallest descendant score ($0.986$) exceeds the largest-magnitude negative ($|{-}1.6\times10^{-4}|$) by nearly four orders of magnitude.
 
 \begin{table}[h]
 \centering\footnotesize
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.1}
-\begin{tabular}{@{}lccl@{}}
+\begin{tabular}{@{}lrcl@{}}
 \toprule
 Pair (base vs.) & $\mathcal{L}$ & $z$ & Verdict \\
 \midrule
-Llama-2-7B-chat (RLHF)        & $+0.9946$ & $+25.8$ & DESC. \\
-base + int8 quant              & $+0.9999$ & $+25.9$ & DESC. \\
-base + $30\%$ prune            & $+0.9859$ & $+25.6$ & DESC. \\
-base + $1\%$ noise             & $+0.9999$ & $+25.9$ & DESC. \\
-DeepSeek-R1-Distill-Llama-8B   & $-0.0002$ & $-1.8$  & NON-DESC. \\
+\multicolumn{4}{@{}l}{\emph{Descendants}} \\
+Llama-2-7B-chat (RLHF)   & $0.9946$ & $>10^4$ & DESC. \\
+base + int8 quant         & $0.9999$ & $>10^4$ & DESC. \\
+base + $30\%$ prune       & $0.9859$ & $>10^4$ & DESC. \\
+base + $1\%$ noise        & $0.9999$ & $>10^4$ & DESC. \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Independents (cross-model null)}} \\
+Mistral-7B-v0.1           & $-4\mathrm{e}{-}5$ & $+0.0$ & NON-DESC. \\
+Qwen1.5-7B                & $+2\mathrm{e}{-}5$ & $+0.7$ & NON-DESC. \\
+Yi-6B                     & $+2\mathrm{e}{-}5$ & $+0.7$ & NON-DESC. \\
+DeepSeek-R1-Distill-8B    & $-16\mathrm{e}{-}5$ & $-1.4$ & NON-DESC. \\
 \bottomrule
 \end{tabular}
-\caption{Real-LLM lineage validation at the 7B scale. All five verdicts match expectation; DESC.\ / NON-DESC.\ abbreviate the App.~\ref{app:verification} z-score categories. Per-block cosines on the chat pair lie in $[0.993, 0.996]$ across all 32 layers, indicating that RLHF fine-tuning leaves the per-block branch-product structure of the base nearly untouched. Per-block cosines on the DeepSeek pair lie in $[-0.001, +0.000]$---indistinguishable from the within-model shuffle null. Signatures are computed and stored in fp32 to preserve the $\mathcal{L} \in [-1, 1]$ bound.}
+\caption{Real-LLM lineage validation at the 7B scale. All eight verdicts match expectation; DESC.\ / NON-DESC.\ abbreviate the App.~\ref{app:verification} z-score categories. The cross-model null is estimated from the four independents ($\mu_0={-}3.9{\times}10^{-5}$, $\sigma_0=8.8{\times}10^{-5}$). Per-block cosines on the chat pair lie in $[0.993, 0.996]$ across all 32 layers, indicating that RLHF fine-tuning leaves the per-block branch-product structure of the base nearly untouched; every independent has all 32 per-block cosines within $\pm 0.001$. Signatures are computed and stored in fp32 to preserve the $\mathcal{L} \in [-1, 1]$ bound.}
 \label{tab:real-llm-lineage}
 \end{table}
 
-This is a preliminary validation---five pairs with a single real independent and a proxy null. The clean separation ($\Delta\mathcal{L} \approx 0.99$ between the descendant cluster and the real independent) and exact agreement with expected verdicts is, however, the first direct evidence that the residual-signature lineage protocol operates as predicted on real 7B foundation-model weights. Scaling to a multi-family negative set and additional descendants (Vicuna, CodeLlama as a continued-pretraining stress test) is the natural next step and would let us replace the proxy null with the cross-model null defined in App.~\ref{app:verification}.
+The complete separation---every descendant at $\mathcal{L} \ge 0.986$, every one of four independent from-scratch lineages at $|\mathcal{L}| < 2\times10^{-4}$---is direct evidence that the residual-signature lineage protocol operates as predicted on real 7B foundation-model weights, now against a real multi-family null rather than a proxy. The remaining limitation is tree breadth: all descendants here derive from a single base (LLaMA-2-7B). Extending to additional real checkpoint trees (e.g., a Mistral or Qwen base with its own community fine-tunes, and continued-pretraining descendants such as CodeLlama) is the natural next step.
 
 \subsection{Harder Regime: Layer Grafts and Linear Merges}\label{app:harder-bench}
 
