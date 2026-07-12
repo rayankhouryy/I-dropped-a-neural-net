@@ -185,8 +185,8 @@ def draw_panel_c(ax):
     ax.axvline(x=0.5, color='gray', linestyle=(0, (5, 5)), lw=1.2, alpha=0.7)
 
     # Zone labels inside the colored regions
-    ax.text(0.25, 2.1, 'Non-Descendant', fontsize=11, fontweight='bold', color=RED, ha='center', va='center')
-    ax.text(0.75, 2.1, 'Descendant', fontsize=11, fontweight='bold', color=GREEN, ha='center', va='center')
+    ax.text(0.25, 2.1, 'Unrelated', fontsize=11, fontweight='bold', color=RED, ha='center', va='center')
+    ax.text(0.75, 2.1, 'Related', fontsize=11, fontweight='bold', color=GREEN, ha='center', va='center')
 
     # Y positions for bars - tighter spacing, moved up
     y_positions = {'Fine-tuned': 1.85, 'Quantized': 1.55, 'LoRA': 1.25, 'Pruned': 0.95,
