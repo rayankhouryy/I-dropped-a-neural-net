@@ -2,7 +2,7 @@
 
 \section{Extended Experimental Details}\label{app:experiments}
 
-\subsection{Initialization Ablation}
+\subsection{Initialization Ablation}\label{app:init-ablation}
 
 We test whether the diagonal-dominance fingerprint depends on initialization scheme. We train depth-24 residual MLPs ($h{=}64$, $d{=}24$) on a synthetic regression target for 200 epochs from seven initialization schemes: Kaiming uniform/normal, Xavier uniform/normal, Gaussian, uniform, and orthogonal. Table~\ref{tab:init-ablation-full} reports pair accuracy before and after training.
 
@@ -28,7 +28,7 @@ Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
 
 Critically, orthogonal initialization provides dynamical isometry at initialization by construction~\citep{saxe2014exact}, yet shows \emph{zero} correct pairs before training, ruling out the hypothesis that near-orthogonal Jacobians alone create the fingerprint. The $\sigma{=}0.02$ small-Gaussian case fails because residual blocks collapse to near-zero contribution; without active per-block contribution there is no Jacobian constraint to enforce.
 
-\subsection{PlainNet Control Experiment}
+\subsection{PlainNet Control Experiment}\label{app:plainnet}
 
 To confirm the fingerprint requires residual training specifically, we train a PlainNet---architecturally identical to ResNet except that skip connections are removed.
 
@@ -135,13 +135,29 @@ To test multi-generational ancestry recovery, we construct a branching tree: roo
 
 \section{Per-Architecture Details}\label{app:architectures}
 
-\subsection{GPT-2 Scaling}
+\subsection{GPT-2 Scaling and Trace Analysis}\label{app:gpt2-details}
 
-Across the GPT-2 family, mean correct-pair score grows with hidden dimension: $d{=}768$ at $\bar{s}(i,i) = 4.18$, $d{=}1024$ at $5.46$, $d{=}1280$ at $6.98$, $d{=}1600$ at $7.77$. The fitted exponent within the GPT-2 family is $\approx 0.85$, consistent with the cross-family $s \propto d^{0.87}$ scaling reported in the main text and exceeding the $\sqrt{d}$ envelope rate; the $\sqrt{d}$ upper bound itself is never violated (observed scores reach $15$--$19\%$ of the bound).
+Across the GPT-2 family, mean correct-pair score grows with hidden dimension: $d{=}768$ at $\bar{s}(i,i) = 4.18$, $d{=}1024$ at $5.46$, $d{=}1280$ at $6.98$, $d{=}1600$ at $7.77$. The fitted exponent within the GPT-2 family is $\approx 0.85$, consistent with the cross-family $s \propto d^{0.87}$ scaling reported in the main text; the $\sqrt{d}$ upper bound itself is never violated (observed scores reach $15$--$19\%$ of the bound).
+
+Figure~\ref{fig:gpt2-trace} shows the trace values $\mathrm{tr}(W_{\mathrm{out}} W_{\mathrm{in}})$ per block across all four GPT-2 variants. Negative traces (blue) constitute 81--92\% of blocks, confirming the diagonal-dominance mechanistic prediction. The early blocks (0--2) consistently show positive traces, likely reflecting the different role of embedding-adjacent layers.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{../../../figures/fig_gpt2_trace_lollipop.pdf}
+\caption{Distribution of trace values $\mathrm{tr}(W_{\mathrm{out}} W_{\mathrm{in}})$ across GPT-2 scales. Blue: negative trace (86\% average); orange: positive trace (14\% average). The strong skew toward negative values confirms the diagonal-dominance mechanistic prediction.}
+\label{fig:gpt2-trace}
+\end{figure*}
 
 \subsection{Alternative Methods Comparison}
 
-Diagonal dominance achieves 100\% pairing accuracy on all four GPT-2 variants. Frobenius norm matching degrades from 67\% (GPT-2) to 47\% (GPT-2-large). Singular-value distance performs at chance (0--8\%). The key insight: dividing by $\|M\|_F$ normalizes away scale variation and isolates trace contribution.
+Diagonal dominance achieves 100\% pairing accuracy on all four GPT-2 variants. Figure~\ref{fig:gpt2-methods} shows the scaling behavior: Frobenius norm matching degrades from 67\% (GPT-2 124M) to 52\% (GPT-2 1.5B), while diagonal dominance remains at 100\%. Singular-value distance performs at chance (0--8\%). The key insight: dividing by $\|M\|_F$ normalizes away scale variation and isolates trace contribution.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\columnwidth]{../../../figures/fig_gpt2_methods_slope.pdf}
+\caption{Block pairing accuracy as model size increases. Diagonal dominance (blue) maintains 100\% accuracy; Frobenius matching (orange) degrades from 67\% to 52\%; random baseline (gray) drops from 8\% to 2\% as the number of blocks increases.}
+\label{fig:gpt2-methods}
+\end{figure}
 
 \subsection{Per-Kind Lineage Baseline Breakdown}\label{app:per-kind-baselines}
 
@@ -317,3 +333,28 @@ The $E$ matrix ($M = -\varepsilon I + E$) provides a commitment scheme: owners c
 \subsection{Compression Auditing}
 
 For original $\mathcal{M}$ and claimed-compressed $\mathcal{M}'$, compute $E$-matrix correlation. Quantization ($r > 0.97$), pruning ($r > 0.75$ at 70\%), and fine-tuning ($r > 0.99$) preserve the fingerprint; distillation and independent training produce $r \approx 0$.
+
+\section{Extended Limitations}\label{app:limitations}
+
+This appendix provides detailed discussion of limitations summarized in the main text.
+
+\textbf{Weight-level, not behavioral.} The signature is a property of weights, not function. Distilled students ($\mathcal{L} \approx 0.08$) are correctly classified as unrelated despite functional similarity. The method cannot detect training-data overlap or knowledge transfer---if two models were trained on the same data from different initializations, they are unrelated by our definition even though they may exhibit similar behavior.
+
+\textbf{Symmetric, no direction.} $\mathcal{L}(A,B) = \mathcal{L}(B,A)$ by construction, so the protocol establishes \emph{whether} two checkpoints share weight lineage but not \emph{which} is the ancestor. Directional attribution requires either training-time metadata (timestamps, version numbers) or comparison against a third candidate. The branching-tree experiment (Section~\ref{app:verification}) shows that comparing against multiple candidates can recover ancestry order: parent scores higher than grandparent, which scores higher than uncle.
+
+\textbf{Real-LLM validation scope.} The 7-pair LLaMA-2 test demonstrates descriptive separation (${\approx}1850\times$) rather than calibrated false-positive rate. With only four real independents, the null distribution is too small for statistical confidence. The remaining gaps:
+\begin{itemize}[nosep]
+\item Tree breadth: all related checkpoints derive from LLaMA-2-7B. Extending to Mistral or Qwen bases with their own community fine-tunes would test generalization across foundation-model families.
+\item Negative set size: a calibrated FPR requires ${\sim}50+$ independents. The per-block branch products fit comfortably in memory at 7B scale, so this is engineering rather than methodological.
+\end{itemize}
+
+\textbf{Adaptive attack coverage.} The gradient-based suppression attack (Section~\ref{sec:adversarial}) is the only adaptive attack tested. The attacker has white-box knowledge of the score function, which is a strong threat model, but alternative attack surfaces remain unexplored:
+\begin{itemize}[nosep]
+\item Git Re-Basin-style re-alignment toward a third model could potentially rotate the $E$ matrices away from their checkpoint-specific directions.
+\item Extended fine-tuning with an explicit $E$-decorrelation term (minimizing $\langle E_{\mathrm{suspect}}, E_{\mathrm{reference}} \rangle$) is a stronger, fingerprint-aware version of the tested attack.
+\item Warm-start distillation (student initialized from teacher weights, then distilled) is by our Section~\ref{sec:background} definition \textsc{Related}, making it a positive control that sharpens the distillation boundary rather than an evasion path.
+\end{itemize}
+
+\textbf{Cross-architecture distillation.} DistilBERT from BERT, or any student with different depth or width than its teacher, is out of scope. The protocol returns \textsc{Incompatible} when architectures differ. Extending to cross-architecture comparison would require either (a) a learned alignment between architectures, or (b) a representation-space comparison that abandons the weight-only constraint.
+
+\textbf{Non-residual architectures.} The fingerprint depends on the skip connection creating a functional constraint toward identity. MLP-Mixer, pure attention without residual connections, or any architecture where $x_{\ell+1} = F_\ell(x_\ell)$ rather than $x_{\ell+1} = x_\ell + F_\ell(x_\ell)$ will not develop diagonal-dominant branch products. The PlainNet control (Section~\ref{sec:exp-exists}) confirms this: architecturally identical to ResNet except for removed skip connections, it achieves only 3\% pair accuracy at the chance baseline.
