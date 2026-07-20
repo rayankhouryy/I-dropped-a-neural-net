@@ -172,7 +172,7 @@ the fraction of the matrix's energy lying along the identity direction, up to a 
 
 The skip connection explains why. It places the learned branch in an identity-centered parameterization: training optimizes a correction around an explicit identity path rather than learning the full transformation from scratch. For stable gradient flow, the block Jacobian $J = I + J_F$ should remain near-orthogonal throughout training, a condition known as dynamical isometry~\citep{pennington2017resurrecting}. If $J \approx I$, then $J_F \approx 0$; for small but nonzero learned corrections, the linear component of $J_F$ tends toward $-\varepsilon I$ with small $\varepsilon$. Because $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$ receive coupled gradients through the branch, this pressure aligns their product with coordinate-preserving directions. Non-residual networks lack this constraint: without the skip connection, there is no functional pressure toward identity, and nothing couples $W_{\mathrm{in}}$ with $W_{\mathrm{out}}$ more than with any other weight matrix.
 
-This is a mechanistic hypothesis, not a theorem, but each of its predictions is testable. It predicts no signal at initialization under any scheme: an ablation over seven initializations finds chance-level pairing before training, including orthogonal initialization, which satisfies dynamical isometry by construction yet has learned nothing~\citep{saxe2014exact} (Appendix~\ref{app:init-ablation}). It predicts no signal without the skip connection: a PlainNet trained to comparable loss develops none (Appendix~\ref{app:plainnet}).
+This is a mechanistic hypothesis, not a theorem, but each of its predictions is testable. It predicts no signal at initialization under any scheme: an ablation over seven initializations finds chance-level pairing before training, including orthogonal initialization, which satisfies dynamical isometry by construction yet has learned nothing~\citep{saxe2014exact} (Table~\ref{tab:init-ablation}). It predicts no signal without the skip connection: a PlainNet trained to comparable loss develops none (Table~\ref{tab:plainnet-control}).
 
 \subsection{Margin Analysis}\label{sec:margin}
 
@@ -219,7 +219,7 @@ Given reference $A$ and suspect $B$, each with $L$ blocks, we form the signature
 \begin{equation}\label{eq:hungarian}
 \pi^* = \arg\max_{\pi \in \mathcal{P}_L} \sum_{i} G_{i,\pi(i)},
 \end{equation}
-via the Hungarian algorithm~\citep{kuhn1955hungarian}. For derived checkpoints that preserve block ordering, $\pi^*$ should be the identity permutation, and recovering it without metadata is evidence that the signatures track block identity rather than position; the Hungarian step matters when ordering cannot be trusted, and its output doubles as a diagnostic: when the verdict is \textsc{Related}, the correspondence matrix shows which blocks were inherited (Appendix~\ref{app:experiments}). Computing the branch products costs $O(Ld^2 h)$, where $h$ is the branch's inner width; the similarity matrix adds $O(L^2 d^2)$ and the assignment a negligible $O(L^3)$.
+via the Hungarian algorithm~\citep{kuhn1955hungarian}. For derived checkpoints that preserve block ordering, $\pi^*$ should be the identity permutation, and recovering it without metadata is evidence that the signatures track block identity rather than position; the Hungarian step matters when ordering cannot be trusted, and its output doubles as a diagnostic: when the verdict is \textsc{Related}, the correspondence matrix shows which blocks were inherited (Appendix~\ref{app:architectures}). Computing the branch products costs $O(Ld^2 h)$, where $h$ is the branch's inner width; the similarity matrix adds $O(L^2 d^2)$ and the assignment a negligible $O(L^3)$.
 
 \subsection{Lineage Score and Verification Test}\label{sec:lineage-score}
 
@@ -245,17 +245,52 @@ with symmetric thresholds $\tau_{\text{upper}} = 3.0$, $\tau_{\text{lower}} = -3
 
 \section{Experiments}\label{sec:experiments}
 
-Our experiments validate the claim ladder of Sections~\ref{sec:diagonal-dominance}--\ref{sec:verification} in order. Section~\ref{sec:exp-exists} tests the three mechanistic predictions of Section~\ref{sec:mechanism}: the fingerprint is absent at initialization under every scheme tested, never develops without skip connections, and emerges within the first few epochs of residual training. Section~\ref{sec:exp-arch} tests the extraction machinery of Section~\ref{sec:pairing} and the margin analysis of Proposition~\ref{prop:margin}, showing that architecture-aware branch products recover block correspondences across 12 architectures spanning language, vision, and speech, with a correct-pair score that grows as $d^{0.87}$ against the $\sqrt{d}$ envelope. Section~\ref{sec:exp-verify} tests the full verification protocol of Section~\ref{sec:lineage-score} at three levels of realism: controlled MLP benchmarks with known ground truth, a CIFAR-10 ResNet-18 benchmark, and real fine-tuned derivatives of LLaMA-2-7B scored against a cross-model null. Section~\ref{sec:exp-baselines} positions the method against weight-space, activation-based, and decision-boundary baselines. Extended ablations are in Appendices~\ref{app:experiments} and~\ref{app:architectures}.
+We validate the claims of Sections~\ref{sec:diagonal-dominance}--\ref{sec:verification} in order: fingerprint existence and learning dynamics (Section~\ref{sec:exp-exists}), cross-architecture generalization (Section~\ref{sec:exp-arch}), lineage verification on controlled and real checkpoints (Section~\ref{sec:exp-verify}), and baseline comparisons (Section~\ref{sec:exp-baselines}). Extended results are in Appendix~\ref{app:architectures}.
 
 \subsection{The Fingerprint Exists and Is Learned}\label{sec:exp-exists}
 
 Section~\ref{sec:mechanism} predicts that diagonal dominance is learned, not an initialization artifact, and requires the skip connection. We test each prediction.
 
-\textbf{Emergence during training.} On a 48-block residual network, block-pairing accuracy is at the chance baseline ($6.25\%$) at epoch 0 and reaches $100\%$ by epoch 5, well before loss plateaus. By epoch 300, the mean correct-pair score exceeds the mean incorrect-pair score by $21\times$ (Appendix~\ref{app:experiments}). The fingerprint develops rapidly in early training.
+\textbf{Emergence during training.} On a 48-block residual network, block-pairing accuracy is at the chance baseline ($6.25\%$) at epoch 0 and reaches $100\%$ by epoch 5, well before loss plateaus. By epoch 300, the mean correct-pair score exceeds the mean incorrect-pair score by $21\times$. The fingerprint develops rapidly in early training.
 
-\textbf{The skip connection is necessary.} We train a PlainNet---architecturally identical to ResNet except that skip connections are removed---to comparable evaluation loss (1.56 vs 1.35). On a 24-block network (chance ${\approx}4.2\%$), ResNet achieves $100\%$ pair accuracy with $100\%$ of correctly paired products exhibiting negative trace; PlainNet achieves only $3\%$ accuracy (at chance) with $47\%$ negative-trace incidence and AUC 0.51 (Appendix~\ref{app:plainnet}). The skip connection is structurally necessary.
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Architecture & Eval Loss & Pair Acc & AUC & Neg Trace \\
+\midrule
+ResNet-24   & 1.35 & $100\%$ & $0.98$ & $100\%$ \\
+PlainNet-24 & 1.56 & $3\%$   & $0.51$ & $47\%$ \\
+\bottomrule
+\end{tabular}
+\caption{ResNet vs.\ PlainNet control. Despite similar evaluation loss, PlainNet achieves only chance-level pair accuracy (3\% vs.\ chance $\approx 4.2\%$), confirming the skip connection is necessary for the fingerprint.}
+\label{tab:plainnet-control}
+\end{table}
 
-\textbf{Not an initialization artifact.} An ablation over seven initialization schemes---Kaiming uniform/normal, Xavier uniform/normal, Gaussian, uniform, and orthogonal---finds $\leq 2.1\%$ pair accuracy before training across all schemes (Appendix~\ref{app:init-ablation}). After training, six schemes reach 94--100\% accuracy. Orthogonal initialization is the critical case: it provides dynamical isometry at initialization by construction~\citep{saxe2014exact}, satisfying the near-identity Jacobian condition of Section~\ref{sec:mechanism}, yet shows \emph{zero} correct pairs before training. This rules out the alternative explanation that near-orthogonal Jacobians alone create the fingerprint; what matters is isometry under training pressure. The seventh case, $\sigma{=}0.02$ Gaussian, fails (13\% trained) because blocks collapse to near-zero contribution, removing the Jacobian constraint.
+\textbf{The skip connection is necessary.} We train a PlainNet (ResNet with skip connections removed) to comparable evaluation loss. Table~\ref{tab:plainnet-control} shows the result: ResNet achieves $100\%$ pair accuracy with $100\%$ negative-trace incidence; PlainNet achieves only $3\%$ (at chance) with AUC 0.51. The skip connection is structurally necessary.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Init scheme & Untrained & Trained & AUC \\
+\midrule
+Orthogonal       & $0.0\%$  & $100\%$ & $0.947$ \\
+Kaiming-normal   & $2.1\%$  & $97\%$  & $0.981$ \\
+Kaiming-uniform  & $2.1\%$  & $98.6\%$ & $0.98$ \\
+Xavier-normal    & $2.1\%$  & $100\%$ & $0.990$ \\
+Xavier-uniform   & $2.1\%$  & $100\%$ & $0.99$ \\
+Uniform          & $2.1\%$  & $93.8\%$ & --- \\
+Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
+\bottomrule
+\end{tabular}
+\caption{Initialization ablation on depth-24 residual MLPs (3 seeds, 200 epochs). All schemes show chance-level accuracy (${\leq}2.1\%$) at initialization, rising to $93$--$100\%$ after training. Orthogonal initialization provides dynamical isometry at init yet shows zero correct pairs before training.}
+\label{tab:init-ablation}
+\end{table}
+
+\textbf{Not an initialization artifact.} Table~\ref{tab:init-ablation} shows pair accuracy before and after training across seven initialization schemes. All show $\leq 2.1\%$ accuracy before training; six reach 93--100\% after. Orthogonal initialization is the critical case: it provides dynamical isometry at initialization by construction~\citep{saxe2014exact}, satisfying the near-identity Jacobian condition of Section~\ref{sec:mechanism}, yet shows zero correct pairs before training. This rules out the hypothesis that near-orthogonal Jacobians alone create the fingerprint; what matters is isometry under training pressure. The $\sigma{=}0.02$ Gaussian case fails because blocks collapse to near-zero contribution, removing the Jacobian constraint.
 
 \subsection{The Fingerprint Generalizes and Scales}\label{sec:exp-arch}
 
@@ -319,7 +354,7 @@ Independent / Distilled & 0.08 & 0.01 & - \\
 
 \textbf{Controlled MLP benchmark.} From 2 trained references we construct 52 pairs: five related-checkpoint kinds (fine-tuning, fine-tuning to a different target, Gaussian noise, magnitude pruning, quantization) against different-seed and distilled negatives; the expanded 159-pair set draws on a 24-checkpoint zoo. Related ($n{=}75$) and unrelated ($n{=}84$) checkpoints separate completely (Figure~\ref{fig:hero}c), giving AUROC$=$1.000 and 75/75 detection at 1\% FPR (Table~\ref{tab:survival}). The margin is not thin at its weakest point: the 85\%-pruned checkpoint ($\mathcal{L}{=}0.58$) still scores $3\times$ above the strongest unrelated one, a distilled student at $\mathcal{L}{=}0.19$.
 
-\textbf{Real architecture, controlled lineage.} On CIFAR-10~\citep{krizhevsky2009cifar} ResNet-18 the same protocol gives AUROC$=$1.000 with TPR@1\%FPR$=$100\%: related checkpoints score $\mathcal{L} \in [0.695, 1.000]$ while the strongest unrelated checkpoint reaches only 0.004, more than $100\times$ below the weakest related one (Appendix~\ref{app:experiments}).
+\textbf{Real architecture, controlled lineage.} On CIFAR-10~\citep{krizhevsky2009cifar} ResNet-18 the same protocol gives AUROC$=$1.000 with TPR@1\%FPR$=$100\%: related checkpoints score $\mathcal{L} \in [0.695, 1.000]$ while the strongest unrelated checkpoint reaches only 0.004, more than $100\times$ below the weakest related one (Appendix~\ref{app:architectures}).
 
 \begin{table}[t]
 \centering\footnotesize
@@ -452,7 +487,7 @@ Training leaves traces. Residual-network optimization couples each block's input
 
 \section*{Reproducibility Statement}
 
-All results in this paper are produced by deterministic scripts with fixed seeds. The 52-pair MLP lineage benchmark (Tables~\ref{tab:survival}, \ref{tab:baselines}) is constructed from $2$ trained reference checkpoints, each paired with $5$ related-checkpoint kinds $\times 6$ derivative seeds $=30$ truly-related pairs (fine-tune, fine-tune to a new target, $\sigma_{\text{rel}} \in [0.01,0.15]$ Gaussian noise, $10$--$85\%$ magnitude pruning, and $16$--$256$-level uniform quantization), plus $16$ different-seed same-task pairs and $6$ distilled-student pairs as unrelated checkpoints. The expanded 159-pair set used in Figure~\ref{fig:lineage-three-panel} draws from the full $24$-checkpoint MLP zoo with the same transformation grid. Exact parameters are listed in Appendix~\ref{app:experiments}; null calibration uses the $50$ different-seed pairs from Appendix~\ref{app:verification}. Real-architecture pairing (Table~\ref{tab:transformer-family}) loads public HuggingFace checkpoints. Code, configuration files, baseline implementations (aligned Frobenius, singular-value distance, weight cosine, CKA, SVCCA, IPGuard regression analogue), the per-pair score JSONs, and the plotting scripts will be released upon acceptance.
+All results in this paper are produced by deterministic scripts with fixed seeds. The 52-pair MLP lineage benchmark (Tables~\ref{tab:survival}, \ref{tab:baselines}) is constructed from $2$ trained reference checkpoints, each paired with $5$ related-checkpoint kinds $\times 6$ derivative seeds $=30$ truly-related pairs (fine-tune, fine-tune to a new target, $\sigma_{\text{rel}} \in [0.01,0.15]$ Gaussian noise, $10$--$85\%$ magnitude pruning, and $16$--$256$-level uniform quantization), plus $16$ different-seed same-task pairs and $6$ distilled-student pairs as unrelated checkpoints. The expanded 159-pair set used in Figure~\ref{fig:lineage-three-panel} draws from the full $24$-checkpoint MLP zoo with the same transformation grid. Exact parameters are listed in Appendix~\ref{app:architectures}; null calibration uses the $50$ different-seed pairs from Appendix~\ref{app:verification}. Real-architecture pairing (Table~\ref{tab:transformer-family}) loads public HuggingFace checkpoints. Code, configuration files, baseline implementations (aligned Frobenius, singular-value distance, weight cosine, CKA, SVCCA, IPGuard regression analogue), the per-pair score JSONs, and the plotting scripts will be released upon acceptance.
 
 \clearpage
 \raggedbottom
