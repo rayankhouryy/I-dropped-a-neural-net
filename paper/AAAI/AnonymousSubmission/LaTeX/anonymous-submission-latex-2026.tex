@@ -249,16 +249,18 @@ We validate the claims of Sections~\ref{sec:diagonal-dominance}--\ref{sec:verifi
 
 \subsection{The Fingerprint Exists and Is Learned}\label{sec:exp-exists}
 
-Section~\ref{sec:mechanism} predicts that diagonal dominance is learned, not an initialization artifact, and requires the skip connection. We test each prediction.
+% NOTE(author): 5.1 now assumes coupling mechanism; §3.1 still says isometry — needs reconciliation later.
+Section~\ref{sec:mechanism} predicts that diagonal dominance is learned, not an initialization artifact, and requires the skip connection. We test each prediction, and then go beyond ``it is learned'' to isolate the causal mechanism: we find that the fingerprint is produced by \emph{gradient coupling} between a block's input and output projections, and that the earlier dynamical-isometry account is falsified by direct measurement.
 
 \textbf{Emergence during training.} On a 48-block residual network, block-pairing accuracy is at the chance baseline ($6.25\%$) at epoch 0 and reaches $100\%$ by epoch 5, well before loss plateaus. By epoch 300, the mean correct-pair score exceeds the mean incorrect-pair score by $21\times$. The fingerprint develops rapidly in early training.
+% TODO(author): chance rate vs block count inconsistent across 5.1 / Table 4 / Table 11 — reconcile.
 
 \begin{table}[t]
 \centering
 \small
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-Architecture & Eval Loss & Pair Acc & AUC & Neg Trace \\
+Architecture & Eval Loss & Pair Acc & AUROC & Neg Trace \\
 \midrule
 ResNet-24   & 1.35 & $100\%$ & $0.98$ & $100\%$ \\
 PlainNet-24 & 1.56 & $3\%$   & $0.51$ & $47\%$ \\
@@ -268,14 +270,14 @@ PlainNet-24 & 1.56 & $3\%$   & $0.51$ & $47\%$ \\
 \label{tab:plainnet-control}
 \end{table}
 
-\textbf{The skip connection is necessary.} We train a PlainNet (ResNet with skip connections removed) to comparable evaluation loss. Table~\ref{tab:plainnet-control} shows the result: ResNet achieves $100\%$ pair accuracy with $100\%$ negative-trace incidence; PlainNet achieves only $3\%$ (at chance) with AUC 0.51. The skip connection is structurally necessary.
+\textbf{The skip connection is necessary.} We train a PlainNet (ResNet with skip connections removed) to comparable evaluation loss. Table~\ref{tab:plainnet-control} shows the result: ResNet achieves $100\%$ pair accuracy with $100\%$ negative-trace incidence; PlainNet achieves only $3\%$ (at chance) with AUROC 0.51. The skip connection is structurally necessary.
 
 \begin{table}[t]
 \centering
 \small
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Init scheme & Untrained & Trained & AUC \\
+Init scheme & Untrained & Trained & AUROC \\
 \midrule
 Orthogonal       & $0.0\%$  & $100\%$ & $0.947$ \\
 Kaiming-normal   & $2.1\%$  & $97\%$  & $0.981$ \\
@@ -290,7 +292,18 @@ Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
 \label{tab:init-ablation}
 \end{table}
 
-\textbf{Not an initialization artifact.} Table~\ref{tab:init-ablation} shows pair accuracy before and after training across seven initialization schemes. All show $\leq 2.1\%$ accuracy before training; six reach 93--100\% after. Orthogonal initialization is the critical case: it provides dynamical isometry at initialization by construction~\citep{saxe2014exact}, satisfying the near-identity Jacobian condition of Section~\ref{sec:mechanism}, yet shows zero correct pairs before training. This rules out the hypothesis that near-orthogonal Jacobians alone create the fingerprint; what matters is isometry under training pressure. The $\sigma{=}0.02$ Gaussian case fails because blocks collapse to near-zero contribution, removing the Jacobian constraint.
+\textbf{Not an initialization artifact.} Table~\ref{tab:init-ablation} shows pair accuracy before and after training across seven initialization schemes. All show $\leq 2.1\%$ accuracy before training; six reach 93--100\% after. Orthogonal initialization is the critical case: it provides dynamical isometry at initialization by construction~\citep{saxe2014exact}, satisfying the near-identity Jacobian condition of Section~\ref{sec:mechanism}, yet shows zero correct pairs before training. Isometry is thus neither necessary nor sufficient for the fingerprint: the one scheme that is isometric at init produces no signal until trained. The $\sigma{=}0.02$ Gaussian case fails for the opposite reason---blocks collapse to near-zero contribution and never develop a branch product to read.
+
+\textbf{Mechanism: gradient coupling, not dynamical isometry.} The isometry account of Section~\ref{sec:mechanism} predicts that training drives block Jacobians toward orthogonality, but direct measurement falsifies this: a trained GPT-2 has normalized Jacobian deviation $\delta_J^{\mathrm{norm}}=0.297$ against $0.025$ at random initialization---$12\times$ \emph{less} orthogonal after training, not more (Appendix~\ref{app:gpt2-details}). The fingerprint arises instead from gradient coupling between $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$, for which three interventions give converging evidence. \emph{Necessity:} shuffling $\nabla W_{\mathrm{out}}$ across blocks before each optimizer step---breaking the per-block coupling while leaving training otherwise intact---cuts the fingerprint by $68\%$ ($s:3.90\!\to\!1.24$) with task accuracy essentially preserved ($54\%\!\to\!47\%$). \emph{Sufficiency:} injecting diagonal structure into $M$ directly, with no backpropagation, builds the fingerprint from scratch ($s:0.08\!\to\!7.57$ over $3000$ steps). \emph{Task-independence:} training on shuffled CIFAR-10 labels ($\sim$$10\%$ test accuracy, at chance) yields a \emph{stronger} fingerprint than normal training ($s=5.88$ vs.\ $3.42$), so gradient flow, not task learning, drives it. Crucially, fingerprint strength is uncorrelated with cumulative weight change ($r(s,\|\Delta W\|)=-0.002$, $n{=}24$), ruling out the trivial ``more gradient flow means a bigger fingerprint'' explanation: the signal is a structural property of the coupled update, not an artifact of update magnitude (Figure~\ref{fig:mechanism-triad}).
+% TODO(author): δ_J^norm falsification detail+figure and Part A (r(g_diag,s)=-0.12, the update-direction-vs-shape refinement) are appendix material (depends on §3.1 reconciliation); relocate when editing beyond Section 5.
+
+\begin{figure}[t]
+\centering
+% TODO(author): export 3-panel mechanism figure from RQ.pdf source
+\includegraphics[width=\columnwidth]{fig_mechanism_triad}
+\caption{The fingerprint is a causal, task-independent product of gradient coupling, not a weight-magnitude artifact. (a) \emph{Necessity}: shuffling $\nabla W_{\mathrm{out}}$ across blocks drops the score from $3.90$ to $1.24$ ($68\%$ reduction) while task accuracy is preserved ($54\%\!\to\!47\%$). (b) \emph{Sufficiency}: direct diagonal injection into $M$ with no backpropagation builds the score from $0.08$ to $7.57$ over $3000$ steps. (c) \emph{Confound killed}: fingerprint strength $s$ is uncorrelated with cumulative weight change $\|\Delta W\|$ ($r=-0.002$).}
+\label{fig:mechanism-triad}
+\end{figure}
 
 \subsection{The Fingerprint Generalizes and Scales}\label{sec:exp-arch}
 
@@ -299,7 +312,7 @@ Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
 \small
 \begin{tabular}{@{}llcc@{}}
 \toprule
-Model & Layers & Pair Acc & AUC \\
+Model & Layers & Pair Acc & AUROC \\
 \midrule
 GPT-2 (124M--1.5B) & 12--48 & $\mathbf{100\%}$ & 1.00 \\
 BERT-base / ViT-B/16 & 12 & $\mathbf{100\%}$ & 0.97--1.00 \\
@@ -316,11 +329,12 @@ ResNet-50/101/152 & 5--35 & $91$--$100\%$ & 0.96--1.00 \\
 
 Table~\ref{tab:transformer-family} reports block-pairing accuracy across 12 architectures spanning language (GPT-2, BERT, LLaMA-2, Mistral, Qwen2.5, DeepSeek-R1), vision (ViT, ResNet), and speech (Whisper): 91--100\% in every family, against random-initialization baselines of at most 9\%. The same extraction transfers across GELU and SwiGLU activations and across causal, bidirectional, and grouped-query attention with no per-family tuning; what changes between families is only the factorization of Table~\ref{tab:factorization}.
 
-\textbf{Factorization must match the architecture.} The branch product carries the signal only when it composes every linear factor of one branch. For ResNet Bottleneck blocks the two-factor product $W_3 W_1$ pairs at chance, while the full $W_3 W_2 W_1$ recovers 91--100\% (Appendix~\ref{app:architectures}); for SwiGLU MLPs, scoring the gate and up paths separately loses accuracy that the joint product $W_{\mathrm{down}} W_{\mathrm{up}}$ restores. Incomplete products do not weaken the fingerprint---they miss it, which is itself informative: the structure lives in the composed map from residual stream to residual stream, not in any individual weight matrix.
+\textbf{Factorization must match the architecture.} The branch product carries the signal only when it composes every linear factor of one branch. For ResNet Bottleneck blocks the two-factor product $W_3 W_1$ pairs at chance, while the full $W_3 W_2 W_1$ recovers 91--100\% (Appendix~\ref{app:architectures}); for SwiGLU MLPs, the gate path alone pairs at $68\%$ (Qwen2.5) and $84\%$ (DeepSeek), both restored to $100\%$ by the joint product $W_{\mathrm{down}} W_{\mathrm{up}}$. Incomplete products do not weaken the fingerprint---they miss it, which is itself informative: the structure lives in the composed map from residual stream to residual stream, not in any individual weight matrix. The signal strength also varies with the branch's role in the residual stream: the ViT V/O attention path, which writes directly into the residual stream, gives the strongest separation in the study ($+4.84$, $100\%$ negative trace).
 
 \textbf{RLHF and behavioral pedigree.} RLHF leaves the fingerprint intact---LLaMA-2 base to chat pairs at 100\%---while the Llama-3-derived DeepSeek distill is correctly rejected (Section~\ref{sec:exp-verify}). Pairing follows the weights, not the training story.
 
-\textbf{Scaling with hidden dimension.} The mean correct-pair score grows from $4.18$ at $d{=}768$ (GPT-2) to $23.83$ at $d{=}5120$ (LLaMA-2-13B), an empirical $d^{0.87}$ that remains within the $\sqrt{d}$ envelope of Proposition~\ref{prop:margin} (observed scores reach 15--19\% of the bound). Corollary~\ref{cor:baseline} places the mismatched baseline at $1/\sqrt{d}$, so separation compounds from both directions as networks widen: the correct-to-incorrect ratio improves from $35\times$ on GPT-2 to $2{,}140\times$ on LLaMA-2-13B, and holds at $1{,}530\times$ across the 256 experts of Mixtral-8x7B. Scale works for the verifier.
+\textbf{Scaling with hidden dimension.} Proposition~\ref{prop:margin} gives $\sqrt{d}$ as a theoretical \emph{upper bound} on the correct-pair score. Across the GPT-2 family ($d\in[768,1600]$) the mean correct-pair score rises from $4.18$ to $7.77$, an empirical power law $d^{0.87}$ (Appendix~\ref{app:gpt2-details}). The exponent exceeds $\tfrac12$, so the score grows \emph{faster} than the $\sqrt{d}$ bound's rate while still sitting well beneath the bound itself---reaching only 15--19\% of it over this range. The two are therefore consistent only as bound-and-observation over the measured window, not as a matched rate; a clean derivation of the exponent remains open. Corollary~\ref{cor:baseline} places the mismatched baseline at $1/\sqrt{d}$, so separation still compounds from both directions as networks widen: the correct-to-incorrect ratio is $35\times$ on GPT-2 and improves with $d$. Scale works for the verifier.
+% TODO(author): reconcile — draft cited d^0.87 up to d=5120 (LLaMA-2-13B, s=23.83, 2140x ratio) and Mixtral-8x7B 1530x, but RQ.pdf lists LLaMA-2-13B and Mixtral-8x7B under Pending Experiments (not run). Measured fit is the GPT-2 family d in [768,1600]; restore the larger-d numbers once those runs land.
 
 \begin{figure*}[t]
 \centering
@@ -352,9 +366,11 @@ Independent / Distilled & 0.08 & 0.01 & - \\
 \label{tab:survival}
 \end{table}
 
-\textbf{Controlled MLP benchmark.} From 2 trained references we construct 52 pairs: five related-checkpoint kinds (fine-tuning, fine-tuning to a different target, Gaussian noise, magnitude pruning, quantization) against different-seed and distilled negatives; the expanded 159-pair set draws on a 24-checkpoint zoo. Related ($n{=}75$) and unrelated ($n{=}84$) checkpoints separate completely (Figure~\ref{fig:hero}c), giving AUROC$=$1.000 and 75/75 detection at 1\% FPR (Table~\ref{tab:survival}). The margin is not thin at its weakest point: the 85\%-pruned checkpoint ($\mathcal{L}{=}0.58$) still scores $3\times$ above the strongest unrelated one, a distilled student at $\mathcal{L}{=}0.19$.
+\textbf{Controlled MLP benchmark.} From 2 trained references we construct 52 pairs: five related-checkpoint kinds (fine-tuning, fine-tuning to a different target, Gaussian noise, magnitude pruning, quantization) against different-seed and distilled negatives; the expanded 159-pair set draws on a 24-checkpoint zoo. Related ($n{=}75$) and unrelated ($n{=}84$) checkpoints separate completely---the two populations do not overlap (Figure~\ref{fig:hero}c). A saturated AUROC invites the objection that the benchmark is simply too easy, so we ran the robustness audit a reviewer would ask for. Complete separation at these sample sizes gives Clopper--Pearson bounds of TPR $\geq 0.961$ and FPR $\leq 0.035$, and the separation is not thin at its weakest point: the lowest-scoring descendant (an aggressively pruned checkpoint, $\mathcal{L}{=}0.452$) still sits $4.6\times$ above the highest-scoring non-descendant (a distilled student, $\mathcal{L}{=}0.098$). The full per-attack score ranges and confidence intervals confirm the margin holds within every transformation family, and the score degrades gracefully with transformation intensity rather than cliff-edging (Figure~\ref{fig:lineage-three-panel}b).
+% TODO(author): prune-min differs across benchmarks — tab:survival reports Min L=0.58 (RQ.pdf p.21) while the AUROC deep-dive reports min-prune 0.452 (RQ.pdf p.20); reconcile.
+% TODO(author): full per-attack CI table (7 rows, RQ.pdf p.20: finetune_same .996[.980,.998], quantize .995[.976,1.000], noise .993[.954,1.000], finetune_diff .944[.912,.956], prune .810[.452,.999], distilled .086[.078,.098], indep_same_task .084[.076,.093]) is appendix material — add to app:architectures when editing beyond Section 5.
 
-\textbf{Real architecture, controlled lineage.} On CIFAR-10~\citep{krizhevsky2009cifar} ResNet-18 the same protocol gives AUROC$=$1.000 with TPR@1\%FPR$=$100\%: related checkpoints score $\mathcal{L} \in [0.695, 1.000]$ while the strongest unrelated checkpoint reaches only 0.004, more than $100\times$ below the weakest related one (Appendix~\ref{app:architectures}).
+\textbf{Real architecture, controlled lineage.} On CIFAR-10~\citep{krizhevsky2009cifar} ResNet-18 the same protocol gives AUROC$=$1.000 with TPR@1\%FPR$=$100\%. Here the separation is starkest: the weakest descendant scores $\mathcal{L}{=}0.6947$ while the strongest non-descendant reaches only $0.0041$, a $172\times$ gap. Because separation is complete, the bootstrap $95\%$ AUROC confidence interval is degenerate at $[1.000, 1.000]$ over $5000$ resamples---the perfect score is not an artifact of a single lucky split (Appendix~\ref{app:architectures}).
 
 \begin{table}[t]
 \centering\footnotesize
@@ -380,7 +396,7 @@ DeepSeek-Distill-8B & L3.1 wts & $4\mathrm{e}{-}4$ & $0.162$ & UNR. \\
 \label{tab:real-llm}
 \end{table}
 
-\textbf{Public models, real lineage.} With LLaMA-2-7B as reference, all three real fine-tuned variants are flagged: the RLHF chat model ($\mathcal{L}=0.995$), the Vicuna instruction fine-tune ($\mathcal{L}=0.996$), and CodeLlama ($\mathcal{L}=0.336$), whose heavy code-specialized continued pretraining makes it the weakest relative---yet it remains ${\sim}700\times$ above the null. The four independently trained negatives score $\mathcal{L}\in[3.5,4.8]\times10^{-4}$, defining a real cross-model null ($\mu_0=4.2\times10^{-4}$). OpenLLaMA is the decisive case among them: it reproduces LLaMA-2's exact shape ($d{=}4096$, $L{=}32$, $d_{\mathrm{ff}}{=}11008$) from scratch, so nothing in its configuration distinguishes it from a true descendant---the \textsc{Unrelated} verdict can only come from the weights. Mean separation is ${\approx}1850\times$, against $6\times$ for weight cosine; aligned Frobenius and singular-value distance underperform substantially on this set (AUROC$=$0.667). With four independents this is a descriptive separation check rather than a calibrated false-positive rate (Appendix~\ref{app:real-llm}).
+\textbf{Public models, real lineage.} With LLaMA-2-7B as reference, all three real fine-tuned variants are flagged: the RLHF chat model ($\mathcal{L}=0.995$), the Vicuna instruction fine-tune ($\mathcal{L}=0.996$), and CodeLlama ($\mathcal{L}=0.336$), whose heavy code-specialized continued pretraining makes it the weakest relative---yet it remains ${\sim}700\times$ above the null. The four independently trained negatives score $\mathcal{L}\in[3.5,4.8]\times10^{-4}$, defining a real cross-model null ($\mu_0=4.2\times10^{-4}$). OpenLLaMA is the decisive case among them: it reproduces LLaMA-2's exact shape ($d{=}4096$, $L{=}32$, $d_{\mathrm{ff}}{=}11008$) from scratch, so nothing in its configuration distinguishes it from a true descendant---the \textsc{Unrelated} verdict can only come from the weights. Mean separation is ${\approx}1850\times$, against $6\times$ for weight cosine; aligned Frobenius and singular-value distance underperform substantially on this set (AUROC$=$0.667). Because all related checkpoints here derive from a single base tree (LLaMA-2-7B) and only $n{=}4$ real independents anchor the null, we read this as a descriptive separation check ($\approx$$1850\times$ margin), not a calibrated false-positive rate (Appendix~\ref{app:real-llm}).
 
 \textbf{Beyond binary verdicts.} On a branching tree ($C_1 \to \{C_2, C_3\}$, $C_2 \to C_4$, $C_3 \to C_5$), $\mathcal{L}$ ranks $C_4$'s relatives in genealogical order: parent (0.96) $>$ grandparent (0.91) $>$ uncle (0.87) $>$ cousin (0.85) $\gg$ independents (${\approx}0.08$) (Appendix~\ref{app:verification}). The score does not merely cross a threshold; it decays with distance from the ancestor---which is what ancestry recovery beyond a binary verdict would require.
 
@@ -413,13 +429,13 @@ IPGuard~\citep{cao2021ipguard} (regression analogue) & Decision-boundary & \xmar
 \label{tab:baselines}
 \end{table*}
 
-We compare against representation-similarity methods (CKA~\citep{kornblith2019similarity}, SVCCA~\citep{raghu2017svcca}), weight-space baselines (aligned Frobenius, singular-value distance, weight cosine), and a decision-boundary baseline (IPGuard~\citep{cao2021ipguard}) on the 52-pair MLP benchmark (Table~\ref{tab:baselines}).
+We compare against representation-similarity methods (CKA~\citep{kornblith2019similarity}, SVCCA~\citep{raghu2017svcca}), weight-space baselines (aligned Frobenius, singular-value distance, weight cosine), and a decision-boundary baseline (IPGuard~\citep{cao2021ipguard}) on the 52-pair MLP benchmark (Table~\ref{tab:baselines}). The thesis of this section is simple: on an easy benchmark every strong method ties, so aggregate AUROC cannot adjudicate between them. Methods diverge in two regimes, and that is where our contribution shows.
 
-\textbf{The saturated benchmark.} Four data-free weight-space methods reach AUROC$=$1.000, so the headline number cannot adjudicate between them. The Gap-$Z$ column and per-kind breakdown (Appendix~\ref{app:per-kind-baselines}) carry the real signal: IPGuard ranks related checkpoints \emph{below} distilled ones (Gap-$Z=-3.5$); CKA's Gap-$Z=+8.6$ is large in $\sigma$ units only because $\sigma_{\text{distill}}$ is tiny ($0.014$), while the raw ratio ($0.999/0.827 \approx 1.21\times$) is fragile.
+\textbf{Regime 1: real 7B weights.} On the LLaMA-2 family of Section~\ref{sec:exp-verify}, diagonal dominance separates related from unrelated by ${\approx}1850\times$ in mean score, against $6\times$ for weight cosine; aligned Frobenius and singular-value distance do not separate this set at all (AUROC$=$0.667 each, above chance but far from the saturation they reach on synthetic pairs). The synthetic tie does not survive contact with real foundation-model weights.
 
-\textbf{The contribution claim.} We do not claim that diagonal dominance beats weight cosine on aggregate AUROC. The contribution is that the residual-product signature (i) yields per-block correspondence as a by-product, (ii) admits the closed-form margin analysis of Proposition~\ref{prop:margin}, and (iii) is interpretable in terms of trained residual geometry. On the real 7B weights of Section~\ref{sec:exp-verify}, the $1850\times$-vs-$6\times$ margin gap matters: aligned Frobenius and SV-distance underperform substantially on this real-model set (AUROC$=$0.667, above chance but far from the saturation reached on synthetic benchmarks).
+\textbf{Regime 2: grafts and merges.} On layer grafts and linear merges (Appendix~\ref{app:harder-bench}, 40 pairs), singular-value distance collapses on merges (AUROC$=$0.448), CKA drops to ${\approx}0.80$, and IPGuard reaches AUROC$=$0.05 on grafts---its \emph{negative} Spearman correlation means it ranks higher-overlap suspects as \emph{less} similar, a systematic inversion where its decision-boundary assumptions break. Diagonal dominance instead holds a monotone Spearman $\rho \approx 0.96$ with the reference fraction on both regimes: it does not merely clear a threshold, it tracks how much of the reference is actually present.
 
-\textbf{The harder regime.} On layer grafts and linear merges (Appendix~\ref{app:harder-bench}, 40 pairs), diagonal dominance, aligned Frobenius, and weight cosine remain at or near AUROC$=$1.000. Singular-value distance underperforms on merges ($0.448$); CKA drops to ${\approx}0.80$; IPGuard achieves AUROC$=$0.05 on grafts---below chance, indicating systematic misclassification where its decision-boundary assumptions break down. The diagonal-dominance score retains Spearman $\rho \approx 0.96$ with the reference fraction, supporting the interpretability claim: it tracks partial overlap monotonically, not merely crossing a threshold.
+\textbf{Where Gap-$Z$ does and does not favor us.} We do not win on the Gap-$Z$ column of Table~\ref{tab:baselines}: weight cosine ($+76.3$) and aligned Frobenius ($+72.0$) both post larger standardized distillation-rejection gaps than ours ($+53.0$), so that column is not our argument. We win on three axes it does not capture: per-block localization (only diagonal dominance and aligned Frobenius recover block correspondence), a mechanistic account of \emph{why} proximity implies lineage (Proposition~\ref{prop:margin} and Section~\ref{sec:exp-exists}), and robustness to distillation. The behavioral baselines fail exactly the last: CKA rates distilled students at $0.83$ and SVCCA at $0.89$, only $1.2\times$ and $1.13\times$ below the fine-tuned related checkpoints they should tower over ($0.999$ and $1.000$; Appendix~\ref{app:per-kind-baselines}). Their high aggregate AUROC survives only because the benchmark's negatives are dominated by independents rather than distilled students; reweighting toward distillation would collapse it. IPGuard is worse still, ranking related checkpoints \emph{below} distilled ones (Gap-$Z=-3.5$).
 
 \section{Robustness and Boundary Cases}\label{sec:boundaries}
 
