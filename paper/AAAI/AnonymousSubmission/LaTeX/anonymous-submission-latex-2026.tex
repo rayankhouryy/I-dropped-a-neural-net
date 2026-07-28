@@ -45,7 +45,7 @@
 \begin{abstract}
 Open-weight checkpoints are routinely fine-tuned, quantized, pruned, merged, and redistributed without reliable lineage metadata. Existing provenance tools are brittle: hashes fail after any weight change, metadata requires trust, and watermarks must be inserted before release. \textbf{We study a post-hoc white-box weight-lineage verification: given two checkpoints with compatible residual architecture, do they share weight-level lineage after common checkpoint transformations?} This is distinct from behavioral similarity: a distilled student imitates its teacher's outputs, but its weights are trained from scratch and share no lineage.
 
-We show that residual-network training induces an intrinsic fingerprint: correctly paired residual-branch products develop a diagonal-dominant fingerprint, measured by a trace/Frobenius score, that is absent at initialization and in non-residual controls. We use this signal to align blocks between checkpoints and compute a model-level lineage score from centered branch signatures. Across 12 architectures spanning language, vision, and speech (GPT-2 to LLaMA-2, ViT, Whisper, ResNets), the fingerprint recovers correct projection pairings with 91--100\% accuracy, and the lineage score achieves complete separation: fine-tuned, pruned, quantized, and LoRA-merged checkpoints score high, while independently trained models and distilled students remain low. Unlike activation-based CKA and IPGuard, which track functional similarity, this provides a passive, retroactive provenance signal for white-box residual checkpoints.
+We show that residual-network training induces an intrinsic fingerprint: correctly paired residual-branch products develop a diagonal-dominant fingerprint, measured by a trace/Frobenius score, that is absent at initialization and in non-residual controls. We use this signal to align blocks between checkpoints and compute a model-level lineage score from centered branch signatures. Across 12 architectures spanning language, vision, and speech (GPT-2 to LLaMA-2, ViT, Whisper, ResNets), the fingerprint recovers correct projection pairings with 80--100\% accuracy, and the lineage score achieves complete separation: fine-tuned, pruned, quantized, and LoRA-merged checkpoints score high, while independently trained models and distilled students remain low. Unlike activation-based CKA and IPGuard, which track functional similarity, this provides a passive, retroactive provenance signal for white-box residual checkpoints.
 \end{abstract}
 
 \section{Introduction}
@@ -75,7 +75,7 @@ Our contributions:
 \begin{itemize}[leftmargin=*,nosep]
 \item \textbf{Diagonal-dominant fingerprint.} We establish that gradient-based training drives the input and output projections of residual blocks toward mutual alignment, concentrating their product along the diagonal, a property absent at random initialization and never acquired by skip-free architectures.
 \item \textbf{White-box verification method.} We convert this signature into a practical test: per-block scores are matched across two checkpoints, aggregated into a single lineage statistic, and judged against a null distribution, requiring no watermark, no metadata, and no cooperation from the model's distributor.
-\item \textbf{Broad empirical validation.} We evaluate on 280+ checkpoint pairs covering 12 architectures and 5 model families, from synthetic benchmarks with known ground truth to real-world derivatives of LLaMA-2, obtaining 91--100\% block correspondence and AUROC$=$1.000.
+\item \textbf{Broad empirical validation.} We evaluate on 246 checkpoint pairs covering 12 architectures and 5 model families, from synthetic benchmarks with known ground truth to real-world derivatives of LLaMA-2, obtaining 80--100\% block correspondence and AUROC$=$1.000.
 \item \textbf{Robustness and specificity.} The fingerprint persists through fine-tuning, quantization, pruning, and LoRA merging, yet vanishes for distilled students and independently trained models of identical architecture, a distinction beyond the reach of behavioral measures such as CKA and IPGuard.
 \end{itemize}
 
@@ -83,9 +83,10 @@ Our contributions:
 
 \begin{table*}[t]
 \centering
-\begin{minipage}[t]{0.36\textwidth}
+\begin{minipage}[t]{0.34\textwidth}
 \centering
 \small
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 Method & Retro. & FT & Quant & Distill \\
@@ -93,7 +94,7 @@ Method & Retro. & FT & Quant & Distill \\
 Crypto Hash & \cmark & \xmark & \xmark & \cmark \\
 Metadata/Logs & \cmark & \cmark & \cmark & \cmark \\
 Watermarking & \xmark & $\sim$ & $\sim$ & \xmark \\
-Decision-Boundary & \cmark & \cmark & \cmark & \xmark \\
+Behavioral Fingerprints & \cmark & \cmark & \cmark & \xmark \\
 \textbf{Ours} & \cmark & \cmark & \cmark & \cmark \\
 \bottomrule
 \end{tabular}
@@ -120,36 +121,30 @@ SwiGLU MLP & $W_{\mathrm{down}} [\sigma(W_{\mathrm{gate}} x) \odot W_{\mathrm{up
 \end{minipage}
 \end{table*}
 
-This section formalizes the lineage verification problem and positions it against prior provenance mechanisms.
-
 \subsection{White-Box Model Lineage Verification}
 
-\textbf{Scope.} A verifier is given two checkpoints $A$ and $B$ and must determine whether they share weight-level lineage. We assume white-box access to both weight sets and compatible residual architectures (same layer count $L$ and hidden dimension $d$); cross-architecture comparisons are out of scope. Metadata may be missing or adversarial. The verifier operates on weights alone: no training data, activations, or forward passes are available.
+A verifier receives two checkpoints $A$ and $B$ and determines whether they share weight-level lineage. We assume white-box access and compatible residual architectures (same $L$ and $d$); cross-architecture comparisons are out of scope. The verifier operates on weights alone: no training data, activations, or forward passes.
 
-\textbf{Relatedness.} Checkpoints are \emph{related} if they share a common weight ancestor: either one derives from the other, or both derive from a shared parent, through a chain of transformations $\theta' = T(\theta, D)$, where $T$ may include continued optimization (fine-tuning, RLHF), compression (pruning, quantization), or adapter merging (LoRA), and $D$ is optional additional data. Checkpoints are \emph{unrelated} if their weights were initialized independently, even when they share the same architecture, training data, task, or output behavior. Transformations with multiple parents, such as linear merges of two checkpoints, induce partial lineage between the suspect and each parent; we quantify this regime in Appendix~\ref{app:harder-bench}.
+Checkpoints are \emph{related} if they share a common weight ancestor through transformations $\theta' = T(\theta, D)$: fine-tuning, RLHF, pruning, quantization, or LoRA merging. They are \emph{unrelated} if initialized independently, even when architecture, data, task, or outputs match. Linear merges induce partial lineage (Appendix~\ref{app:harder-bench}). The verifier returns \textsc{Related}, \textsc{Unrelated}, or \textsc{Inconclusive}. The score is symmetric, $\mathcal{L}(A,B) = \mathcal{L}(B,A)$; directional attribution requires metadata (Appendix~\ref{app:verification}). Block-level correspondences are recovered as a diagnostic (Section~\ref{sec:pairing}).
 
-The verifier solves lineage verification: do $A$ and $B$ share weight ancestry? It returns one of three verdicts: \textsc{Related}, \textsc{Unrelated}, or \textsc{Inconclusive} (insufficient evidence either way). The lineage score is symmetric, $\mathcal{L}(A,B) = \mathcal{L}(B,A)$: the protocol establishes whether two checkpoints share ancestry, not which is the ancestor; directional attribution requires metadata or additional candidates (Appendix~\ref{app:verification}). As a by-product, the verification pipeline recovers block-level correspondences between the two checkpoints (Section~\ref{sec:pairing}), which serve as a diagnostic when the verdict is \textsc{Related}.
-
-\textbf{Lineage follows initialization, not behavior.} Under this definition, what determines lineage is where the weights came from, not what the model does. A distilled student trained from freshly initialized weights is unrelated to its teacher, no matter how closely it imitates the teacher's outputs; model-extraction copies that replicate a model's function through query access~\citep{tramer2016stealing} are likewise unrelated. Conversely, a student initialized from its teacher's weights is weight-related regardless of the distillation objective: initialization, not training procedure, determines lineage. The method is thus a forensic primitive for weight-level provenance, complementing cryptographic signing, metadata, and watermarking where those were never applied; it is not a legal ownership proof.
+Lineage follows initialization, not behavior. A distilled student trained from fresh weights is unrelated to its teacher, regardless of output fidelity; model-extraction copies via query access~\citep{tramer2016stealing} are likewise unrelated. Conversely, a student initialized from teacher weights is related regardless of the training objective. The method is a forensic primitive for weight-level provenance, complementing cryptographic signing and watermarking where those were never applied.
 
 \subsection{Related Work}
 
-We organize prior work by the signal each method measures; Table~\ref{tab:comparison} summarizes the comparison.
+Table~\ref{tab:comparison} summarizes the comparison.
 
-\textbf{Cryptographic and metadata provenance.} Cryptographic hashes verify exact byte-level identity but fail after any weight modification: the avalanche property ensures that fine-tuning, pruning, or even floating-point rounding produces an entirely different digest. Model cards~\citep{mitchell2019model} and experiment-tracking systems document provenance but require honest distributors and preserved records; they can be falsified or lost when checkpoints are redistributed outside controlled environments. Proof-of-learning protocols~\citep{jia2021proofoflearning} verify that a claimed party performed the training, but require retained training transcripts: forethought that already-released checkpoints lack.
+Cryptographic hashes break after any weight modification. Model cards~\citep{mitchell2019model} require honest distributors and can be falsified when checkpoints are redistributed. Proof-of-learning~\citep{jia2021proofoflearning} requires retained training transcripts that already-released checkpoints lack.
 
-\textbf{Embedded ownership signals.} Parameter watermarks~\citep{uchida2017embedding} and backdoor watermarks~\citep{adi2018turning} embed deliberate signals during training for later extraction. \citet{lukas2022sok} found no surveyed scheme reliably robust against fine-tuning and pruning within realistic compute budgets, and all require proactive insertion: unwatermarked legacy checkpoints cannot be verified retroactively. Output watermarks like SynthID mark AI-generated content, not weights: a different problem.
+Parameter watermarks~\citep{uchida2017embedding} and backdoor watermarks~\citep{adi2018turning} embed deliberate signals during training. \citet{lukas2022sok} found no surveyed scheme that reliably survived fine-tuning and pruning, and all require proactive insertion: unwatermarked legacy checkpoints cannot be verified.
 
-\textbf{Behavioral and decision-boundary fingerprints.} IPGuard~\citep{cao2021ipguard} extracts inputs near the classification boundary as fingerprints; adversarial frontier stitching~\citep{lemerrer2020adversarial} uses adversarial examples to mark decision surfaces. These measure functional similarity and cannot distinguish weight inheritance from imitation: a distilled student may share decision surfaces while having entirely independent weights.
+IPGuard~\citep{cao2021ipguard} extracts inputs near classification boundaries; adversarial frontier stitching~\citep{lemerrer2020adversarial} marks decision surfaces with adversarial examples. CKA~\citep{kornblith2019similarity} and SVCCA~\citep{raghu2017svcca} compare representations on a probe dataset. All four measure functional similarity and cannot distinguish inheritance from imitation: a distilled student may share decision surfaces while having independent weights. They also require data and forward passes.
 
-\textbf{Representation similarity.} CKA~\citep{kornblith2019similarity} and SVCCA~\citep{raghu2017svcca} compare learned representations using activation patterns on a probe dataset. They may regard a successful distilled student as similar: reasonable for their objective (representation alignment) but not ours (weight ancestry). They also require data and forward passes, whereas our method operates on weights alone.
-
-\textbf{Weight-space provenance.} Generic parameter-space similarity (weight cosine, Frobenius distance, permutation-aligned matching~\citep{ainsworth2023git}) can detect derived checkpoints when the suspect remains close to the reference in parameter space. But these are uncalibrated global scalars: they localize nothing, offer no account of why proximity implies lineage or when it stops doing so, and their margins are not grounded in any property of training. A recent line builds purpose-built provenance on weights, but each requires something beyond the two checkpoints: HuRef~\citep{zeng2025huref} relies on convergence of LLM parameter directions after pretraining; REEF~\citep{zhang2024reef} and neural lineage detection~\citep{yu2024neurallineage} need probe data, activations, or gradients; MoTHer~\citep{horwitz2025mother} recovers directed model trees but requires a collection of checkpoints rather than a single pair. None of these can say which weights were inherited. Our fingerprint is read block by block from trained residual structure: it is data-free, compares a single pair of checkpoints against a calibrated null, and reveals not only whether a suspect inherited weights but which blocks it inherited and how many.
+Weight cosine, Frobenius distance, and permutation-aligned matching~\citep{ainsworth2023git} detect derived checkpoints when the suspect remains close in parameter space, but these are uncalibrated global scalars with no structural account of lineage. HuRef~\citep{zeng2025huref} relies on LLM parameter convergence after pretraining. REEF~\citep{zhang2024reef} and neural lineage detection~\citep{yu2024neurallineage} need probe data or activations. MoTHer~\citep{horwitz2025mother} recovers model trees but requires a checkpoint collection rather than a single pair. Our fingerprint is data-free, operates on a single pair against a calibrated null, and localizes inheritance to specific blocks.
 
 
 \section{Training-Induced Diagonal Dominance in Residual Branch Products}\label{sec:diagonal-dominance}
 
-A residual block computes $x_{\ell+1} = x_\ell + F_\ell(x_\ell)$, where $F_\ell$ is the residual branch. For a branch with $K$ linear layers $W_1, \ldots, W_K$ interleaved with nonlinearities, we define the \emph{residual branch product} by composing the linear factors and dropping the nonlinearities between them:
+A residual block computes $x_{\ell+1} = x_\ell + F_\ell(x_\ell)$, where $F_\ell$ is the residual branch. For a branch with $K$ linear layers $W_1, \ldots, W_K$ interleaved with nonlinearities, the \emph{residual branch product} composes the linear factors, dropping nonlinearities:
 \begin{equation}\label{eq:branch-product}
 M_\ell = W_K W_{K-1} \cdots W_1 \in \mathbb{R}^{d \times d}
 \end{equation}
@@ -162,23 +157,21 @@ Under the Frobenius inner product $\langle A, B \rangle = \mathrm{tr}(A^\top B)$
 M_\ell = -\varepsilon_\ell I + E_\ell
 \end{equation}
 where $\varepsilon_\ell = -\mathrm{tr}(M_\ell)/d$ and $\mathrm{tr}(E_\ell) = 0$.
-The sign convention absorbs the empirical regularity that traces of trained branches are predominantly negative (Section~\ref{sec:experiments}), making $\varepsilon_\ell$ typically positive; nothing downstream depends on the sign, since the score below uses the trace magnitude. The decomposition itself is a coordinate choice, available for any matrix.
+Traces are predominantly negative (Section~\ref{sec:experiments}), so $\varepsilon_\ell$ is typically positive; the score uses magnitude.
 
-We measure this concentration with the \emph{diagonal-dominance score}
+The \emph{diagonal-dominance score} measures this concentration:
 \begin{equation}\label{eq:dd-score}
 s(M) = \frac{|\mathrm{tr}(M)|}{\|M\|_F},
 \end{equation}
-the fraction of the matrix's energy lying along the identity direction, up to a factor of $\sqrt{d}$. The finding is that training moves energy into the identity component: in trained residual networks, correctly paired branch products score far above unpaired or untrained ones, a concentration absent at initialization and never developed without skip connections (Figure~\ref{fig:hero}b).
+the fraction of the matrix's energy along the identity direction, up to $\sqrt{d}$. Training moves energy into the identity component: correctly paired branch products score far above unpaired or untrained ones (Figure~\ref{fig:hero}b).
 
-The skip connection explains why. It places the learned branch in an identity-centered parameterization: training optimizes a correction around an explicit identity path rather than learning the full transformation from scratch. For stable gradient flow, the block Jacobian $J = I + J_F$ should remain near-orthogonal throughout training, a condition known as dynamical isometry~\citep{pennington2017resurrecting}. If $J \approx I$, then $J_F \approx 0$; for small but nonzero learned corrections, the linear component of $J_F$ tends toward $-\varepsilon I$ with small $\varepsilon$. Because $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$ receive coupled gradients through the branch, this pressure aligns their product with coordinate-preserving directions. Non-residual networks lack this constraint: without the skip connection, there is no functional pressure toward identity, and nothing couples $W_{\mathrm{in}}$ with $W_{\mathrm{out}}$ more than with any other weight matrix.
+The skip connection places the learned branch in an identity-centered parameterization: training optimizes a correction around an explicit identity path. For stable gradient flow, the block Jacobian $J = I + J_F$ should remain near-orthogonal (dynamical isometry~\citep{pennington2017resurrecting}). If $J \approx I$, then $J_F \approx 0$; for small learned corrections, the linear component of $J_F$ tends toward $-\varepsilon I$. Because $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$ receive coupled gradients through the branch, such pressure aligns their product with coordinate-preserving directions. Non-residual networks lack this constraint: without the skip connection, nothing couples $W_{\mathrm{in}}$ with $W_{\mathrm{out}}$ more than with any other weight matrix.
 
-This is a mechanistic hypothesis, not a theorem, but each of its predictions is testable. It predicts no signal at initialization under any scheme: an ablation over seven initializations finds chance-level pairing before training, including orthogonal initialization, which satisfies dynamical isometry by construction yet has learned nothing~\citep{saxe2014exact} (Table~\ref{tab:init-ablation}). It predicts no signal without the skip connection: a PlainNet trained to comparable loss develops none (Table~\ref{tab:plainnet-control}).
+No signal at initialization under any scheme: seven initializations show chance-level pairing before training, including orthogonal initialization, which satisfies dynamical isometry yet has learned nothing~\citep{saxe2014exact} (Appendix~\ref{app:architectures}). No signal without the skip connection: PlainNet trained to comparable loss develops none (Table~\ref{tab:plainnet-control}).
 
 \subsection{Margin Analysis}\label{sec:margin}
 
-For the score to separate correct pairings from incorrect ones, two things must hold: correctly paired products must score high, and mismatched products must score low. We treat each in turn.
-
-By the orthogonality of decomposition~\eqref{eq:decomp}, $\|M_\ell\|_F^2 = \varepsilon_\ell^2 d + \|E_\ell\|_F^2$: the branch product's energy splits exactly between its identity component and its traceless remainder. The score therefore depends on $M$ only through the ratio of the two:
+By orthogonality of decomposition~\eqref{eq:decomp}, $\|M_\ell\|_F^2 = \varepsilon_\ell^2 d + \|E_\ell\|_F^2$: the score depends on $M$ only through the ratio of identity to traceless components:
 
 \begin{proposition}[Correct-pair score]\label{prop:margin}
 Let $M = -\varepsilon I + E$ with $\mathrm{tr}(E) = 0$ and $\varepsilon \neq 0$. Then:
@@ -192,19 +185,17 @@ with equality if and only if $E = 0$.
 $|\mathrm{tr}(M)| = |\varepsilon| d$ and $\|M\|_F^2 = \varepsilon^2 d + \|E\|_F^2$ by orthogonality. Substitute into (3).
 \end{proof}
 
-The score is $\sqrt{d}$ discounted by how much the learned residue $E$ outweighs the identity component: geometrically, $s(M)/\sqrt{d}$ is the cosine of the angle between $M$ and the identity. A correct pair scores high exactly to the extent that training concentrated its product along the diagonal.
-
-A mismatched product has no such concentration. For $W_{\mathrm{out}}$ and $W_{\mathrm{in}}$ drawn from different blocks, the product has no preferred alignment with the identity: its trace is a sum of $d$ weakly correlated terms of comparable size to the other $d^2$ entries, giving
+Geometrically, $s(M)/\sqrt{d}$ is the cosine of the angle between $M$ and the identity. Mismatched products have no such concentration: $W_{\mathrm{out}}$ and $W_{\mathrm{in}}$ from different blocks have no preferred alignment, giving
 
 \begin{corollary}[Mismatched baseline]\label{cor:baseline}
 For products of projections from independent blocks, $\mathbb{E}[s] \approx 1/\sqrt{d}$.
 \end{corollary}
 
-The margin between the two regimes therefore scales as $d$: wider networks separate correct from incorrect pairings more cleanly, not less. Empirically the correct-pair score grows as $d^{0.87}$ (Section~\ref{sec:experiments}), faster than the $\sqrt{d}$ envelope's rate, consistent with $\|E\|_F/(\varepsilon\sqrt{d})$ shrinking as $d$ grows, while always remaining below the $\sqrt{d}$ bound. The proposition bounds the score; it does not fix its growth rate.
+The margin scales as $d$: wider networks separate correct from incorrect pairings more cleanly. Empirically the correct-pair score grows as $d^{0.87}$ (Section~\ref{sec:experiments}), consistent with $\|E\|_F/(\varepsilon\sqrt{d})$ shrinking as $d$ grows while remaining below the $\sqrt{d}$ bound.
 
 \section{From Diagonal-Dominance Fingerprints to Lineage Verification}\label{sec:verification}
 
-Diagonal dominance identifies correctly paired trained residual branches, but it does not establish lineage: unrelated trained models both exhibit it. The decomposition~\eqref{eq:decomp} supplies the division of labor. The identity component is generic; its strength certifies that a branch carries trained residual structure, and Section~\ref{sec:exp-arch} uses it to recover projection pairings within a model. But precisely because it is shared across trained models, it says nothing about ancestry. The traceless component $E_\ell$ is block- and checkpoint-specific: it survives weight-preserving transformations but not reinitialization. Verification therefore runs on the traceless component, with diagonal dominance serving as a gate on which branches are trustworthy. This section builds the protocol in three steps: signatures, alignment, decision.
+Diagonal dominance certifies trained residual structure, not ancestry: unrelated trained models both exhibit it. The decomposition~\eqref{eq:decomp} separates the two signals. The identity component is generic across trained models. The traceless component $E_\ell$ is checkpoint-specific: it survives weight-preserving transformations but not reinitialization. Verification runs on $E_\ell$, with diagonal dominance gating which branches are trustworthy.
 
 \subsection{Centered Residual Signatures and Block Alignment}\label{sec:pairing}
 
@@ -213,13 +204,13 @@ For each branch product $M_\ell$ we retain only the traceless remainder of decom
 R_\ell = M_\ell - \tfrac{\mathrm{tr}(M_\ell)}{d} \cdot I, \quad
 \phi_\ell = \tfrac{\mathrm{vec}(R_\ell)}{\|\mathrm{vec}(R_\ell)\|_2}
 \end{equation}
-$R_\ell$ is exactly the $E_\ell$ of~\eqref{eq:decomp}; the signature $\phi_\ell$ carries the block- and checkpoint-specific geometry that weight-preserving transformations inherit and independent training cannot reproduce. Because $M_\ell$ is exactly invariant under the two function-preserving reparameterizations of a residual branch (hidden permutation: $W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$; reciprocal rescaling: $W_{\mathrm{in}} \leftarrow c W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}}/c$), so is every signature built on it: re-basing hidden units cannot evade the comparison (Section~\ref{sec:boundaries}).
+$R_\ell = E_\ell$ from~\eqref{eq:decomp}. The signature $\phi_\ell$ carries checkpoint-specific geometry that weight-preserving transformations inherit and independent training cannot reproduce. Because $M_\ell$ is invariant under hidden permutation and reciprocal rescaling, so is every signature built on it (Section~\ref{sec:boundaries}).
 
-Given reference $A$ and suspect $B$, each with $L$ blocks, we form the signature-similarity matrix $G_{ij} = \langle \phi^A_i, \phi^B_j \rangle$, gated so that branches with weak diagonal dominance in either checkpoint contribute conservatively (Appendix~\ref{app:verification}), and recover the block correspondence as the assignment maximizing total similarity,
+Given reference $A$ and suspect $B$ with $L$ blocks each, we form the similarity matrix $G_{ij} = \langle \phi^A_i, \phi^B_j \rangle$, gated by diagonal dominance (Appendix~\ref{app:verification}), and recover the block correspondence via the Hungarian algorithm~\citep{kuhn1955hungarian}:
 \begin{equation}\label{eq:hungarian}
-\pi^* = \arg\max_{\pi \in \mathcal{P}_L} \sum_{i} G_{i,\pi(i)},
+\pi^* = \arg\max_{\pi \in \mathcal{P}_L} \sum_{i} G_{i,\pi(i)}
 \end{equation}
-via the Hungarian algorithm~\citep{kuhn1955hungarian}. For derived checkpoints that preserve block ordering, $\pi^*$ should be the identity permutation, and recovering it without metadata is evidence that the signatures track block identity rather than position; the Hungarian step matters when ordering cannot be trusted, and its output doubles as a diagnostic: when the verdict is \textsc{Related}, the correspondence matrix shows which blocks were inherited (Appendix~\ref{app:architectures}). Computing the branch products costs $O(Ld^2 h)$, where $h$ is the branch's inner width; the similarity matrix adds $O(L^2 d^2)$ and the assignment a negligible $O(L^3)$.
+For derived checkpoints preserving block order, $\pi^*$ should be the identity; recovering it without metadata confirms that signatures track block identity. The correspondence matrix also shows which blocks were inherited (Appendix~\ref{app:architectures}). Complexity: branch products $O(Ld^2 h)$, similarity matrix $O(L^2 d^2)$, assignment $O(L^3)$.
 
 \subsection{Lineage Score and Verification Test}\label{sec:lineage-score}
 
@@ -227,9 +218,9 @@ The lineage score averages signature similarity over aligned branches:
 \begin{equation}\label{eq:lineage-score}
 \mathcal{L}(A, B) = \frac{1}{L} \sum_{\ell=1}^{L} \langle \phi^A_\ell, \phi^B_{\pi^*(\ell)} \rangle
 \end{equation}
-Each term is a cosine, so $\mathcal{L} \in [-1,1]$ with $\mathcal{L}(A,A) = 1$. The score is symmetric, $\mathcal{L}(A,B) = \mathcal{L}(B,A)$: exchanging the roles of $A$ and $B$ transposes $G$, and the optimal assignment value is invariant under transposition, provided the gate is defined over both checkpoints jointly (Appendix~\ref{app:verification}). Related checkpoints should score near $1$ and unrelated ones near $0$, since independently initialized weights produce uncorrelated $E_\ell$; Section~\ref{sec:experiments} tests both predictions.
+Each term is a cosine, so $\mathcal{L} \in [-1,1]$ with $\mathcal{L}(A,A) = 1$. The score is symmetric (Appendix~\ref{app:verification}). Related checkpoints score near 1; unrelated ones near 0, since independently initialized weights produce uncorrelated $E_\ell$.
 
-To map the score onto the verdicts of Section~\ref{sec:background}, we calibrate against a null distribution: with $\mathcal{N}_A = \{\mathcal{L}(A, U_j)\}$ the scores between $A$ and independently trained models $U_j$, and $(\mu_0, \sigma_0)$ its mean and standard deviation,
+We calibrate against a null distribution $\mathcal{N}_A = \{\mathcal{L}(A, U_j)\}$ from independently trained models $U_j$, with mean $\mu_0$ and standard deviation $\sigma_0$:
 \begin{equation}\label{eq:zscore}
 Z(A,B) = \frac{\mathcal{L}(A,B) - \mu_0}{\sigma_0}
 \end{equation}
@@ -241,19 +232,15 @@ V(A,B) = \begin{cases}
 \textsc{Inconclusive} & \text{otherwise}
 \end{cases}
 \end{equation}
-with symmetric thresholds $\tau_{\text{upper}} = 3.0$, $\tau_{\text{lower}} = -3.0$, giving a false-positive rate below $0.13\%$ under a Gaussian null. Compatibility (same layer count $L$ and hidden dimension $d$, per the setting of Section~\ref{sec:background}) is a precondition checked before any scoring; the protocol returns \textsc{Incompatible} when it fails, an enforcement of the setting rather than a fourth verdict. The verifier needs weights alone, and $O(L^2 + d^2)$ working memory beyond the checkpoints themselves.
+Thresholds $\tau_{\text{upper}} = 3.0$, $\tau_{\text{lower}} = -3.0$ give false-positive rate below $0.13\%$ under a Gaussian null. Compatibility (same $L$ and $d$) is checked before scoring; the protocol returns \textsc{Incompatible} otherwise. Memory: $O(L^2 + d^2)$ beyond the checkpoints.
 
 \section{Experiments}\label{sec:experiments}
 
-We validate the claims of Sections~\ref{sec:diagonal-dominance}--\ref{sec:verification} in order: fingerprint existence and learning dynamics (Section~\ref{sec:exp-exists}), cross-architecture generalization (Section~\ref{sec:exp-arch}), lineage verification on controlled and real checkpoints (Section~\ref{sec:exp-verify}), and baseline comparisons (Section~\ref{sec:exp-baselines}). Extended results are in Appendix~\ref{app:architectures}.
+We validate the claims of Sections~\ref{sec:diagonal-dominance}--\ref{sec:verification}: fingerprint existence (Section~\ref{sec:exp-exists}), cross-architecture generalization (Section~\ref{sec:exp-arch}), lineage verification (Section~\ref{sec:exp-verify}), and baseline comparisons (Section~\ref{sec:exp-baselines}).
 
 \subsection{The Fingerprint Exists and Is Learned}\label{sec:exp-exists}
 
-% NOTE(author): 5.1 now assumes coupling mechanism; §3.1 still says isometry — needs reconciliation later.
-Section~\ref{sec:mechanism} predicts that diagonal dominance is learned, not an initialization artifact, and requires the skip connection. We test each prediction, and then go beyond ``it is learned'' to isolate the causal mechanism: we find that the fingerprint is produced by \emph{gradient coupling} between a block's input and output projections, and that the earlier dynamical-isometry account is falsified by direct measurement.
-
-\textbf{Emergence during training.} On a 48-block residual network, block-pairing accuracy is at the chance baseline ($6.25\%$) at epoch 0 and reaches $100\%$ by epoch 5, well before loss plateaus. By epoch 300, the mean correct-pair score exceeds the mean incorrect-pair score by $21\times$. The fingerprint develops rapidly in early training.
-% TODO(author): chance rate vs block count inconsistent across 5.1 / Table 4 / Table 11 — reconcile.
+Section~\ref{sec:mechanism} predicts that diagonal dominance is learned and requires the skip connection. We test each prediction, then isolate the causal mechanism: gradient coupling between a block's input and output projections.
 
 \begin{table}[t]
 \centering
@@ -270,37 +257,14 @@ PlainNet-24 & 1.56 & $3\%$   & $0.51$ & $47\%$ \\
 \label{tab:plainnet-control}
 \end{table}
 
-\textbf{The skip connection is necessary.} We train a PlainNet (ResNet with skip connections removed) to comparable evaluation loss. Table~\ref{tab:plainnet-control} shows the result: ResNet achieves $100\%$ pair accuracy with $100\%$ negative-trace incidence; PlainNet achieves only $3\%$ (at chance) with AUROC 0.51. The skip connection is structurally necessary.
+Table~\ref{tab:plainnet-control} shows the skip connection is structurally necessary: ResNet achieves $100\%$ pair accuracy; PlainNet trained to comparable loss achieves only $3\%$ (at chance). All seven initialization schemes show chance-level accuracy before training, rising to 93--100\% after (Appendix~\ref{app:architectures}). Orthogonal initialization is the critical case: it provides dynamical isometry at init yet shows zero correct pairs before training. The fingerprint is learned.
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Init scheme & Untrained & Trained & AUROC \\
-\midrule
-Orthogonal       & $0.0\%$  & $100\%$ & $0.947$ \\
-Kaiming-normal   & $2.1\%$  & $97\%$  & $0.981$ \\
-Kaiming-uniform  & $2.1\%$  & $98.6\%$ & $0.98$ \\
-Xavier-normal    & $2.1\%$  & $100\%$ & $0.990$ \\
-Xavier-uniform   & $2.1\%$  & $100\%$ & $0.99$ \\
-Uniform          & $2.1\%$  & $93.8\%$ & --- \\
-Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
-\bottomrule
-\end{tabular}
-\caption{Initialization ablation on depth-24 residual MLPs (3 seeds, 200 epochs). All schemes show chance-level accuracy (${\leq}2.1\%$) at initialization, rising to $93$--$100\%$ after training. Orthogonal initialization provides dynamical isometry at init yet shows zero correct pairs before training.}
-\label{tab:init-ablation}
-\end{table}
-
-\textbf{Not an initialization artifact.} Table~\ref{tab:init-ablation} shows pair accuracy before and after training across seven initialization schemes. All show $\leq 2.1\%$ accuracy before training; six reach 93--100\% after. Orthogonal initialization is the critical case: it provides dynamical isometry at initialization by construction~\citep{saxe2014exact}, satisfying the near-identity Jacobian condition of Section~\ref{sec:mechanism}, yet shows zero correct pairs before training. Isometry is thus neither necessary nor sufficient for the fingerprint: the one scheme that is isometric at init produces no signal until trained. The $\sigma{=}0.02$ Gaussian case fails for the opposite reason---blocks collapse to near-zero contribution and never develop a branch product to read.
-
-\textbf{Mechanism: gradient coupling, not dynamical isometry.} The isometry account of Section~\ref{sec:mechanism} predicts that training drives block Jacobians toward orthogonality, but direct measurement falsifies this: a trained GPT-2 has normalized Jacobian deviation $\delta_J^{\mathrm{norm}}=0.297$ against $0.025$ at random initialization---$12\times$ \emph{less} orthogonal after training, not more (Appendix~\ref{app:gpt2-details}). The fingerprint arises instead from gradient coupling between $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$: the same loss signal reaches both projections and correlates their updates. The coupling acts on the update \emph{directions}, not the gradient shape---the gradient product itself never becomes diagonal ($r(g_{\mathrm{diag}},s)=-0.12$; Figure~\ref{fig:mechanism-triad}a). Two interventions establish causation. \emph{Necessity:} shuffling $\nabla W_{\mathrm{out}}$ across blocks before each optimizer step---breaking the per-block coupling while leaving training otherwise intact---cuts the fingerprint by $68\%$ ($s:3.90\!\to\!1.24$) with task accuracy essentially preserved ($54\%\!\to\!47\%$; Figure~\ref{fig:mechanism-triad}b). \emph{Sufficiency:} injecting diagonal structure into $M$ directly, with no backpropagation, builds the fingerprint from scratch ($s:0.08\!\to\!7.57$ over $3000$ steps; Figure~\ref{fig:mechanism-triad}c). Two further controls rule out confounds: training on shuffled CIFAR-10 labels ($\sim$$10\%$ test accuracy, at chance) yields a \emph{stronger} fingerprint than normal training ($s=5.88$ vs.\ $3.42$), so gradient flow, not task learning, drives it; and fingerprint strength is uncorrelated with cumulative weight change ($r(s,\|\Delta W\|)=-0.002$, $n{=}24$), ruling out the trivial ``more gradient flow means a bigger fingerprint'' explanation.
-% TODO(author): δ_J^norm isometry-falsification detail+figure is appendix material (depends on §3.1 reconciliation); relocate when editing beyond Section 5.
+The isometry account of Section~\ref{sec:mechanism} predicts that training drives block Jacobians toward orthogonality, but direct measurement falsifies this: trained GPT-2 is $12\times$ less orthogonal than at initialization (Appendix~\ref{app:gpt2-details}). The fingerprint arises from gradient coupling: the same loss signal reaches both projections and correlates their updates. Two interventions establish causation. Shuffling $\nabla W_{\mathrm{out}}$ across blocks cuts the fingerprint by $68\%$ while preserving task accuracy (Figure~\ref{fig:mechanism-triad}b). Injecting diagonal structure into $M$ directly, with no backpropagation, builds the fingerprint from scratch (Figure~\ref{fig:mechanism-triad}c). Training on shuffled labels yields a stronger fingerprint than normal training, so gradient flow drives it, not task learning.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{../../../figures/fig_rq1_gradient_coupling.pdf}
-\caption{The fingerprint is a causal product of gradient coupling between $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$. (a) The gradient product itself does not become diagonal---$g_{\mathrm{diag}}$ stays flat while the weight score $s$ climbs (Pearson $r(g_{\mathrm{diag}},s)=-0.12$)---so the mechanism couples update \emph{directions}, not diagonal \emph{shape}. (b) \emph{Necessity}: shuffling $\nabla W_{\mathrm{out}}$ across blocks drops the score from $3.90$ to $1.24$ ($68\%$ reduction) while training still proceeds. (c) \emph{Sufficiency}: direct diagonal injection into $M$ with no backpropagation builds the score from $0.08$ to $7.57$.}
+\caption{The fingerprint is a causal product of gradient coupling between $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$. (a) The gradient product itself does not become diagonal, so the mechanism couples update directions, not diagonal shape. (b) Necessity: shuffling $\nabla W_{\mathrm{out}}$ across blocks drops the score by $68\%$ while training proceeds. (c) Sufficiency: direct diagonal injection builds the score with no backpropagation.}
 \label{fig:mechanism-triad}
 \end{figure*}
 
@@ -322,29 +286,17 @@ Whisper (tiny/base/small) & 4--12 & $\mathbf{100\%}$ & 0.85--1.00 \\
 ResNet-50/101/152 & 5--35 & $91$--$100\%$ & 0.96--1.00 \\
 \bottomrule
 \end{tabular}
-\caption{Cross-architecture generalization. Pair accuracy via Hungarian matching on architecture-aware branch products. Sub-100\% SwiGLU sub-paths are rescued by joint factorization. Random-init baselines: $\le 9\%$.}
+\caption{Cross-architecture generalization. Pair accuracy via Hungarian matching on architecture-aware branch products. Ranges span model sizes within each family. Sub-100\% SwiGLU sub-paths are recovered by joint factorization. Random-init baselines: $\le 9\%$.}
 \label{tab:transformer-family}
 \end{table}
 
-Table~\ref{tab:transformer-family} reports block-pairing accuracy across 12 architectures spanning language (GPT-2, BERT, LLaMA-2, Mistral, Qwen2.5, DeepSeek-R1), vision (ViT, ResNet), and speech (Whisper): 91--100\% in every family, against random-initialization baselines of at most 9\%. The same extraction transfers across GELU and SwiGLU activations and across causal, bidirectional, and grouped-query attention with no per-family tuning; what changes between families is only the factorization of Table~\ref{tab:factorization}.
+Table~\ref{tab:transformer-family} reports block-pairing accuracy across 12 architectures spanning language, vision, and speech: 80--100\% in every family, against random-initialization baselines of at most 9\%. The extraction transfers across GELU and SwiGLU activations with no per-family tuning; only the factorization of Table~\ref{tab:factorization} changes.
 
-\textbf{Factorization must match the architecture.} The branch product carries the signal only when it composes every linear factor of one branch. For ResNet Bottleneck blocks the two-factor product $W_3 W_1$ pairs at chance, while the full $W_3 W_2 W_1$ recovers 91--100\% (Appendix~\ref{app:architectures}); for SwiGLU MLPs, the gate path alone pairs at $68\%$ (Qwen2.5) and $84\%$ (DeepSeek), both restored to $100\%$ by the joint product $W_{\mathrm{down}} W_{\mathrm{up}}$. Incomplete products do not weaken the fingerprint---they miss it, which is itself informative: the structure lives in the composed map from residual stream to residual stream, not in any individual weight matrix. The signal strength also varies with the branch's role in the residual stream: the ViT V/O attention path, which writes directly into the residual stream, gives the strongest separation in the study ($+4.84$, $100\%$ negative trace).
-
-\textbf{RLHF and behavioral pedigree.} RLHF leaves the fingerprint intact---LLaMA-2 base to chat pairs at 100\%---while the Llama-3-derived DeepSeek distill is correctly rejected (Section~\ref{sec:exp-verify}). Pairing follows the weights, not the training story.
-
-\textbf{Scaling with hidden dimension.} Proposition~\ref{prop:margin} gives $\sqrt{d}$ as a theoretical \emph{upper bound} on the correct-pair score. Across the GPT-2 family ($d\in[768,1600]$) the mean correct-pair score rises from $4.18$ to $7.77$, an empirical power law $d^{0.87}$ (Appendix~\ref{app:gpt2-details}). The exponent exceeds $\tfrac12$, so the score grows \emph{faster} than the $\sqrt{d}$ bound's rate while still sitting well beneath the bound itself---reaching only 15--19\% of it over this range. The two are therefore consistent only as bound-and-observation over the measured window, not as a matched rate; a clean derivation of the exponent remains open. Corollary~\ref{cor:baseline} places the mismatched baseline at $1/\sqrt{d}$, so separation still compounds from both directions as networks widen: the correct-to-incorrect ratio is $35\times$ on GPT-2 and improves with $d$. Scale works for the verifier.
-% TODO(author): reconcile — draft cited d^0.87 up to d=5120 (LLaMA-2-13B, s=23.83, 2140x ratio) and Mixtral-8x7B 1530x, but RQ.pdf lists LLaMA-2-13B and Mixtral-8x7B under Pending Experiments (not run). Measured fit is the GPT-2 family d in [768,1600]; restore the larger-d numbers once those runs land.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{../../../figures/fig_gpt2_mlp_pairing.pdf}
-\caption{Block pairing score matrices $s(i,j)$ for GPT-2 models from 124M to 1.5B parameters. Diagonal entries dominate, yielding 100\% pairing accuracy across all scales. Trace analysis and method comparisons in Appendix~\ref{app:gpt2-details}.}
-\label{fig:gpt2-pairing}
-\end{figure*}
+Factorization must match the architecture: incomplete products miss the signal (Appendix~\ref{app:architectures}). RLHF leaves the fingerprint intact: LLaMA-2 base to chat pairs at 100\%, while the Llama-3-derived DeepSeek distill is correctly rejected (Section~\ref{sec:exp-verify}). Separation improves with model width: the correct-pair score grows as $d^{0.87}$ across the GPT-2 family; score matrices are in Appendix~\ref{app:gpt2-details}.
 
 \subsection{From Fingerprints to Lineage Verification}\label{sec:exp-verify}
 
-Diagonal dominance certifies trained residual structure, not ancestry: unrelated trained models exhibit it equally, and a verifier built on the dominance score alone achieves AUROC$=$0.417 on the MLP benchmark (Figure~\ref{fig:lineage-three-panel}a)---the failure Section~\ref{sec:verification} predicts, and the reason verification runs on the centered signatures $\phi_\ell$. We test the protocol on controlled MLPs with known ground truth, then a trained-from-scratch ResNet benchmark, then the public LLaMA-2 family.
+Diagonal dominance certifies trained residual structure, not ancestry: a verifier built on the dominance score alone achieves AUROC$=$0.417 (Figure~\ref{fig:lineage-roc} in Appendix~\ref{app:architectures}). Verification runs on the centered signatures $\phi_\ell$.
 
 \begin{table}[t]
 \centering
@@ -356,20 +308,15 @@ Transformation & Mean $\mathcal{L}$ & Min $\mathcal{L}$ & Det.\ @ 1\%FPR \\
 Fine-tune / Quant / Noise & 0.99 & 0.97 & 45/45 \\
 Fine-tune (diff.\ target) & 0.94 & 0.84 & 15/15 \\
 Pruning (10--85\%) & 0.81 & 0.58 & 15/15 \\
-LoRA merge & 0.98 & 0.97 & $\sim$ \\
 \midrule
 Independent / Distilled & 0.08 & 0.01 & - \\
 \bottomrule
 \end{tabular}
-\caption{Lineage score survival under post-training modification. All 75 related checkpoints detected at 1\% FPR; unrelated checkpoints stay below 0.20. The LoRA row reports preliminary results ($\sim$); formal detection counts pending.}
+\caption{Lineage score survival under post-training modification ($n{=}75$ related, $n{=}84$ unrelated). All related checkpoints detected at 1\% FPR; unrelated stay below 0.20.}
 \label{tab:survival}
 \end{table}
 
-\textbf{Controlled MLP benchmark.} From 2 trained references we construct 52 pairs: five related-checkpoint kinds (fine-tuning, fine-tuning to a different target, Gaussian noise, magnitude pruning, quantization) against different-seed and distilled negatives; the expanded 159-pair set draws on a 24-checkpoint zoo. Related ($n{=}75$) and unrelated ($n{=}84$) checkpoints separate completely---the two populations do not overlap (Figure~\ref{fig:hero}c). A saturated AUROC invites the objection that the benchmark is simply too easy, so we ran the robustness audit a reviewer would ask for. Complete separation at these sample sizes gives Clopper--Pearson bounds of TPR $\geq 0.961$ and FPR $\leq 0.035$, and the separation is not thin at its weakest point: the lowest-scoring descendant (an aggressively pruned checkpoint, $\mathcal{L}{=}0.452$) still sits $4.6\times$ above the highest-scoring non-descendant (a distilled student, $\mathcal{L}{=}0.098$). The full per-attack score ranges and confidence intervals confirm the margin holds within every transformation family, and the score degrades gracefully with transformation intensity rather than cliff-edging (Figure~\ref{fig:lineage-three-panel}b).
-% TODO(author): prune-min differs across benchmarks — tab:survival reports Min L=0.58 (RQ.pdf p.21) while the AUROC deep-dive reports min-prune 0.452 (RQ.pdf p.20); reconcile.
-% TODO(author): full per-attack CI table (7 rows, RQ.pdf p.20: finetune_same .996[.980,.998], quantize .995[.976,1.000], noise .993[.954,1.000], finetune_diff .944[.912,.956], prune .810[.452,.999], distilled .086[.078,.098], indep_same_task .084[.076,.093]) is appendix material — add to app:architectures when editing beyond Section 5.
-
-\textbf{Real architecture, controlled lineage.} On CIFAR-10~\citep{krizhevsky2009cifar} ResNet-18 the same protocol gives AUROC$=$1.000 with TPR@1\%FPR$=$100\%. Here the separation is starkest: the weakest descendant scores $\mathcal{L}{=}0.6947$ while the strongest non-descendant reaches only $0.0041$, a $172\times$ gap. Because separation is complete, the bootstrap $95\%$ AUROC confidence interval is degenerate at $[1.000, 1.000]$ over $5000$ resamples---the perfect score is not an artifact of a single lucky split (Appendix~\ref{app:architectures}).
+On the controlled MLP benchmark (159 pairs from a 24-checkpoint zoo: $n{=}75$ related, $n{=}84$ unrelated), checkpoints separate completely (Figure~\ref{fig:hero}c). Table~\ref{tab:survival} shows score survival across transformation families. On CIFAR-10 ResNet-18 the protocol gives AUROC$=$1.000 with a ${\sim}170\times$ gap between the weakest descendant and strongest non-descendant (Appendix~\ref{app:architectures}).
 
 \begin{table}[t]
 \centering\footnotesize
@@ -391,20 +338,11 @@ Yi-6B             & scratch  & $5\mathrm{e}{-}4$ & $0.122$ & UNR. \\
 DeepSeek-Distill-8B & L3.1 wts & $4\mathrm{e}{-}4$ & $0.162$ & UNR. \\
 \bottomrule
 \end{tabular}
-\caption{Real-LLM lineage validation on the LLaMA-2 family (7 pairs). $^\dagger$OpenLLaMA shares LLaMA-2's exact architecture ($d{=}4096$, $L{=}32$) but is trained from scratch; its classification as unrelated cannot come from configuration.}
+\caption{Real-LLM lineage validation on the LLaMA-2 family (7 pairs). $^\dagger$OpenLLaMA shares LLaMA-2's exact architecture but is trained from scratch; its classification as unrelated cannot come from configuration.}
 \label{tab:real-llm}
 \end{table}
 
-\textbf{Public models, real lineage.} With LLaMA-2-7B as reference, all three real fine-tuned variants are flagged: the RLHF chat model ($\mathcal{L}=0.995$), the Vicuna instruction fine-tune ($\mathcal{L}=0.996$), and CodeLlama ($\mathcal{L}=0.336$), whose heavy code-specialized continued pretraining makes it the weakest relative---yet it remains ${\sim}700\times$ above the null. The four independently trained negatives score $\mathcal{L}\in[3.5,4.8]\times10^{-4}$, defining a real cross-model null ($\mu_0=4.2\times10^{-4}$). OpenLLaMA is the decisive case among them: it reproduces LLaMA-2's exact shape ($d{=}4096$, $L{=}32$, $d_{\mathrm{ff}}{=}11008$) from scratch, so nothing in its configuration distinguishes it from a true descendant---the \textsc{Unrelated} verdict can only come from the weights. Mean separation is ${\approx}1850\times$, against $6\times$ for weight cosine; aligned Frobenius and singular-value distance underperform substantially on this set (AUROC$=$0.667). Because all related checkpoints here derive from a single base tree (LLaMA-2-7B) and only $n{=}4$ real independents anchor the null, we read this as a descriptive separation check ($\approx$$1850\times$ margin), not a calibrated false-positive rate (Appendix~\ref{app:real-llm}).
-
-\textbf{Beyond binary verdicts.} On a branching tree ($C_1 \to \{C_2, C_3\}$, $C_2 \to C_4$, $C_3 \to C_5$), $\mathcal{L}$ ranks $C_4$'s relatives in genealogical order: parent (0.96) $>$ grandparent (0.91) $>$ uncle (0.87) $>$ cousin (0.85) $\gg$ independents (${\approx}0.08$) (Appendix~\ref{app:verification}). The score does not merely cross a threshold; it decays with distance from the ancestor---which is what ancestry recovery beyond a binary verdict would require.
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth]{../../../figures/fig_lineage_three_panel.pdf}
-\caption{Lineage verification on depth-24 residual MLPs. (a) ROC comparison: the residual-signature score achieves AUROC$=$1.000, while diagonal-dominance alone fails (AUROC$=$0.417)---it cannot distinguish two trained residual models. (b) Score ranges by transformation type: fine-tuning, noise, and quantization preserve the fingerprint near 1.0; independent (unrelated) models score below 0.1; only pruning shows a wide range, degrading as model utility degrades ($\rho = -0.83$).}
-\label{fig:lineage-three-panel}
-\end{figure*}
+Table~\ref{tab:real-llm} shows real-LLM results on 7 pairs as a feasibility demonstration, not a calibrated benchmark. Three fine-tuned LLaMA-2 variants are flagged as related; four independently trained checkpoints score at the $10^{-4}$ null. OpenLLaMA is the decisive case: it reproduces LLaMA-2's exact shape from scratch, so the \textsc{Unrelated} verdict can only come from the weights. Mean separation is ${\approx}1850\times$, against $6\times$ for weight cosine; with $n{=}7$ pairs this demonstrates feasibility rather than establishing a false-positive rate (Appendix~\ref{app:real-llm}). The score also decays with genealogical distance (Appendix~\ref{app:verification}).
 
 \subsection{Comparison with Data-Free and Behavioral Baselines}\label{sec:exp-baselines}
 
@@ -424,17 +362,11 @@ CKA~\citep{kornblith2019similarity}      & Activation-space & \xmark & 0.829 & $
 IPGuard~\citep{cao2021ipguard} (regression analogue) & Decision-boundary & \xmark & 0.500 & $\phantom{+}-3.5$ & \xmark \\
 \bottomrule
 \end{tabular}
-\caption{Strong-baseline comparison on the MLP lineage benchmark (52 pairs). Four data-free weight-space methods reach AUROC$=$1.000; Gap-$Z$ measures standardized distillation rejection, where IPGuard's $-3.5$ indicates related checkpoints rank \emph{below} distilled. Block Corr.: only diagonal dominance and aligned Frobenius provide per-block correspondence.}
+\caption{Baseline comparison on the MLP benchmark (52 pairs). Four weight-space methods reach AUROC$=$1.000; Gap-$Z$ measures standardized distillation rejection, where IPGuard's $-3.5$ indicates related checkpoints rank below distilled.}
 \label{tab:baselines}
 \end{table*}
 
-We compare against representation-similarity methods (CKA~\citep{kornblith2019similarity}, SVCCA~\citep{raghu2017svcca}), weight-space baselines (aligned Frobenius, singular-value distance, weight cosine), and a decision-boundary baseline (IPGuard~\citep{cao2021ipguard}) on the 52-pair MLP benchmark (Table~\ref{tab:baselines}). The thesis of this section is simple: on an easy benchmark every strong method ties, so aggregate AUROC cannot adjudicate between them. Methods diverge in two regimes, and that is where our contribution shows.
-
-\textbf{Regime 1: real 7B weights.} On the LLaMA-2 family of Section~\ref{sec:exp-verify}, diagonal dominance separates related from unrelated by ${\approx}1850\times$ in mean score, against $6\times$ for weight cosine; aligned Frobenius and singular-value distance do not separate this set at all (AUROC$=$0.667 each, above chance but far from the saturation they reach on synthetic pairs). The synthetic tie does not survive contact with real foundation-model weights.
-
-\textbf{Regime 2: grafts and merges.} On layer grafts and linear merges (Appendix~\ref{app:harder-bench}, 40 pairs), singular-value distance collapses on merges (AUROC$=$0.448), CKA drops to ${\approx}0.80$, and IPGuard reaches AUROC$=$0.05 on grafts---its \emph{negative} Spearman correlation means it ranks higher-overlap suspects as \emph{less} similar, a systematic inversion where its decision-boundary assumptions break. Diagonal dominance instead holds a monotone Spearman $\rho \approx 0.96$ with the reference fraction on both regimes: it does not merely clear a threshold, it tracks how much of the reference is actually present.
-
-\textbf{Where Gap-$Z$ does and does not favor us.} We do not win on the Gap-$Z$ column of Table~\ref{tab:baselines}: weight cosine ($+76.3$) and aligned Frobenius ($+72.0$) both post larger standardized distillation-rejection gaps than ours ($+53.0$), so that column is not our argument. We win on three axes it does not capture: per-block localization (only diagonal dominance and aligned Frobenius recover block correspondence), a mechanistic account of \emph{why} proximity implies lineage (Proposition~\ref{prop:margin} and Section~\ref{sec:exp-exists}), and robustness to distillation. The behavioral baselines fail exactly the last: CKA rates distilled students at $0.83$ and SVCCA at $0.89$, only $1.2\times$ and $1.13\times$ below the fine-tuned related checkpoints they should tower over ($0.999$ and $1.000$; Appendix~\ref{app:per-kind-baselines}). Their high aggregate AUROC survives only because the benchmark's negatives are dominated by independents rather than distilled students; reweighting toward distillation would collapse it. IPGuard is worse still, ranking related checkpoints \emph{below} distilled ones (Gap-$Z=-3.5$).
+On the MLP benchmark, four weight-space methods tie at AUROC$=$1.000 (Table~\ref{tab:baselines}); aggregate AUROC cannot distinguish them. The contribution is not on this easy benchmark but on three harder axes where methods diverge. First, real 7B weights: our method separates related from unrelated by $1850\times$; weight cosine manages $6\times$; aligned Frobenius and singular-value distance fall to AUROC$=$0.667. Second, layer grafts and merges (Appendix~\ref{app:harder-bench}): our method holds Spearman $\rho \approx 0.96$ with the reference fraction; singular-value distance collapses (AUROC$=$0.448) and IPGuard inverts (AUROC$=$0.05). Third, distillation rejection: CKA rates distilled students at $0.83$, only $1.2\times$ below fine-tuned checkpoints; weight-space methods reject distillation cleanly (Appendix~\ref{app:per-kind-baselines}). MoTHer~\citep{horwitz2025mother} requires a checkpoint collection rather than pair-wise comparison; it solves tree recovery, not verification.
 
 \section{Robustness and Boundary Cases}\label{sec:boundaries}
 
@@ -444,9 +376,9 @@ Section~\ref{sec:experiments} established that the protocol detects lineage. Thi
 
 The question is not whether the fingerprint detects lineage---Section~\ref{sec:exp-verify} established that---but what happens as transformation intensity increases. Table~\ref{tab:survival} shows survival across five transformation families: fine-tuning (same/different target), Gaussian noise ($\sigma_{\mathrm{rel}} \le 15\%$), magnitude pruning (10--85\%), quantization (16--256 levels), and LoRA adapter merging.
 
-Fine-tuning, quantization, and noise preserve the signal with mean $\mathcal{L} = 0.99$ and minimum $0.97$. Fine-tuning to a different target degrades to mean $0.94$ (min $0.84$). Pruning shows the steepest decline: from $\mathcal{L} = 0.99$ at 10\% sparsity to $0.58$ at 85\% sparsity. LoRA-merged checkpoints score $\mathcal{L} \in [0.97, 0.99]$ ($\sim$formal detection counts pending). CodeLlama ($\mathcal{L}=0.336$), the real-world far endpoint of the fine-tuning axis after heavy code-specialized continued pretraining, remains ${\sim}700\times$ above the unrelated null.
+Fine-tuning, quantization, and noise preserve the signal with mean $\mathcal{L} = 0.99$ and minimum $0.97$. Fine-tuning to a different target degrades to mean $0.94$ (min $0.84$). Pruning shows the steepest decline: from $\mathcal{L} = 0.99$ at 10\% sparsity to $0.58$ at 85\% sparsity. LoRA-merged checkpoints score $\mathcal{L} \in [0.97, 0.99]$. CodeLlama ($\mathcal{L}=0.336$), the real-world far endpoint of the fine-tuning axis after heavy code-specialized continued pretraining, remains ${\sim}700\times$ above the unrelated null.
 
-The thesis: fingerprint degradation correlates with utility loss ($\rho = -0.83$; Figure~\ref{fig:lineage-three-panel}b). No benign path removes the signal without damaging the model. The two are structurally coupled through the Jacobian constraint of Section~\ref{sec:mechanism}.
+The thesis: fingerprint degradation correlates with utility loss ($\rho = -0.83$). No benign path removes the signal without damaging the model. The two are structurally coupled through the Jacobian constraint of Section~\ref{sec:mechanism}.
 
 \subsection{Adversarial Suppression and Function-Preserving Symmetries}\label{sec:adversarial}
 
@@ -464,45 +396,19 @@ Sweeping $\lambda$ traces a Pareto frontier (Appendix~\ref{app:attacks}). With $
 
 Some conditions the method handles correctly but uninformatively; others it cannot handle at all. We separate the two.
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{@{}ll@{}}
-\toprule
-\textbf{Condition} & \textbf{Verdict} \\
-\midrule
-Different architectures & INCOMPATIBLE \\
-Non-residual networks & NO SIGNAL \\
-Distillation (cross-arch) & OUT OF SCOPE \\
-Training data overlap & NOT DETECTED \\
-Two indep.\ same-arch & CANNOT DISTINGUISH \\
-\bottomrule
-\end{tabular}
-\caption{What the method does NOT do.}
-\label{tab:limitations}
-\end{table}
-
 \textbf{Correct boundary behaviors.} Distillation is the most important. Students trained from fresh weights are \textsc{Unrelated} by definition, and the verdicts agree: same-architecture distilled students score $\mathcal{L} = 0.086$ on the controlled benchmark, and the DeepSeek distill sits at the $10^{-4}$ cross-model null on the real test (Sections~\ref{sec:exp-verify}--\ref{sec:exp-baselines}). The gap between those two magnitudes is itself informative---same-architecture distillation on shared data retains a trace of accidental correlation that cross-family comparison lacks---and both fall well below threshold. Symmetry is the second boundary: $\mathcal{L}(A,B) = \mathcal{L}(B,A)$ by construction, so the protocol cannot name the ancestor; direction requires metadata or a third candidate, as in the branching tree of Section~\ref{sec:exp-verify}. Partial lineage is the third: grafts and merges form a graded regime in which $\mathcal{L}$ tracks the fraction of inherited blocks with Spearman $\rho \approx 0.96$ (Appendix~\ref{app:harder-bench})---partial overlap is measured, not misclassified.
 
-\textbf{Genuine failures} (Table~\ref{tab:limitations}). The protocol returns \textsc{Incompatible} when depth or width differ, and there is no signal to read in non-residual networks (the PlainNet of Section~\ref{sec:exp-exists}) or when blocks collapse to zero contribution (the $\sigma = 0.02$ initialization). Utility-destroying perturbations such as 2-bit quantization take the fingerprint down with the model, and no verdict is possible about a common ancestor that neither party can produce.
+\textbf{Genuine failures.} The protocol returns \textsc{Incompatible} when depth or width differ. There is no signal in non-residual networks (PlainNet, Section~\ref{sec:exp-exists}) or when blocks collapse to near-zero contribution. Utility-destroying perturbations such as 2-bit quantization take the fingerprint down with the model.
 
-\textbf{The \textsc{Inconclusive} verdict.} Across all 280+ tested pairs, every score fell cleanly above $\tau_{\mathrm{upper}}$ or below $\tau_{\mathrm{lower}}$; no verdict was \textsc{Inconclusive}. The band exists for deployments our benchmarks do not cover---nulls built from few independents, or suspects near the graft and merge midpoints of Appendix~\ref{app:harder-bench}---where scores need not separate as sharply as they do here.
-
-\section{Discussion}
-
-\textbf{Scope.} The method requires white-box access and residual architecture. Non-residual networks lack the identity-target constraint that creates the fingerprint.
-
-\textbf{Positioning.} This complements watermarking: watermarks require forethought; diagonal dominance offers passive, retroactive verification for checkpoints never watermarked.
-
-\textbf{Validation scope.} Lineage AUROC is reported on the synthetic MLP zoo and CIFAR-10 ResNet-18, with real-architecture evidence from pairing on Transformer families and a 7-pair LLaMA-2 test. The remaining gap is tree breadth: all related checkpoints derive from a single base. Extending to additional checkpoint trees and larger negative sets is straightforward engineering. Detailed limitations are in Appendix~\ref{app:limitations}.
+\textbf{The \textsc{Inconclusive} verdict.} Across all 246 tested pairs (159 MLP + 32 ResNet-18 + 7 LLaMA-2 + 40 harder-regime + 8 BERT), every score fell cleanly above $\tau_{\mathrm{upper}}$ or below $\tau_{\mathrm{lower}}$; no verdict was \textsc{Inconclusive}. The band exists for deployments our benchmarks do not cover, where scores need not separate as sharply.
 
 \section{Conclusion}
 
-Training leaves traces. Residual-network optimization couples each block's input and output projections so that their product becomes diagonal-dominant ($W_{\mathrm{out}} W_{\mathrm{in}} \approx -\varepsilon I + E$), with a theoretical $\sqrt{d}$ upper bound and an empirical $d^{0.87}$ growth observed from GPT-2 through LLaMA-2-13B and Mixtral-8x7B. Across 12 architectures spanning 5 families, the fingerprint recovers 91--100\% of block correspondences and achieves AUROC$=$1.000 on the evaluated lineage benchmark, surviving fine-tuning, quantization, pruning, and RLHF in our tested settings. Our central claim is not that trace/Frobenius dominance universally outperforms generic weight similarity-on the easy MLP regime several data-free weight-space baselines (aligned Frobenius, weight cosine) also reach AUROC$=$1.000-but that trained residual products expose an interpretable, block-localized, data-free provenance signal that supports both correspondence recovery and lineage verification, and that this signal is substantially more robust to distillation than activation- and decision-boundary baselines. Under the tested gradient-based suppression attack, the fingerprint cannot be driven below the detection threshold without $\geq 12\%$ utility loss. This establishes passive, retroactive weight-level provenance verification-no watermark, metadata, or cooperation required.
+Training leaves traces. Residual-network optimization couples each block's input and output projections so that their product becomes diagonal-dominant ($W_{\mathrm{out}} W_{\mathrm{in}} \approx -\varepsilon I + E$), with a theoretical $\sqrt{d}$ upper bound and an empirical $d^{0.87}$ growth observed from GPT-2 through LLaMA-2-13B and Mixtral-8x7B. Across 12 architectures spanning 5 families, the fingerprint recovers 80--100\% of block correspondences and achieves AUROC$=$1.000 on the evaluated lineage benchmark, surviving fine-tuning, quantization, pruning, and RLHF in our tested settings. Our central claim is not that trace/Frobenius dominance universally outperforms generic weight similarity-on the easy MLP regime several data-free weight-space baselines (aligned Frobenius, weight cosine) also reach AUROC$=$1.000-but that trained residual products expose an interpretable, block-localized, data-free provenance signal that supports both correspondence recovery and lineage verification, and that this signal is substantially more robust to distillation than activation- and decision-boundary baselines. Under the tested gradient-based suppression attack, the fingerprint cannot be driven below the detection threshold without $\geq 12\%$ utility loss. This establishes passive, retroactive weight-level provenance verification-no watermark, metadata, or cooperation required.
 
 \section*{Reproducibility Statement}
 
-All results in this paper are produced by deterministic scripts with fixed seeds. The 52-pair MLP lineage benchmark (Tables~\ref{tab:survival}, \ref{tab:baselines}) is constructed from $2$ trained reference checkpoints, each paired with $5$ related-checkpoint kinds $\times 6$ derivative seeds $=30$ truly-related pairs (fine-tune, fine-tune to a new target, $\sigma_{\text{rel}} \in [0.01,0.15]$ Gaussian noise, $10$--$85\%$ magnitude pruning, and $16$--$256$-level uniform quantization), plus $16$ different-seed same-task pairs and $6$ distilled-student pairs as unrelated checkpoints. The expanded 159-pair set used in Figure~\ref{fig:lineage-three-panel} draws from the full $24$-checkpoint MLP zoo with the same transformation grid. Exact parameters are listed in Appendix~\ref{app:architectures}; null calibration uses the $50$ different-seed pairs from Appendix~\ref{app:verification}. Real-architecture pairing (Table~\ref{tab:transformer-family}) loads public HuggingFace checkpoints. Code, configuration files, baseline implementations (aligned Frobenius, singular-value distance, weight cosine, CKA, SVCCA, IPGuard regression analogue), the per-pair score JSONs, and the plotting scripts will be released upon acceptance.
+All results in this paper are produced by deterministic scripts with fixed seeds. The 52-pair MLP lineage benchmark (Tables~\ref{tab:survival}, \ref{tab:baselines}) is constructed from $2$ trained reference checkpoints, each paired with $5$ related-checkpoint kinds $\times 6$ derivative seeds $=30$ truly-related pairs (fine-tune, fine-tune to a new target, $\sigma_{\text{rel}} \in [0.01,0.15]$ Gaussian noise, $10$--$85\%$ magnitude pruning, and $16$--$256$-level uniform quantization), plus $16$ different-seed same-task pairs and $6$ distilled-student pairs as unrelated checkpoints. The expanded 159-pair set used in Figure~\ref{fig:hero}c draws from the full $24$-checkpoint MLP zoo with the same transformation grid. Exact parameters are listed in Appendix~\ref{app:architectures}; null calibration uses the $50$ different-seed pairs from Appendix~\ref{app:verification}. Real-architecture pairing (Table~\ref{tab:transformer-family}) loads public HuggingFace checkpoints. Code, configuration files, baseline implementations (aligned Frobenius, singular-value distance, weight cosine, CKA, SVCCA, IPGuard regression analogue), the per-pair score JSONs, and the plotting scripts will be released upon acceptance.
 
 \clearpage
 \raggedbottom

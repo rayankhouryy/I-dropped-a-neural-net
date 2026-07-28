@@ -76,9 +76,42 @@ To test multi-generational ancestry recovery, we construct a branching tree: roo
 
 \section{Per-Architecture Details}\label{app:architectures}
 
+\subsection{Initialization Ablation}
+
+Table~\ref{tab:init-ablation} shows pair accuracy before and after training across seven initialization schemes on depth-24 residual MLPs (3 seeds, 200 epochs). All schemes show chance-level accuracy (${\leq}2.1\%$) at initialization, rising to $93$--$100\%$ after training. Orthogonal initialization provides dynamical isometry at init yet shows zero correct pairs before training.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Init scheme & Untrained & Trained & AUROC \\
+\midrule
+Orthogonal       & $0.0\%$  & $100\%$ & $0.947$ \\
+Kaiming-normal   & $2.1\%$  & $97\%$  & $0.981$ \\
+Kaiming-uniform  & $2.1\%$  & $98.6\%$ & $0.98$ \\
+Xavier-normal    & $2.1\%$  & $100\%$ & $0.990$ \\
+Xavier-uniform   & $2.1\%$  & $100\%$ & $0.99$ \\
+Uniform          & $2.1\%$  & $93.8\%$ & --- \\
+Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
+\bottomrule
+\end{tabular}
+\caption{Initialization ablation on depth-24 residual MLPs. All schemes show chance-level accuracy before training. The Gaussian $\sigma{=}0.02$ case fails because blocks collapse to near-zero contribution.}
+\label{tab:init-ablation}
+\end{table}
+
 \subsection{GPT-2 Scaling and Trace Analysis}\label{app:gpt2-details}
 
 Across the GPT-2 family, mean correct-pair score grows with hidden dimension: $d{=}768$ at $\bar{s}(i,i) = 4.18$, $d{=}1024$ at $5.46$, $d{=}1280$ at $6.98$, $d{=}1600$ at $7.77$. The fitted exponent within the GPT-2 family is $\approx 0.85$, consistent with the cross-family $s \propto d^{0.87}$ scaling reported in the main text; the $\sqrt{d}$ upper bound itself is never violated (observed scores reach $15$--$19\%$ of the bound).
+
+Figure~\ref{fig:gpt2-pairing} shows block pairing score matrices $s(i,j)$ for GPT-2 models from 124M to 1.5B parameters. Diagonal entries dominate, yielding 100\% pairing accuracy across all scales.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{../../../figures/fig_gpt2_mlp_pairing.pdf}
+\caption{Block pairing score matrices $s(i,j)$ for GPT-2 models from 124M to 1.5B parameters. Diagonal entries dominate, yielding 100\% pairing accuracy across all scales.}
+\label{fig:gpt2-pairing}
+\end{figure*}
 
 Figure~\ref{fig:gpt2-trace} shows the trace values $\mathrm{tr}(W_{\mathrm{out}} W_{\mathrm{in}})$ per block across all four GPT-2 variants. Negative traces (blue) constitute 81--92\% of blocks, confirming the diagonal-dominance mechanistic prediction. The early blocks (0--2) consistently show positive traces, likely reflecting the different role of embedding-adjacent layers.
 
@@ -213,6 +246,15 @@ For Bottleneck blocks, the naive $W_3 W_1$ achieves chance-level accuracy. The t
 \subsection{CIFAR-10 ResNet-18 Benchmark}
 
 We train two CIFAR-10 ResNet-18 references and three independents. Each reference yields 11 related checkpoints (noise $1{-}10\%$, pruning $20{-}80\%$, quantization $16{-}256$ levels). Results: AUROC$=$1.000, TPR@1\%FPR$=$100\%. Related checkpoint scores: $\mathcal{L} \in [0.695, 1.000]$; unrelated baseline: $\mathcal{L}_{\max} = 0.004$.
+
+\subsection{ROC for Lineage Verification}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\columnwidth]{../../../figures/fig_lineage_three_panel.pdf}
+\caption{ROC for lineage verification on depth-24 residual MLPs. The residual-signature score achieves AUROC$=$1.000; diagonal-dominance alone fails (AUROC$=$0.417) because it cannot distinguish two trained residual models.}
+\label{fig:lineage-roc}
+\end{figure}
 
 \subsection{Branching Ancestry Recovery}
 
