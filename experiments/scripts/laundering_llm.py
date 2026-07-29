@@ -82,7 +82,7 @@ MODEL_TRIPLETS = {
     'qwen': {
         'ref': 'Qwen/Qwen2.5-1.5B',
         'suspect': 'Qwen/Qwen2.5-1.5B-Instruct',
-        'unrelated': 'TinyLlama/TinyLlama-1.1B-Chat-v1.0',
+        'unrelated': None,  # No common model with matching d=1536; skip unrelated control
     },
 }
 
