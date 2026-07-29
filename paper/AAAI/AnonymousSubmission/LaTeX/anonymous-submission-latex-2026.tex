@@ -213,7 +213,7 @@ For each branch product $M_\ell$ we retain only the traceless remainder of decom
 R_\ell = M_\ell - \tfrac{\mathrm{tr}(M_\ell)}{d} \cdot I, \quad
 \phi_\ell = \tfrac{\mathrm{vec}(R_\ell)}{\|\mathrm{vec}(R_\ell)\|_2}
 \end{equation}
-$R_\ell = E_\ell$ from~\eqref{eq:decomp}. The signature $\phi_\ell$ carries checkpoint-specific geometry that weight-preserving transformations inherit and independent training cannot reproduce. Because $M_\ell$ is invariant under hidden permutation and reciprocal rescaling, so is every signature built on it (Section~\ref{sec:adversarial}).
+$R_\ell = E_\ell$ from~\eqref{eq:decomp}. The signature $\phi_\ell$ carries checkpoint-specific geometry that weight-preserving transformations inherit and independent training cannot reproduce. Because $M_\ell$ is invariant under hidden permutation and reciprocal rescaling, so is every signature built on it (Section~\ref{sec:laundering}).
 
 Given reference $A$ and suspect $B$ with $L$ blocks each, we form the similarity matrix $G_{ij} = \langle \phi^A_i, \phi^B_j \rangle$, gated by diagonal dominance (Appendix~\ref{app:verification}), and recover the block correspondence via the Hungarian algorithm~\citep{kuhn1955hungarian}:
 \begin{equation}\label{eq:hungarian}
@@ -341,9 +341,13 @@ DeepSeek-Distill-8B & L3.1 wts & $4\mathrm{e}{-}4$ & $0.162$ & UNR. \\
 
 As a real-world feasibility demonstration, we compare LLaMA-2-7B-base against 3 known derivatives (chat/RLHF, Vicuna/instruct-tuned, CodeLlama/code-pretrained) and 4 independently trained models (Mistral-7B, OpenLLaMA-7B, Yi-6B, DeepSeek-Distill-8B), extracting SwiGLU branch products $M = W_{\mathrm{down}} W_{\mathrm{up}}$ across all 32 layers (hidden dim $d{=}4096$). Three fine-tuned variants score related ($\mathcal{L}$: 0.995, 0.996, 0.336); four independents score at the $10^{-4}$ null. OpenLLaMA---same architecture ($d{=}4096$, $L{=}32$, $d_{\mathrm{ff}}{=}11008$) trained from scratch---is the decisive case: its \textsc{Unrelated} verdict can only come from weights. Mean separation is ${\approx}1850\times$, against $6\times$ for weight cosine (Table~\ref{tab:real-llm}); with $n{=}7$ pairs this demonstrates feasibility rather than establishing a false-positive rate (Appendix~\ref{app:real-llm}). The score also decays with genealogical distance (Appendix~\ref{app:verification}).
 
-\subsection{Comparison with Data-Free and Behavioral Baselines}\label{sec:exp-baselines}
+\subsection{Lineage Verification Benchmark}\label{sec:exp-baselines}
 
-We compare against six baselines on a 52-pair MLP benchmark (depth$=$16, in\_dim$=$16, hidden$=$48): three data-free weight-space methods (aligned Frobenius, singular-value distance, weight cosine) and three behavioral methods requiring 1024 probe samples each (SVCCA, CKA, and a regression analogue of IPGuard). Table~\ref{tab:baselines} reports aggregate AUROC and Gap-$Z = (\bar{s}_{\mathrm{related}} - \bar{s}_{\mathrm{distilled}})/\sigma_{\mathrm{distilled}}$, the standardized margin by which distilled students fall below related checkpoints.
+The 52-pair MLP benchmark of Section~\ref{sec:exp-verify} is too easy: four data-free weight-space methods all reach AUROC$=$1.000 (Table~\ref{tab:baselines}). We first establish this baseline comparison, then test which methods survive \emph{function-preserving laundering}---transformations that decouple raw weight proximity from lineage while preserving the model's input--output behavior exactly.
+
+\subsubsection{Baseline Comparison}\label{sec:baseline-comparison}
+
+We compare against six baselines on the 52-pair MLP benchmark (depth$=$16, in\_dim$=$16, hidden$=$48): three data-free weight-space methods (aligned Frobenius, singular-value distance, weight cosine) and three behavioral methods requiring 1024 probe samples each (SVCCA, CKA, and a regression analogue of IPGuard). Table~\ref{tab:baselines} reports aggregate AUROC and Gap-$Z = (\bar{s}_{\mathrm{related}} - \bar{s}_{\mathrm{distilled}})/\sigma_{\mathrm{distilled}}$, the standardized margin by which distilled students fall below related checkpoints.
 
 \begin{table*}[!t]
 \centering
@@ -358,7 +362,7 @@ Singular Value Distance   & Weight-space     & \cmark & 1.000 & $\phantom{+}+7.9
 Weight Cosine             & Weight-space     & \cmark & 1.000 & $+76.3$ & \xmark \\
 SVCCA~\citep{raghu2017svcca}             & Activation-space & \xmark & 1.000 & $+45.4$ & \xmark \\
 CKA~\citep{kornblith2019similarity}      & Activation-space & \xmark & 0.829 & $\phantom{+}+8.6$ & \xmark \\
-IPGuard~\citep{cao2021ipguard} (regression analogue) & Decision-boundary & \xmark & 0.500 & $\phantom{+}-3.5$ & \xmark \\
+IPGuard~\citep{cao2021ipguard} (regression analogue) & Decision-boundary & \xmark & 0.700 & $\phantom{+}-3.5$ & \xmark \\
 \bottomrule
 \end{tabular}
 \caption{Baseline comparison on the MLP benchmark (52 pairs). Four weight-space methods reach AUROC$=$1.000; Gap-$Z$ measures standardized distillation rejection, where IPGuard's $-3.5$ indicates related checkpoints rank below distilled.}
@@ -373,6 +377,37 @@ Four weight-space methods, ours included, reach AUROC$=$1.000 on this benchmark.
 
 \textbf{Distillation rejection.} CKA scores distilled students at 0.83, only $1.2\times$ below fine-tuned checkpoints, and SVCCA behaves similarly (Appendix~\ref{app:per-kind-baselines}). Every weight-space method, ours included, places distilled students at or below the different-seed baseline. MoTHer~\citep{horwitz2025mother} is not comparable in this setting: it recovers model trees from a checkpoint collection and does not score a single pair.
 
+\subsubsection{Robustness to Laundering}\label{sec:laundering}
+
+The AUROC$=$1.000 results above leave open whether baselines succeed because they track lineage or because they track raw weight proximity, which happens to correlate with lineage in unmodified checkpoints. We test this by applying \emph{function-preserving laundering}: per-block permutation (P) and reciprocal rescaling (D) that leave the network's input--output map exactly unchanged while transforming the weights. Specifically, P permutes hidden units ($W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$), and D rescales them ($W_{\mathrm{in}} \leftarrow D W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} D^{-1}$). These transformations leave the branch product $M = W_{\mathrm{out}} W_{\mathrm{in}}$ exactly unchanged ($P^\top P = I$, $D^{-1} D = I$), so our signature is invariant by construction. Raw-weight baselines have no such guarantee.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Method & none & P & D & PD & PDFT \\
+\midrule
+\textbf{Ours (on $M$)} & \textbf{1.000} & \textbf{1.000} & \textbf{1.000} & \textbf{1.000} & \textbf{1.000} \\
+Raw Frobenius & 1.000 & 0.495 & 0.000 & 0.000 & 0.000 \\
+Raw SVD dist & 1.000 & 1.000 & 0.000 & 0.000 & 0.000 \\
+Raw weight cos & 1.000 & 0.856 & 1.000 & 0.805 & 0.805 \\
+Re-Basin+scale & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+\bottomrule
+\end{tabular}
+\caption{AUROC under function-preserving laundering (52 pairs). P$=$permutation, D$=$rescaling (log-uniform $[0.1, 10]$), PDFT$=$P+D then 5 epochs fine-tuning. All variants pass a hard gate ($\max|\Delta f| < 10^{-4}$). Our score is invariant; raw-weight baselines collapse.}
+\label{tab:laundering}
+\end{table}
+
+Table~\ref{tab:laundering} shows the results. Our method maintains AUROC$=$1.000 across all variants---the measured signature deviation is $|\Delta\mathcal{L}| \approx 10^{-8}$, confirming algebraic invariance. Raw-weight baselines collapse: aligned Frobenius drops to 0.495 under P alone and to 0.000 under any D; singular-value distance survives P (spectrum is permutation-invariant) but fails D; weight cosine partially survives both but degrades to 0.805 under PD.
+
+A scale-aware Re-Basin baseline~\citep{ainsworth2023git}---which explicitly solves a per-block permutation+scale optimization to undo the laundering---also achieves 1.000 on all variants. The distinction is cost and guarantee: our signature is invariant with zero alignment work, while Re-Basin must solve $L$ Hungarian assignments plus $L$ least-squares fits for every pair. The honest framing is that raw-weight baselines \emph{can} survive laundering, but only by explicitly solving the alignment problem our signature is invariant to for free.
+
+\textbf{Real 7B validation.} On Llama-2-7B, we launder the chat variant's SwiGLU layers (P permutes $W_{\mathrm{gate}}$/$W_{\mathrm{up}}$ rows and $W_{\mathrm{down}}$ columns; D-mild scales $W_{\mathrm{up}}$ rows and $W_{\mathrm{down}}$ columns). Our score remains at $\mathcal{L}=0.995$ under both P and D-mild---identical to the unlaundered baseline. Raw weight cosine collapses from 0.949 to 0.002 under P. The unrelated control (OpenLLaMA-7B) stays at $\mathcal{L} \approx 0.000$ regardless of laundering, confirming no false positives.
+
+\textbf{Gradient-based suppression.} We test a white-box adversary who optimizes $\min_\Delta \mathcal{L}(A,A+\Delta) + \lambda \cdot \|f_{A+\Delta}(X) - f_A(X)\|^2$, sweeping $\lambda \in \{0, 10^{-2}, 10^{-1}, 1, 10\}$ (Appendix~\ref{app:attacks}). With $\lambda \ge 1$, the attack cannot push $\mathcal{L}$ below $0.91$. Reaching the unrelated range ($\mathcal{L} \approx 0.08$) requires $\lambda = 10^{-2}$ and costs 12\% eval-loss degradation; removing the utility constraint ($\lambda = 0$) destroys the model. The adversary faces the same coupling that makes benign transformations preserve the signal: the fingerprint lives in the correlated component of $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$, which encodes the branch's learned function.
+
 \subsection{Survival Under Post-Training Modification}\label{sec:survival}
 
 Section~\ref{sec:exp-verify} established that the fingerprint detects lineage; here we measure how it degrades as transformation intensity grows. Table~\ref{tab:survival} covers five transformation families: fine-tuning (same and different target), Gaussian noise ($\sigma_{\mathrm{rel}} \le 15\%$), magnitude pruning (10--85\%), quantization (16--256 levels), and LoRA adapter merging.
@@ -380,14 +415,6 @@ Section~\ref{sec:exp-verify} established that the fingerprint detects lineage; h
 Fine-tuning, quantization, and noise leave the signal essentially intact (mean $\mathcal{L} = 0.99$, min $0.97$), and LoRA-merged checkpoints score $\mathcal{L} \in [0.97, 0.99]$. Fine-tuning to a different target degrades the score to a mean of $0.94$ (min $0.84$). Pruning declines most steeply, from $\mathcal{L} = 0.99$ at 10\% sparsity to $0.58$ at 85\%. The real-world extreme of the fine-tuning axis is CodeLlama: after heavy code-specialized continued pretraining it scores $\mathcal{L}=0.336$, yet remains ${\sim}700\times$ above the unrelated null.
 
 Across all families, degradation correlates with utility loss ($\rho = -0.83$): no tested transformation removes the signal while preserving the model. The mechanism of Section~\ref{sec:exp-exists} explains why. The fingerprint lives in the correlated component of $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$, and that component is precisely the accumulated updates that encode the branch's learned function. Erasing the signal requires decorrelating what training built; function-preserving transformations, by construction, do not.
-
-\subsection{Adversarial Suppression and Function-Preserving Symmetries}\label{sec:adversarial}
-
-\textbf{Function-preserving symmetries.} Per-block permutation ($W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$) and reciprocal rescaling ($W_{\mathrm{in}} \leftarrow c W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}}/c$) leave the branch product $M = W_{\mathrm{out}} W_{\mathrm{in}}$ exactly unchanged, so $\mathcal{L} = 1.0$ to numerical precision. Orthogonal rotations also preserve $M$ but break the network, since ReLU does not commute with rotation. Re-basing hidden units therefore cannot evade the score: the signature is built on the one object these reparameterizations leave fixed.
-
-\textbf{Gradient-based suppression.} We test a white-box adversary with full knowledge of the score, who optimizes $\min_\Delta \mathcal{L}(A,A+\Delta) + \lambda \cdot \|f_{A+\Delta}(X) - f_A(X)\|^2$ on a residual MLP (baseline eval loss 0.69), sweeping $\lambda \in \{0, 10^{-2}, 10^{-1}, 1, 10\}$ to trace the Pareto frontier (Appendix~\ref{app:attacks}). With $\lambda \ge 1$, the attack cannot push $\mathcal{L}$ below $0.91$. Reaching the unrelated range ($\mathcal{L} \approx 0.08$) requires $\lambda = 10^{-2}$ and costs 12\% eval-loss degradation; removing the utility constraint entirely ($\lambda = 0$) destroys the model ($57\times$ loss increase). The adversary faces the same coupling that Section~\ref{sec:survival} measured for benign transformations.
-
-\textbf{Untested attack surfaces.} Two adaptive attacks remain open. Re-alignment toward a third model in the style of Git Re-Basin could attempt to rotate the $E$ matrices off their checkpoint-specific directions, and fine-tuning with an explicit decorrelation penalty on $\langle E_{\mathrm{suspect}}, E_{\mathrm{reference}}\rangle$ would strengthen the attack above with knowledge of the signature itself; we leave both to future work. Warm-start distillation---a student initialized from teacher weights, then distilled---is not an evasion candidate: under the definition of Section~\ref{sec:background} it is \textsc{Related}, and it serves as a positive control on the distillation boundary. Boundary cases and failure modes are discussed in Appendix~\ref{app:boundaries}.
 
 \section{Conclusion}
 

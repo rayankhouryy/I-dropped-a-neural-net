@@ -1,0 +1,63 @@
+{
+  "config": {
+    "ref_base": "NousResearch/Llama-2-7b-hf",
+    "suspect": "NousResearch/Llama-2-7b-chat-hf",
+    "unrelated": "openlm-research/open_llama_7b",
+    "variants": "P,D-mild",
+    "probe_blocks": 4,
+    "seed_base": 7000,
+    "device": "cuda",
+    "dtype": "float16",
+    "out": "results/laundering/",
+    "sig_cache": null
+  },
+  "n_layers": 32,
+  "gate_threshold": 0.0001,
+  "probe_blocks": 4,
+  "seeds": {
+    "laundering_base": 7000,
+    "probe": 12345
+  },
+  "pairs": [
+    {
+      "tag": "chat(laundered)",
+      "repo": "NousResearch/Llama-2-7b-chat-hf",
+      "expected": "DESCENDANT",
+      "variant": "P",
+      "gate_max_deviation": 1.25,
+      "gate_pass": false,
+      "ours_L": 0.9946684262942113,
+      "weight_cosine_raw": 0.002105183818744976
+    },
+    {
+      "tag": "unrelated(laundered)",
+      "repo": "openlm-research/open_llama_7b",
+      "expected": "NON-DESCENDANT",
+      "variant": "P",
+      "gate_max_deviation": 0.5,
+      "gate_pass": false,
+      "ours_L": 5.1032089386232704e-05,
+      "weight_cosine_raw": -3.6796842983422074e-06
+    },
+    {
+      "tag": "chat(laundered)",
+      "repo": "NousResearch/Llama-2-7b-chat-hf",
+      "expected": "DESCENDANT",
+      "variant": "D-mild",
+      "gate_max_deviation": 1.0,
+      "gate_pass": false,
+      "ours_L": 0.9946684168109016,
+      "weight_cosine_raw": 0.9489361183741148
+    },
+    {
+      "tag": "unrelated(laundered)",
+      "repo": "openlm-research/open_llama_7b",
+      "expected": "NON-DESCENDANT",
+      "variant": "D-mild",
+      "gate_max_deviation": 0.5,
+      "gate_pass": false,
+      "ours_L": 5.10450806340252e-05,
+      "weight_cosine_raw": -1.9140616021313905e-05
+    }
+  ]
+}

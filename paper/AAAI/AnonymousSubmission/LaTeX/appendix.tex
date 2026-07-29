@@ -369,7 +369,7 @@ This appendix provides detailed discussion of limitations summarized in the main
 \item Negative set size: a calibrated FPR requires ${\sim}50+$ independents. The per-block branch products fit comfortably in memory at 7B scale, so this is engineering rather than methodological.
 \end{itemize}
 
-\textbf{Adaptive attack coverage.} The gradient-based suppression attack (Section~\ref{sec:adversarial}) is the only adaptive attack tested. The attacker has white-box knowledge of the score function, which is a strong threat model, but alternative attack surfaces remain unexplored:
+\textbf{Adaptive attack coverage.} The gradient-based suppression attack (Section~\ref{sec:laundering}) is the only adaptive attack tested. The attacker has white-box knowledge of the score function, which is a strong threat model, but alternative attack surfaces remain unexplored:
 \begin{itemize}[nosep]
 \item Git Re-Basin-style re-alignment toward a third model could potentially rotate the $E$ matrices away from their checkpoint-specific directions.
 \item Extended fine-tuning with an explicit $E$-decorrelation term (minimizing $\langle E_{\mathrm{suspect}}, E_{\mathrm{reference}} \rangle$) is a stronger, fingerprint-aware version of the tested attack.
