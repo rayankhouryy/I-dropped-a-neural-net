@@ -2,7 +2,7 @@
   "variant": "PDFT",
   "method": "ipguard_regr",
   "AUROC": 0.8272727272727273,
-  "mean_related": 0.8224166666666666,
+  "mean_related": 0.8248333333333334,
   "min_related": 0.5475,
   "mean_unrelated": 0.6404545454545455,
   "max_unrelated": 0.6825,
@@ -21,7 +21,7 @@
     {
       "ref": 0,
       "kind": "noise",
-      "score": 0.935
+      "score": 0.915
     },
     {
       "ref": 0,
@@ -46,7 +46,7 @@
     {
       "ref": 0,
       "kind": "noise",
-      "score": 0.8925
+      "score": 0.95
     },
     {
       "ref": 0,
@@ -71,7 +71,7 @@
     {
       "ref": 0,
       "kind": "noise",
-      "score": 0.885
+      "score": 0.865
     },
     {
       "ref": 0,
@@ -96,7 +96,7 @@
     {
       "ref": 1,
       "kind": "noise",
-      "score": 0.9025
+      "score": 0.91
     },
     {
       "ref": 1,
@@ -121,7 +121,7 @@
     {
       "ref": 1,
       "kind": "noise",
-      "score": 0.9325
+      "score": 0.9175
     },
     {
       "ref": 1,
@@ -146,7 +146,7 @@
     {
       "ref": 1,
       "kind": "noise",
-      "score": 0.86
+      "score": 0.9225
     },
     {
       "ref": 1,

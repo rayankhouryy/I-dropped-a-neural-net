@@ -142,10 +142,8 @@ def block_stack_output(model, X: torch.Tensor) -> torch.Tensor:
 
     This is exactly the sub-function the laundering operators act on. Since no
     operator touches `model.last`, preserving g is equivalent to preserving the
-    full model function f = last(g(.)) wherever last is finite -- and it is robust
-    to a pre-existing NaN in the 1-element `last.bias` produced by descendant_noise
-    (torch std() Bessel correction on a singleton tensor; present in the original
-    Table-6 code, orthogonal to laundering).
+    full model function f = last(g(.)); comparing g (rather than f) keeps the gate
+    focused on precisely what the operators can change.
     """
     model.eval()
     with torch.no_grad():
@@ -195,31 +193,3 @@ def raw_weights(model) -> dict:
 def utility(model, X, y) -> float:
     """Task MSE on (X, y); thin wrapper around eval_loss for the PDFT check."""
     return eval_loss(model, X, y)
-
-
-def sanitize_nonfinite_head(model) -> int:
-    """Zero non-finite values in the final head (model.last). Returns count fixed.
-
-    descendant_noise adds noise scaled by p.std(); for the 1-element `last.bias`,
-    torch's default Bessel-corrected std over a singleton tensor is NaN, which
-    poisons last.bias. This is a PRE-EXISTING artifact in the shared benchmark
-    code (lineage_phase1_mlp.descendant_noise), orthogonal to laundering, and it
-    is present in the original Table-6 run too.
-
-    The final head is applied AFTER the residual block stack and is read by NONE
-    of the 7 scorers (all operate on branch products M = W_out@W_in, block-input
-    activations, or raw block weights) and by NO laundering operator. Zeroing it
-    therefore changes no measured weight/activation score and does not alter the
-    block-stack function g the gate checks; it only makes model predictions and
-    eval-loss finite instead of NaN, and lets PDFT fine-tuning produce finite
-    gradients. We do NOT edit the shared code, so the original harness/Table 6
-    is untouched.
-    """
-    fixed = 0
-    with torch.no_grad():
-        for p in model.last.parameters():
-            mask = ~torch.isfinite(p)
-            if mask.any():
-                fixed += int(mask.sum().item())
-                p[mask] = 0.0
-    return fixed
