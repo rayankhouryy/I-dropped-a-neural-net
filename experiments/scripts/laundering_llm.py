@@ -122,53 +122,101 @@ def hidden_after_blocks(model, input_ids, n_blocks: int) -> torch.Tensor:
 # ------------------------------------------------------- signatures / scoring
 
 @torch.no_grad()
-def branch_signatures(model):
-    """Per-layer signature phi(M) with M = W_down @ W_up, plus raw MLP flats.
+def _layer_signatures(layer):
+    """(phi, raw) as fp32 1-D CPU tensors for one decoder layer's SwiGLU MLP.
 
-    phis[l]      = vec(M - (tr/d) I) / ||.||   (ours; M-based, laundering-invariant)
-    raw_flats[l] = flattened [W_gate; W_up; W_down] (raw weight-cosine baseline)
+    phi = vec(M - (tr/d) I) / ||.||   with M = W_down @ W_up  (ours; M-based)
+    raw = [W_gate; W_up; W_down] flattened                    (raw weight cosine)
+
+    The fp32 upcast + matmul happen on-device; only the two 1-D results move to
+    CPU. Shared by the reference extractor and the streaming suspect scorer so
+    both compute byte-identical signatures.
     """
-    phis, raw_flats = [], []
+    Wg = layer.mlp.gate_proj.weight.detach().to(torch.float32)
+    Wu = layer.mlp.up_proj.weight.detach().to(torch.float32)
+    Wd = layer.mlp.down_proj.weight.detach().to(torch.float32)
+    M = Wd @ Wu                          # (d, d)
+    d = M.shape[0]
+    tr = torch.trace(M)
+    R = M - (tr / d) * torch.eye(d, dtype=M.dtype, device=M.device)
+    phi = (R / torch.linalg.matrix_norm(R)).flatten().cpu()
+    raw = torch.cat([Wg.flatten(), Wu.flatten(), Wd.flatten()]).cpu()
+    del Wg, Wu, Wd, M, R
+    return phi, raw
+
+
+@torch.no_grad()
+def ref_signatures(model):
+    """Per-layer (phi, raw) for the REFERENCE, stored as fp16 numpy to save host RAM.
+
+    For a 7B model this is ~1 GB (phis) + ~8.7 GB (raw) in fp16, versus ~19 GB in
+    fp32 -- the difference between fitting and OOMing a 16 GB host (e.g. an
+    ml.g6.xlarge, which pairs a 24 GB L4 GPU with only 16 GB system RAM). The
+    suspect is never stored in full; see score_against_ref.
+    """
+    phis, raws = [], []
     for layer in model.model.layers:
-        Wg = layer.mlp.gate_proj.weight.detach().to(torch.float32)
-        Wu = layer.mlp.up_proj.weight.detach().to(torch.float32)
-        Wd = layer.mlp.down_proj.weight.detach().to(torch.float32)
-        M = Wd @ Wu                          # (d, d)
-        d = M.shape[0]
-        tr = torch.trace(M)
-        R = M - (tr / d) * torch.eye(d, dtype=M.dtype, device=M.device)
-        phi = (R / torch.linalg.matrix_norm(R)).flatten()
-        phis.append(phi.to(torch.float16).cpu().numpy().astype(np.float32))
-        raw_flats.append(torch.cat([Wg.flatten(), Wu.flatten(), Wd.flatten()])
-                         .to(torch.float16).cpu().numpy().astype(np.float32))
-        del Wg, Wu, Wd, M, R, phi
+        phi, raw = _layer_signatures(layer)
+        phis.append(phi.to(torch.float16).numpy())
+        raws.append(raw.to(torch.float16).numpy())
+        del phi, raw
         gc.collect()
-    return phis, raw_flats
+    return phis, raws
 
 
-def ours_L(phis_a, phis_b) -> float:
-    """Identity-aligned mean signature cosine (ours, L). Renormalize (fp16 I/O)."""
-    vals = []
-    for a0, b0 in zip(phis_a, phis_b):
-        a = a0 / (np.linalg.norm(a0) + 1e-12)
-        b = b0 / (np.linalg.norm(b0) + 1e-12)
-        vals.append(float(a @ b))
-    return float(np.mean(vals))
+def _cosine(a: np.ndarray, b: np.ndarray) -> float:
+    return float(a @ b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-12)
 
 
-def weight_cosine_raw(raw_a, raw_b) -> float:
-    """Per-layer cosine of flattened RAW MLP weights, identity-aligned mean."""
-    vals = []
-    for a, b in zip(raw_a, raw_b):
-        vals.append(float(a @ b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-12))
-    return float(np.mean(vals))
+@torch.no_grad()
+def score_against_ref(model, ref_phis, ref_raws):
+    """Stream the suspect layer-by-layer -> (ours_L, weight_cosine_raw).
+
+    Each layer is reduced to two scalar cosines immediately and discarded, so the
+    host-RAM peak is the (fp16) reference plus a single fp32 layer (~0.6 GB), not
+    a second full 7B signature set. Identity-aligned mean over layers (P/D leave
+    M invariant, so ours needs no unit alignment; the raw cosine does not either,
+    which is exactly why it collapses under P).
+    """
+    n_ref, n_sus = len(ref_phis), len(model.model.layers)
+    if n_ref != n_sus:
+        print(f"[warn] layer-count mismatch ref={n_ref} suspect={n_sus}; "
+              f"scoring the first {min(n_ref, n_sus)} layers", flush=True)
+    L_terms, wcos_terms = [], []
+    for li, layer in enumerate(model.model.layers):
+        if li >= n_ref:
+            break
+        phi, raw = _layer_signatures(layer)
+        L_terms.append(_cosine(ref_phis[li].astype(np.float32), phi.numpy()))
+        wcos_terms.append(_cosine(ref_raws[li].astype(np.float32), raw.numpy()))
+        del phi, raw
+        gc.collect()
+    return float(np.mean(L_terms)), float(np.mean(wcos_terms))
 
 
 # ------------------------------------------------------------------------ main
 
 def load_model(repo: str, device: str, dtype):
+    """Load a causal LM, minimizing the host-RAM peak.
+
+    On CUDA we first try to stream shards straight onto the GPU via device_map
+    (needs `accelerate`), which keeps CPU RAM low -- important on boxes with
+    little system memory (e.g. g6.xlarge has only 16 GB RAM vs a 13.5 GB fp16
+    7B checkpoint). If accelerate is unavailable we fall back to a plain load
+    followed by .to(device).
+    """
     from transformers import AutoModelForCausalLM
     print(f"[load] {repo}", flush=True)
+    if device.startswith("cuda"):
+        try:
+            m = AutoModelForCausalLM.from_pretrained(
+                repo, torch_dtype=dtype, low_cpu_mem_usage=True,
+                device_map={"": device})
+            m.eval()
+            return m
+        except (ImportError, ValueError) as e:
+            print(f"[load] device_map unavailable ({e.__class__.__name__}); "
+                  f"falling back to plain load + .to({device})", flush=True)
     m = AutoModelForCausalLM.from_pretrained(repo, torch_dtype=dtype,
                                              low_cpu_mem_usage=True)
     m.to(device)
@@ -177,26 +225,29 @@ def load_model(repo: str, device: str, dtype):
 
 
 def run_probe_gate(repo, variant, seed, device, dtype, n_blocks, vocab_fallback):
-    """Load a fresh copy, launder it, and return (max_deviation, laundered_model).
+    """Load ONE copy, probe it, launder IN PLACE, probe again.
 
-    The gate loads a clean reference copy and a to-be-laundered copy, launders the
-    latter, and compares the block-`n_blocks` hidden states on shared probe ids.
+    Returns (max_deviation, laundered_model). Laundering is in-place and exactly
+    function-preserving, so a single resident model suffices: we record the
+    block-`n_blocks` hidden states before laundering, launder in place, and
+    record them again after. Peak GPU memory is therefore ONE model (~13.5 GB
+    for a 7B in fp16 -- fits a 24 GB L4), not two copies as before; this also
+    halves the number of 7B loads per pair.
     """
-    ref = load_model(repo, device, dtype)
-    vocab = getattr(ref.config, "vocab_size", vocab_fallback)
+    model = load_model(repo, device, dtype)
+    vocab = getattr(model.config, "vocab_size", vocab_fallback)
     probe = make_probe_ids(vocab, seed=12345)
-    h_ref = hidden_after_blocks(ref, probe, n_blocks)
+    h_ref = hidden_after_blocks(model, probe, n_blocks)   # before laundering
 
-    laundered = load_model(repo, device, dtype)
-    launder_model(laundered, variant, seed)
-    h_l = hidden_after_blocks(laundered, probe, n_blocks)
+    launder_model(model, variant, seed)                   # function-preserving, in place
+    h_l = hidden_after_blocks(model, probe, n_blocks)      # after laundering
 
     dev = float((h_ref - h_l).abs().max().item())
-    del ref
+    del h_ref, h_l
     gc.collect()
     if device.startswith("cuda"):
         torch.cuda.empty_cache()
-    return dev, laundered
+    return dev, model
 
 
 def main():
@@ -219,11 +270,11 @@ def main():
     outdir = Path(args.out)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    # Reference signatures once (unlaundered base).
+    # Reference signatures once (unlaundered base); model freed before any suspect loads.
     ref = load_model(args.ref_base, args.device, dtype)
     n_layers = len(ref.model.layers)
     probe_blocks = min(args.probe_blocks, n_layers)
-    ref_phis, ref_raw = branch_signatures(ref)
+    ref_phis, ref_raw = ref_signatures(ref)
     del ref
     gc.collect()
     if args.device.startswith("cuda"):
@@ -238,9 +289,7 @@ def main():
         dev, model = run_probe_gate(repo, variant, seed, args.device, dtype,
                                     probe_blocks, vocab_fallback=32000)
         gate_pass = dev < GATE_THRESHOLD
-        phis, raw = branch_signatures(model)
-        L = ours_L(ref_phis, phis)
-        wcos = weight_cosine_raw(ref_raw, raw)
+        L, wcos = score_against_ref(model, ref_phis, ref_raw)
         del model
         gc.collect()
         if args.device.startswith("cuda"):
