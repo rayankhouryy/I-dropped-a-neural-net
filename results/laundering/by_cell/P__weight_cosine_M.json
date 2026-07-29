@@ -1,0 +1,274 @@
+{
+  "variant": "P",
+  "method": "weight_cosine_M",
+  "AUROC": 1.0,
+  "mean_related": 0.9870854296506081,
+  "min_related": 0.9497403935022928,
+  "mean_unrelated": 0.09867504827139131,
+  "max_unrelated": 0.12619701218476992,
+  "n_pairs": 52,
+  "related_scores": [
+    {
+      "ref": 0,
+      "kind": "fine_tune",
+      "score": 0.9996244501998854
+    },
+    {
+      "ref": 0,
+      "kind": "fine_tune_new_target",
+      "score": 0.9500687159603056
+    },
+    {
+      "ref": 0,
+      "kind": "noise",
+      "score": 0.9996861542647317
+    },
+    {
+      "ref": 0,
+      "kind": "prune",
+      "score": 0.9793248769036411
+    },
+    {
+      "ref": 0,
+      "kind": "quantize",
+      "score": 0.9999757606296561
+    },
+    {
+      "ref": 0,
+      "kind": "fine_tune",
+      "score": 0.9996139057387844
+    },
+    {
+      "ref": 0,
+      "kind": "fine_tune_new_target",
+      "score": 0.9660161623846752
+    },
+    {
+      "ref": 0,
+      "kind": "noise",
+      "score": 0.9996687029286315
+    },
+    {
+      "ref": 0,
+      "kind": "prune",
+      "score": 0.9793248764373951
+    },
+    {
+      "ref": 0,
+      "kind": "quantize",
+      "score": 0.9999757606296762
+    },
+    {
+      "ref": 0,
+      "kind": "fine_tune",
+      "score": 0.9996690430188409
+    },
+    {
+      "ref": 0,
+      "kind": "fine_tune_new_target",
+      "score": 0.9514230308492844
+    },
+    {
+      "ref": 0,
+      "kind": "noise",
+      "score": 0.9996658323174398
+    },
+    {
+      "ref": 0,
+      "kind": "prune",
+      "score": 0.9793248770186944
+    },
+    {
+      "ref": 0,
+      "kind": "quantize",
+      "score": 0.99997576061937
+    },
+    {
+      "ref": 1,
+      "kind": "fine_tune",
+      "score": 0.9993995785999042
+    },
+    {
+      "ref": 1,
+      "kind": "fine_tune_new_target",
+      "score": 0.9703767570566402
+    },
+    {
+      "ref": 1,
+      "kind": "noise",
+      "score": 0.9996334281095094
+    },
+    {
+      "ref": 1,
+      "kind": "prune",
+      "score": 0.9786377128111663
+    },
+    {
+      "ref": 1,
+      "kind": "quantize",
+      "score": 0.9999756815694765
+    },
+    {
+      "ref": 1,
+      "kind": "fine_tune",
+      "score": 0.9994037066577337
+    },
+    {
+      "ref": 1,
+      "kind": "fine_tune_new_target",
+      "score": 0.9497403935022928
+    },
+    {
+      "ref": 1,
+      "kind": "noise",
+      "score": 0.9996622411148873
+    },
+    {
+      "ref": 1,
+      "kind": "prune",
+      "score": 0.9786377131998434
+    },
+    {
+      "ref": 1,
+      "kind": "quantize",
+      "score": 0.9999756815550761
+    },
+    {
+      "ref": 1,
+      "kind": "fine_tune",
+      "score": 0.9993751161101142
+    },
+    {
+      "ref": 1,
+      "kind": "fine_tune_new_target",
+      "score": 0.9561455446364957
+    },
+    {
+      "ref": 1,
+      "kind": "noise",
+      "score": 0.9996480304383268
+    },
+    {
+      "ref": 1,
+      "kind": "prune",
+      "score": 0.9786377126994377
+    },
+    {
+      "ref": 1,
+      "kind": "quantize",
+      "score": 0.9999756815563245
+    }
+  ],
+  "unrelated_scores": [
+    {
+      "ref": 0,
+      "kind": "diff_seed_same_task",
+      "score": 0.09798255463012653
+    },
+    {
+      "ref": 0,
+      "kind": "diff_seed_same_task",
+      "score": 0.12322521748094183
+    },
+    {
+      "ref": 0,
+      "kind": "diff_seed_same_task",
+      "score": 0.09151972658415175
+    },
+    {
+      "ref": 0,
+      "kind": "diff_seed_same_task",
+      "score": 0.1087657044913486
+    },
+    {
+      "ref": 0,
+      "kind": "diff_seed_same_task",
+      "score": 0.09319347624241385
+    },
+    {
+      "ref": 0,
+      "kind": "diff_seed_same_task",
+      "score": 0.11513646717992645
+    },
+    {
+      "ref": 0,
+      "kind": "diff_seed_same_task",
+      "score": 0.07275083905453428
+    },
+    {
+      "ref": 0,
+      "kind": "diff_seed_same_task",
+      "score": 0.08961951323864872
+    },
+    {
+      "ref": 0,
+      "kind": "distilled",
+      "score": 0.10772134318526849
+    },
+    {
+      "ref": 0,
+      "kind": "distilled",
+      "score": 0.09360480825825523
+    },
+    {
+      "ref": 0,
+      "kind": "distilled",
+      "score": 0.11486011085958293
+    },
+    {
+      "ref": 1,
+      "kind": "diff_seed_same_task",
+      "score": 0.08424972046098676
+    },
+    {
+      "ref": 1,
+      "kind": "diff_seed_same_task",
+      "score": 0.08758986411023083
+    },
+    {
+      "ref": 1,
+      "kind": "diff_seed_same_task",
+      "score": 0.09242229855176841
+    },
+    {
+      "ref": 1,
+      "kind": "diff_seed_same_task",
+      "score": 0.10578016717260881
+    },
+    {
+      "ref": 1,
+      "kind": "diff_seed_same_task",
+      "score": 0.05753498666146398
+    },
+    {
+      "ref": 1,
+      "kind": "diff_seed_same_task",
+      "score": 0.08109290507649924
+    },
+    {
+      "ref": 1,
+      "kind": "diff_seed_same_task",
+      "score": 0.10009345232650077
+    },
+    {
+      "ref": 1,
+      "kind": "diff_seed_same_task",
+      "score": 0.11363008073130006
+    },
+    {
+      "ref": 1,
+      "kind": "distilled",
+      "score": 0.12619701218476992
+    },
+    {
+      "ref": 1,
+      "kind": "distilled",
+      "score": 0.10152695338622866
+    },
+    {
+      "ref": 1,
+      "kind": "distilled",
+      "score": 0.11235386010305307
+    }
+  ]
+}
