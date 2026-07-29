@@ -72,7 +72,7 @@ The protocol cannot provide a verdict when: (1) architectures differ; (2) pertur
 
 \subsection{Lineage Chain and Branching Tree}
 
-To test multi-generational ancestry recovery, we construct a branching tree: root $C_1$, siblings $C_2, C_3$ fine-tuned from $C_1$, grandchildren $C_4 = C_2 \to \mathrm{FT}$, $C_5 = C_3 \to \mathrm{FT}$. The lineage score recovers correct ancestry: for $C_4$, ranking by $\mathcal{L}(C_4, \cdot)$ is parent ($0.96$) $>$ grandparent ($0.91$) $>$ uncle ($0.87$) $>$ cousin ($0.85$) $>$ independent ($0.08$). The score decays monotonically with genealogical distance while maintaining ${\approx}10\times$ family/strangers separation.
+From the MLP benchmark (Table~\ref{tab:survival} setup), we construct a family tree: root $C_1$ (trained from scratch), siblings $C_2$ and $C_3$ (both fine-tuned from $C_1$), grandchildren $C_4$ (from $C_2$) and $C_5$ (from $C_3$). We then measure $\mathcal{L}(C_4, \cdot)$ against all candidates. The score ranks genealogical proximity correctly: parent ($0.96$) $>$ grandparent ($0.91$) $>$ uncle ($0.87$) $>$ cousin ($0.85$) $\gg$ independent (${\sim}0.08$), decaying monotonically with genealogical distance while maintaining ${\approx}10\times$ family/strangers separation.
 
 \section{Per-Architecture Details}\label{app:architectures}
 
@@ -100,9 +100,37 @@ Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
 \label{tab:init-ablation}
 \end{table}
 
-\subsection{GPT-2 Scaling and Trace Analysis}\label{app:gpt2-details}
+\subsection{GPT-2 Scaling, Trace, and Jacobian Analysis}\label{app:gpt2-details}
 
 Across the GPT-2 family, mean correct-pair score grows with hidden dimension: $d{=}768$ at $\bar{s}(i,i) = 4.18$, $d{=}1024$ at $5.46$, $d{=}1280$ at $6.98$, $d{=}1600$ at $7.77$. The fitted exponent within the GPT-2 family is $\approx 0.85$, consistent with the cross-family $s \propto d^{0.87}$ scaling reported in the main text; the $\sqrt{d}$ upper bound itself is never violated (observed scores reach $15$--$19\%$ of the bound).
+
+\paragraph{Jacobian Orthogonality Analysis.}
+The dynamical isometry hypothesis predicts that training should drive block Jacobians $J = I + M$ toward orthogonality. We test this by measuring the normalized Jacobian deviation:
+\begin{equation}
+\delta_J^{\mathrm{norm}} = \left\| \frac{J^\top J}{\|J\|_F^2} - \frac{I}{d} \right\|_F
+\end{equation}
+Intuitively, $\delta_J^{\mathrm{norm}}$ measures how far $J$'s singular values are from uniform: any scaled orthogonal matrix scores 0, and larger values mean some directions are amplified while others are attenuated. This metric is scale-invariant and measures how far the Jacobian's singular values deviate from uniformity (a perfectly orthogonal matrix has $\delta_J^{\mathrm{norm}} = 0$).
+
+Table~\ref{tab:jacobian-orthogonality} shows that training makes GPT-2 Jacobians \emph{less} orthogonal, not more. Across all four model sizes, pretrained $\delta_J^{\mathrm{norm}}$ is $5$--$12\times$ the random-initialization baseline. This falsifies the isometry account: the fingerprint arises from gradient coupling (Section~\ref{sec:exp-exists}), not from optimization toward orthogonal Jacobians.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Model & $d$ & Pretrained $\delta_J^{\mathrm{norm}}$ & Random-init $\delta_J^{\mathrm{norm}}$ & Ratio \\
+\midrule
+GPT-2-small  & 768  & 0.297 & 0.025 & $11.7\times$ \\
+GPT-2-medium & 1024 & 0.242 & 0.026 & $9.4\times$ \\
+GPT-2-large  & 1280 & 0.155 & 0.025 & $6.2\times$ \\
+GPT-2-XL     & 1600 & 0.122 & 0.024 & $5.1\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Jacobian orthogonality across GPT-2 scales. Pretrained models are $5$--$12\times$ less orthogonal than at random initialization, falsifying the dynamical isometry hypothesis. Random-init $\delta_J^{\mathrm{norm}}$ is nearly constant across scales (${\approx}0.025$); pretrained values decrease with model size but never approach the random-init floor.}
+\label{tab:jacobian-orthogonality}
+\end{table}
+
+At initialization the branches contribute almost nothing, so $J \approx I$ and every block is trivially near-isometric. Training builds the fingerprint while dismantling this isometry: a byproduct cannot grow while its supposed cause decays.
 
 Figure~\ref{fig:gpt2-pairing} shows block pairing score matrices $s(i,j)$ for GPT-2 models from 124M to 1.5B parameters. Diagonal entries dominate, yielding 100\% pairing accuracy across all scales.
 
@@ -210,7 +238,7 @@ The set already spans a real RLHF model, a real instruction fine-tune, and a rea
 
 \subsection{Harder Regime: Layer Grafts and Linear Merges}\label{app:harder-bench}
 
-To probe the regime predicted by Section~\ref{sec:exp-baselines} where a flat global cosine should blur partial provenance, we evaluate all seven baselines on two harder constructions over the depth-$16$ MLP zoo: (i) \textbf{layer grafts}, where a suspect is built by copying $K \in \{0,4,8,12,16\}$ of the reference's $16$ blocks into a same-task independent donor (and labelling $K \ge 8$ as related); and (ii) \textbf{linear merges}, where suspect parameters equal $w \cdot \mathrm{ref} + (1-w) \cdot \mathrm{donor}$ with $w \in \{0, 0.25, 0.5, 0.75, 1.0\}$ (related if $w \ge 0.5$). We use $2$ trained references, $2$ trained donors per reference, and report AUROC for binary related-vs-unrelated detection plus Spearman correlation between each method's score and the reference fraction ($K/L$ or $w$); the latter measures whether a method tracks partial overlap monotonically rather than just clearing a threshold. Table~\ref{tab:harder-bench} summarizes the $40$-pair benchmark.
+We construct 40 harder pairs from depth-16 MLPs (same setup as Table~\ref{tab:baselines}): (i) \textbf{layer grafts} copy $K \in \{0,4,8,12,16\}$ of 16 blocks from reference into an independent donor (related if $K \ge 8$); (ii) \textbf{linear merges} compute $w \cdot \mathrm{ref} + (1-w) \cdot \mathrm{donor}$ with $w \in \{0, 0.25, 0.5, 0.75, 1.0\}$ (related if $w \ge 0.5$). We use 2 references and 2 donors per reference. AUROC measures binary related-vs-unrelated detection; Spearman correlation measures whether a method tracks partial overlap monotonically ($K/L$ or $w$) rather than just clearing a threshold. Table~\ref{tab:harder-bench} summarizes the 40-pair benchmark.
 
 \begin{table}[h]
 \centering\small
@@ -234,9 +262,9 @@ IPGuard (regr.\ analogue)  & 0.052 & 0.448 & $-$0.83 & +0.22 \\
 \label{tab:harder-bench}
 \end{table}
 
-\subsection{ResNet Factorization}
+\subsection{ResNet Factorization}\label{app:resnet-factorization}
 
-For Bottleneck blocks, the naive $W_3 W_1$ achieves chance-level accuracy. The triple product $W_3 W_2 W_1$ recovers:
+On ImageNet-pretrained ResNet-50/101/152 (torchvision), we compare naive two-layer factorization ($W_3 W_1$, skipping the middle conv) against the correct three-layer product ($W_3 W_2 W_1$) on layer3 bottleneck blocks ($n{=}5/22/35$ blocks respectively). Naive $W_3 W_1$ achieves chance-level accuracy; the correct triple product recovers:
 \begin{itemize}[nosep]
 \item ResNet-50/layer3 ($n{=}5$): 100\%, AUC 1.000
 \item ResNet-101/layer3 ($n{=}22$): 100\%, AUC 0.995
@@ -258,7 +286,7 @@ We train two CIFAR-10 ResNet-18 references and three independents. Each referenc
 
 \subsection{Branching Ancestry Recovery}
 
-On a synthetic tree $C_1 \!\to\! \{C_2, C_3\}$, $C_2 \!\to\! C_4$, $C_3 \!\to\! C_5$, the lineage score ranks candidates correctly:
+From the MLP benchmark (Table~\ref{tab:survival} setup), we construct a family tree: root $C_1$ (trained from scratch), siblings $C_2$ and $C_3$ (both fine-tuned from $C_1$), grandchildren $C_4$ (from $C_2$) and $C_5$ (from $C_3$). We then measure $\mathcal{L}(C_4, \cdot)$ against all candidates. The lineage score ranks candidates correctly:
 \begin{align*}
 \mathcal{L}(C_4, C_2) &= 0.961 \;>\; \mathcal{L}(C_4, C_1) = 0.910 \\
 &>\; \mathcal{L}(C_4, C_3) = 0.867 \;>\; \mathcal{L}(C_4, C_5) = 0.850 \\
@@ -316,6 +344,16 @@ The $E$ matrix ($M = -\varepsilon I + E$) provides a commitment scheme: owners c
 \subsection{Compression Auditing}
 
 For original $\mathcal{M}$ and claimed-compressed $\mathcal{M}'$, compute $E$-matrix correlation. Quantization ($r > 0.97$), pruning ($r > 0.75$ at 70\%), and fine-tuning ($r > 0.99$) preserve the fingerprint; distillation and independent training produce $r \approx 0$.
+
+\section{Boundary Cases and Failure Modes}\label{app:boundaries}
+
+Some conditions the method handles correctly but uninformatively; others it cannot handle at all. We separate the two.
+
+\textbf{Correct boundary behaviors.} Distillation is the most important. Students trained from fresh weights are \textsc{Unrelated} by definition, and the verdicts agree: same-architecture distilled students score $\mathcal{L} = 0.086$ on the controlled benchmark, and the DeepSeek distill sits at the $10^{-4}$ cross-model null on the real test (Sections~\ref{sec:exp-verify}--\ref{sec:exp-baselines}). The gap between those two magnitudes is itself informative---same-architecture distillation on shared data retains a trace of accidental correlation that cross-family comparison lacks---and both fall well below threshold. Symmetry is the second boundary: $\mathcal{L}(A,B) = \mathcal{L}(B,A)$ by construction, so the protocol cannot name the ancestor; direction requires metadata or a third candidate, as in the branching tree of Section~\ref{sec:exp-verify}. Partial lineage is the third: grafts and merges form a graded regime in which $\mathcal{L}$ tracks the fraction of inherited blocks with Spearman $\rho \approx 0.96$ (Appendix~\ref{app:harder-bench})---partial overlap is measured, not misclassified.
+
+\textbf{Genuine failures.} The protocol returns \textsc{Incompatible} when depth or width differ. There is no signal in non-residual networks (PlainNet, Section~\ref{sec:exp-exists}) or when blocks collapse to near-zero contribution. Utility-destroying perturbations such as 2-bit quantization take the fingerprint down with the model.
+
+\textbf{The \textsc{Inconclusive} verdict.} Across all 246 tested pairs (159 MLP + 32 ResNet-18 + 7 LLaMA-2 + 40 harder-regime + 8 BERT), every score fell cleanly above $\tau_{\mathrm{upper}}$ or below $\tau_{\mathrm{lower}}$; no verdict was \textsc{Inconclusive}. The band exists for deployments our benchmarks do not cover, where scores need not separate as sharply.
 
 \section{Extended Limitations}\label{app:limitations}
 

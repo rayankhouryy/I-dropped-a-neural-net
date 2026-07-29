@@ -23,10 +23,26 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
+plt.rcParams.update({
+    "font.family": "serif",
+    "font.size": 14,
+    "axes.titlesize": 16,
+    "axes.labelsize": 14,
+    "legend.fontsize": 11,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "figure.dpi": 150,
+    "savefig.dpi": 300,
+    "savefig.bbox": "tight",
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+})
+
 RESULTS = Path("experiments/results")
 OUT_PNG = Path("experiments/figures/fig_rq1_gradient_coupling.png")
 OUT_PDF = Path("experiments/figures/fig_rq1_gradient_coupling.pdf")
 PAPER_PDF = Path("paper/figures/fig_rq1_gradient_coupling.pdf")
+FIGURES_PDF = Path("figures/fig_rq1_gradient_coupling.pdf")
 
 
 def load_part_a():
@@ -84,8 +100,7 @@ def aggregate(per_seed, key_x=0, key_y=1):
 
 
 def panel_a(ax, samples_per_seed, agg):
-    # Use seed 0 trajectory for line, but show pooled scatter for context.
-    # Aggregate g_diag and weight_s by epoch.
+    # Aggregate g_diag and weight_s by epoch across seeds.
     rows_by_epoch_g = {}
     rows_by_epoch_s = {}
     for seed in samples_per_seed:
@@ -98,45 +113,46 @@ def panel_a(ax, samples_per_seed, agg):
     s_mean = np.array([np.mean(rows_by_epoch_s[e]) for e in eps])
     s_std = np.array([np.std(rows_by_epoch_s[e]) for e in eps])
 
-    ax.plot(eps, g_mean, marker="o", color="#1f77b4",
-            label=r"gradient $g_{\mathrm{diag}}$")
+    # Distinct line styles for dual axis clarity
+    ax.plot(eps, g_mean, marker="o", color="#1f77b4", linewidth=2.5,
+            linestyle="-", label=r"Gradient $g_{\mathrm{diag}}$")
     ax.fill_between(eps, g_mean - g_std, g_mean + g_std, alpha=0.2, color="#1f77b4")
-    ax2 = ax.twinx()
-    ax2.plot(eps, s_mean, marker="s", color="#d62728",
-             label=r"weight $s = |\mathrm{tr}(M)|/\|M\|_F$")
-    ax2.fill_between(eps, s_mean - s_std, s_mean + s_std, alpha=0.2, color="#d62728")
     ax.set_xlabel("Epoch")
-    ax.set_ylabel(r"$g_{\mathrm{diag}}$", color="#1f77b4")
-    ax2.set_ylabel(r"$s$", color="#d62728")
+    ax.set_ylabel(r"Gradient diagonality $g_{\mathrm{diag}}$", color="#1f77b4")
     ax.tick_params(axis="y", labelcolor="#1f77b4")
+    ax.spines["right"].set_visible(True)
+
+    ax2 = ax.twinx()
+    ax2.plot(eps, s_mean, marker="s", color="#d62728", linewidth=2.5,
+             linestyle="--", label=r"Weight score $s$")
+    ax2.fill_between(eps, s_mean - s_std, s_mean + s_std, alpha=0.2, color="#d62728")
+    ax2.set_ylabel(r"Weight score $s$", color="#d62728")
     ax2.tick_params(axis="y", labelcolor="#d62728")
-    ax.set_title("A. Gradients stay flat while weights climb\n"
-                 r"Pearson $r(g_{\mathrm{diag}}, s) = "
-                 f"{agg['mean_correlation']:.2f} \pm {agg['std_correlation']:.2f}$",
-                 fontsize=10)
+    ax2.spines["right"].set_color("#d62728")
+
+    ax.set_title("Gradient vs. weight trajectory")
     ax.grid(True, alpha=0.3)
+
+    # Combined legend below the plot, horizontal
     lines1, labs1 = ax.get_legend_handles_labels()
     lines2, labs2 = ax2.get_legend_handles_labels()
     ax.legend(lines1 + lines2, labs1 + labs2,
-              loc="upper center", bbox_to_anchor=(0.5, -0.18),
-              fontsize=8, framealpha=0.92, ncol=2)
+              loc="upper center", bbox_to_anchor=(0.5, -0.15),
+              ncol=2, framealpha=0.9)
 
 
 def panel_b(ax, part_b, agg):
     for cond, color, marker in [("control", "#2ca02c", "o"),
                                  ("shuffled", "#ff7f0e", "s")]:
         xs, ys, stds = aggregate(part_b[cond])
+        label = cond.capitalize()
         ax.errorbar(xs, ys, yerr=stds, marker=marker, color=color,
-                    label=f"{cond} (final $s$={agg[cond]['mean_s']:.2f})",
-                    capsize=3, linewidth=1.5)
+                    label=label, capsize=3, linewidth=2.0)
     ax.set_xlabel("Epoch")
-    ax.set_ylabel(r"Mean diagonal dominance $s$")
-    drop = 1 - agg["shuffled"]["mean_s"] / agg["control"]["mean_s"]
-    ax.set_title(f"B. Shuffling $\\nabla W_{{out}}$ cuts fingerprint by {drop*100:.0f}%\n"
-                 "Independent updates break the coupling",
-                 fontsize=10)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18),
-              fontsize=8, framealpha=0.92)
+    ax.set_ylabel(r"Diagonal dominance $s$")
+    ax.set_title("Shuffled gradient ablation")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15),
+              ncol=2, framealpha=0.9)
     ax.grid(True, alpha=0.3)
 
 
@@ -144,23 +160,20 @@ def panel_c(ax, part_c, agg):
     colors = {"eps_0.0": "#7f7f7f", "eps_0.01": "#9467bd", "eps_0.1": "#e377c2"}
     markers = {"eps_0.0": "x", "eps_0.01": "o", "eps_0.1": "^"}
     labels = {
-        "eps_0.0":  r"$\varepsilon = 0$ (control, noise only)",
+        "eps_0.0":  r"$\varepsilon = 0$ (control)",
         "eps_0.01": r"$\varepsilon = 0.01$",
         "eps_0.1":  r"$\varepsilon = 0.1$",
     }
     for eps_key, per_seed in part_c.items():
         xs, ys, stds = aggregate(per_seed)
         ax.errorbar(xs, ys, yerr=stds, marker=markers[eps_key],
-                    color=colors[eps_key],
-                    label=labels[eps_key] + f"  (final $s$={agg[eps_key]['mean_s']:.2f})",
-                    capsize=3, linewidth=1.5)
-    ax.set_xlabel("Synthetic injection step")
-    ax.set_ylabel(r"Mean diagonal dominance $s$")
-    ax.set_title("C. Diagonal injection (no backprop) builds the fingerprint\n"
-                 "Diagonal structure is sufficient",
-                 fontsize=10)
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18),
-              fontsize=8, framealpha=0.92)
+                    color=colors[eps_key], label=labels[eps_key],
+                    capsize=3, linewidth=2.0)
+    ax.set_xlabel("Injection step")
+    ax.set_ylabel(r"Diagonal dominance $s$")
+    ax.set_title("Synthetic diagonal injection")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15),
+              ncol=3, framealpha=0.9)
     ax.grid(True, alpha=0.3)
 
 
@@ -169,26 +182,23 @@ def main():
     part_b, agg_b = load_part_b()
     part_c, agg_c = load_part_c()
 
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.4))
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5.0))
     panel_a(axes[0], samples_per_seed, agg_a)
     panel_b(axes[1], part_b, agg_b)
     panel_c(axes[2], part_c, agg_c)
-    fig.suptitle(
-        r"Gradient coupling mechanism (RQ1 §9): "
-        r"correlated $\nabla W_{in},\nabla W_{out}$ updates "
-        r"build the diagonal fingerprint",
-        fontsize=12, y=1.02,
-    )
     fig.tight_layout()
 
     OUT_PNG.parent.mkdir(parents=True, exist_ok=True)
     PAPER_PDF.parent.mkdir(parents=True, exist_ok=True)
+    FIGURES_PDF.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT_PNG, dpi=150, bbox_inches="tight")
     fig.savefig(OUT_PDF, bbox_inches="tight")
     fig.savefig(PAPER_PDF, bbox_inches="tight")
+    fig.savefig(FIGURES_PDF, bbox_inches="tight")
     print(f"wrote {OUT_PNG}")
     print(f"wrote {OUT_PDF}")
     print(f"wrote {PAPER_PDF}")
+    print(f"wrote {FIGURES_PDF}")
 
 
 if __name__ == "__main__":

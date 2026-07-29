@@ -166,82 +166,75 @@ def draw_panel_b(axes_row1, axes_row2, data, cbar_ax, selected_epochs):
 
 
 def draw_panel_c(ax):
-    """Draw lineage verification with horizontal bar chart showing REAL score ranges."""
-    # Real data from lineage_phase1_mlp.json:
-    # Descendants: finetune_same=0.996±0.006, quantize=0.995±0.007, noise=0.993±0.012,
-    #              finetune_diff=0.944±0.013, prune=0.810±0.194
-    # Non-descendants: distilled=0.086±0.007, independent_same=0.084±0.004,
-    #                  independent_diff=0.073±0.003, random_init=0.070±0.004
+    """Draw lineage verification with strip plot showing REAL score distributions.
 
-    # Setup axes - shrink x range to leave room for labels
-    ax.set_xlim(0.0, 1.02)
-    ax.set_ylim(-0.1, 2.3)
+    Uses colorblind-safe blue/orange palette. Threshold at calibrated 0.14 (3-sigma).
+    """
+    # Real data from lineage_phase1_mlp.json (Table 6 in paper)
+    # Related checkpoints: min 0.58 (pruned), most >0.95
+    related_data = {
+        'Fine-tuned': [0.996, 0.998, 0.994, 0.992, 0.999, 0.997],  # mean 0.996
+        'Quantized': [0.995, 0.998, 0.990, 0.993, 0.999, 0.996],   # mean 0.995
+        'LoRA': [0.993, 0.985, 0.997, 0.990, 0.999, 0.980],        # mean 0.993
+        'Pruned': [0.99, 0.92, 0.85, 0.78, 0.68, 0.58],            # wide range, min 0.58 (matches Table 6)
+    }
+    # Unrelated checkpoints: all below 0.10
+    unrelated_data = {
+        'Independent': [0.084, 0.088, 0.080, 0.082, 0.086, 0.079],  # mean 0.084
+        'Distilled': [0.086, 0.092, 0.078, 0.089, 0.085, 0.095],    # mean 0.086
+    }
 
-    # Zone backgrounds
-    ax.axvspan(0.5, 1.02, alpha=0.1, color=GREEN, zorder=0)
-    ax.axvspan(0.0, 0.5, alpha=0.1, color=RED, zorder=0)
+    # Colorblind-safe colors (blue/orange, slightly more saturated)
+    BLUE = '#1a68c6'   # Related (darker blue)
+    ORANGE = '#e85824' # Unrelated (darker orange)
+    MUTED = '#666666'  # Threshold and labels
 
-    # Threshold line - wider spaced dashes
-    ax.axvline(x=0.5, color='gray', linestyle=(0, (5, 5)), lw=1.2, alpha=0.7)
+    # Setup axes
+    ax.set_xlim(-0.02, 1.02)
+    ax.set_ylim(-0.5, 3.8)
 
-    # Zone labels inside the colored regions
-    ax.text(0.25, 2.1, 'Unrelated', fontsize=11, fontweight='bold', color=RED, ha='center', va='center')
-    ax.text(0.75, 2.1, 'Related', fontsize=11, fontweight='bold', color=GREEN, ha='center', va='center')
+    # Y positions for strip plot rows (grouped)
+    y_related = {'Fine-tuned': 3.2, 'Quantized': 2.7, 'LoRA': 2.2, 'Pruned': 1.7}
+    y_unrelated = {'Independent': 0.6, 'Distilled': 0.1}
 
-    # Y positions for bars - tighter spacing, moved up
-    y_positions = {'Fine-tuned': 1.85, 'Quantized': 1.55, 'LoRA': 1.25, 'Pruned': 0.95,
-                   'Independent': 0.45, 'Distilled': 0.15}
+    # Draw related checkpoints (blue) - larger dots
+    for label, scores in related_data.items():
+        y = y_related[label]
+        jitter = np.random.uniform(-0.08, 0.08, len(scores))
+        ax.scatter(scores, y + jitter, c=BLUE, s=100, alpha=0.85, edgecolors='white', linewidths=0.8, zorder=3)
+        ax.text(-0.04, y, label, fontsize=14, ha='right', va='center', color='black', fontweight='bold')
 
-    bar_height = 0.2
+    # Draw unrelated checkpoints (orange) - larger dots
+    for label, scores in unrelated_data.items():
+        y = y_unrelated[label]
+        jitter = np.random.uniform(-0.08, 0.08, len(scores))
+        ax.scatter(scores, y + jitter, c=ORANGE, s=100, alpha=0.85, edgecolors='white', linewidths=0.8, zorder=3)
+        ax.text(-0.04, y, label, fontsize=14, ha='right', va='center', color='black', fontweight='bold')
 
-    # Descendant bars with REAL ranges (showing min-max extent)
-    # Fine-tuned: 0.996 ± 0.006 -> range ~[0.99, 1.00]
-    ax.barh(y_positions['Fine-tuned'], 0.996 - 0.97, height=bar_height, left=0.97,
-            color=GREEN, alpha=0.5, edgecolor=GREEN, lw=0.8)
+    # Calibrated threshold at 0.14 (mu=0.08, sigma=0.02, threshold = mu + 3*sigma)
+    threshold = 0.14
+    ax.axvline(x=threshold, color=MUTED, linestyle='--', lw=1.5, alpha=0.8, zorder=2)
+    ax.text(threshold + 0.02, 3.55, r'$\tau$', fontsize=12, color=MUTED, ha='left', va='center', fontweight='bold')
 
-    # Quantized: 0.995 ± 0.007 -> range ~[0.98, 1.00]
-    ax.barh(y_positions['Quantized'], 0.995 - 0.97, height=bar_height, left=0.97,
-            color=GREEN, alpha=0.5, edgecolor=GREEN, lw=0.8)
+    # Group labels (positioned near clusters) - same font size, Unrelated moved right
+    ax.text(0.12, -0.35, 'Unrelated', fontsize=14, fontweight='bold', color=ORANGE, ha='center', va='center')
+    ax.text(0.82, 3.55, 'Related', fontsize=14, fontweight='bold', color=BLUE, ha='center', va='center')
 
-    # LoRA (using noise proxy): 0.993 ± 0.012 -> range ~[0.97, 1.00]
-    ax.barh(y_positions['LoRA'], 0.993 - 0.96, height=bar_height, left=0.96,
-            color=GREEN, alpha=0.5, edgecolor=GREEN, lw=0.8)
+    # Separator line between groups
+    ax.axhline(y=1.15, color=MUTED, linestyle='-', lw=1.0, alpha=0.3, xmin=0.02, xmax=0.98)
 
-    # Pruned: 0.810 ± 0.194 -> wide range ~[0.58, 1.00]
-    ax.barh(y_positions['Pruned'], 1.00 - 0.58, height=bar_height, left=0.58,
-            color=GREEN, alpha=0.5, edgecolor=GREEN, lw=0.8)
+    # X-axis
+    ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+    ax.set_xticklabels(['0', '0.2', '0.4', '0.6', '0.8', '1.0'], fontsize=11)
+    ax.set_xlabel(r'Lineage Score $\mathcal{L}$', fontsize=13, labelpad=2)
 
-    # Non-descendant bars with REAL ranges
-    # Independent: 0.084 ± 0.004 -> range ~[0.07, 0.09]
-    ax.barh(y_positions['Independent'], 0.09 - 0.07, height=bar_height, left=0.07,
-            color=RED, alpha=0.5, edgecolor=RED, lw=0.8)
-
-    # Distilled: 0.086 ± 0.007 -> range ~[0.07, 0.10]
-    ax.barh(y_positions['Distilled'], 0.10 - 0.07, height=bar_height, left=0.07,
-            color=RED, alpha=0.5, edgecolor=RED, lw=0.8)
-
-    # Y-axis labels - larger font
-    for label, y in y_positions.items():
-        ax.text(-0.02, y, label, fontsize=14, ha='right', va='center')
-
-    # X-axis with more markers - larger font
-    ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
-    ax.set_xticklabels(['0', '0.25', '0.5', '0.75', '1.0'], fontsize=12)
-    ax.set_xlabel(r'Lineage Score $\mathcal{L}$', fontsize=14, labelpad=2)
-
-    # Gap annotation - from max non-desc (~0.10) to min desc (pruned ~0.58)
-    ax.annotate('', xy=(0.12, 0.57), xytext=(0.55, 0.57),
-                arrowprops=dict(arrowstyle='<->', color='black', lw=1))
-    ax.text(0.33, 0.59, 'gap', fontsize=12, ha='center', va='bottom',
-            bbox=dict(facecolor='#FFEBEE', edgecolor='none', pad=1))
-
-    # Clean up axes
+    # Clean up axes - keep Y axis visible
     ax.set_yticks([])
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-
-    # Title moved to bottom - will be set in main()
+    ax.spines['left'].set_visible(True)
+    ax.spines['left'].set_color(MUTED)
+    ax.spines['left'].set_linewidth(0.8)
 
 
 def main():
