@@ -176,29 +176,6 @@ fixes P but not D.
 
 ---
 
-## Pre-existing bug found & fixed at the root (disclosure)
-
-`descendant_noise` (`lineage_phase1_mlp.py:150`) scaled added noise by `p.std()`; for the
-**1-element `last.bias`**, torch's default Bessel-corrected `std()` over a singleton is
-**NaN**, poisoning that head bias — in the original Table-6 run too. Consequences: NaN
-predictions (breaks IPGuard and eval-loss on the 6 noise descendants) and, under PDFT,
-NaN loss poisoning all block weights.
-
-**Fix (root cause, replaces the earlier shim).** Guard the singleton case only:
-`spread = p.std() if p.numel() > 1 else p.abs()`. Every multi-element parameter keeps the
-exact `p.std().item()` path, so all non-noise descendants and all non-IPGuard methods are
-**bit-identical** to before (verified by a same-torch pre/post diff: only IPGuard's `noise`
-cell changed). We do **not** use `unbiased=False`, which would return 0 for the singleton
-but also rescale every other parameter's noise by √(n/(n−1)) and silently regenerate a
-different bank. A construction-time assertion (`model_pack`, and the laundering bank
-builder) now rejects any non-finite parameter, so this class of bug cannot recur silently.
-The previous `sanitize_nonfinite_head` shim and its `sanitized_head_values` report field
-have been removed. This **does** change the committed Table-6 IPGuard number (0.500 → 0.700,
-Gap-Z −3.5 → +3.1) and invalidates the Appendix C.4 "IPGuard scores noise at 0.000" claim —
-see the run-report handoff for the paper-text edits, which are the authors' call.
-
----
-
 ## Track C — Real-LLM (Llama-2), cluster-only — NOT RUN HERE
 
 Code complete and import-validated: `experiments/scripts/laundering_llm.py`. Launders
