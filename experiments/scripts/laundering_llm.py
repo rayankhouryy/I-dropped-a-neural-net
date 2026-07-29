@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Track C -- Real-LLM checkpoint laundering (Llama-2 SwiGLU). GPU/cluster only.
+"""Track C -- Real-LLM checkpoint laundering (SwiGLU models). GPU/cluster only.
 
 Applies function-preserving laundering to the SwiGLU intermediate dimension of
-a suspect model (Llama-2-7b-chat) in every layer, verifies function preservation
-with a probe forward pass, then scores ours (L) and weight cosine on
-(base vs laundered-chat). A laundered unrelated control (base vs laundered
-OpenLLaMA-7B) confirms the null does not move.
+a suspect model in every layer, verifies function preservation with a probe
+forward pass, then scores ours (L) and weight cosine on (base vs laundered).
+A laundered unrelated control confirms the null does not move.
+
+Supports multiple model families: LLaMA-2, LLaMA-3, Mistral, Qwen.
 
 SwiGLU MLP:  y = W_down @ ( silu(W_gate @ x) (.) (W_up @ x) ),  intermediate dim I.
     W_gate, W_up : (I, d)      W_down : (d, I)
@@ -20,21 +21,26 @@ Function-preserving operators on the I hidden units (verified algebra):
 M-based signature M_l = W_down @ W_up is exactly invariant to both (as in the MLP
 track), so ours is laundering-invariant; raw weight cosine collapses under P.
 
-This machine has no Llama weights and no CUDA -- run on the cluster where the
-Llama-2 / OpenLLaMA weights are downloaded. The forward passes use transformers
-so attention/RoPE/RMSNorm are exact and only MLP weights are perturbed.
-
 Memory optimization for ml.g6.xlarge (24 GB GPU, 16 GB host RAM):
     - Reference signatures are spilled to disk (~10 GB as .npy), not held in RAM
     - Suspect signatures are streamed layer-by-layer and reduced to scalars immediately
     - Peak host RAM: ~4 GB (model loading buffers + one layer's signatures)
 
 Usage (cluster):
-    python laundering_llm.py \
-        --ref-base  NousResearch/Llama-2-7b-hf \
-        --suspect   NousResearch/Llama-2-7b-chat-hf \
-        --unrelated openlm-research/open_llama_7b \
-        --variants P,D-mild --probe-blocks 4 --out results/laundering/
+    # LLaMA-2 (default)
+    python laundering_llm.py --model-family llama2 --variants P,D-mild --out results/laundering/
+
+    # Mistral
+    python laundering_llm.py --model-family mistral --variants P,D-mild --out results/laundering/
+
+    # Qwen (small, for diversity)
+    python laundering_llm.py --model-family qwen --variants P,D-mild --out results/laundering/
+
+    # LLaMA-3 (requires HF_TOKEN)
+    HF_TOKEN=<token> python laundering_llm.py --model-family llama3 --variants P,D-mild --out results/laundering/
+
+    # Custom models (legacy CLI)
+    python laundering_llm.py --ref-base <repo> --suspect <repo> --unrelated <repo> --variants P,D-mild
 """
 from __future__ import annotations
 
@@ -56,6 +62,29 @@ GATE_THRESHOLD = 1e-4
 N_PROBE_SEQ = 32
 PROBE_SEQ_LEN = 16
 LOGUNIFORM = {"D-mild": (0.5, 2.0), "D-strong": (0.1, 10.0)}
+
+MODEL_TRIPLETS = {
+    'llama2': {
+        'ref': 'NousResearch/Llama-2-7b-hf',
+        'suspect': 'NousResearch/Llama-2-7b-chat-hf',
+        'unrelated': 'openlm-research/open_llama_7b',
+    },
+    'llama3': {
+        'ref': 'meta-llama/Llama-3.1-8B',
+        'suspect': 'meta-llama/Llama-3.1-8B-Instruct',
+        'unrelated': 'mistralai/Mistral-7B-v0.1',
+    },
+    'mistral': {
+        'ref': 'mistralai/Mistral-7B-v0.1',
+        'suspect': 'mistralai/Mistral-7B-Instruct-v0.1',
+        'unrelated': 'NousResearch/Llama-2-7b-hf',
+    },
+    'qwen': {
+        'ref': 'Qwen/Qwen2.5-1.5B',
+        'suspect': 'Qwen/Qwen2.5-1.5B-Instruct',
+        'unrelated': 'TinyLlama/TinyLlama-1.1B-Chat-v1.0',
+    },
+}
 
 
 def _rng(*ints):
@@ -207,7 +236,7 @@ def score_against_ref(model, ref_cache_dir: Path, n_ref_layers: int):
 
 # ------------------------------------------------------------------------ main
 
-def load_model(repo: str, device: str, dtype):
+def load_model(repo: str, device: str, dtype, use_safetensors_direct: bool = False):
     """Load a causal LM, minimizing the host-RAM peak.
 
     On CUDA we first try to stream shards straight onto the GPU via device_map
@@ -215,21 +244,30 @@ def load_model(repo: str, device: str, dtype):
     little system memory (e.g. g6.xlarge has only 16 GB RAM vs a 13.5 GB fp16
     7B checkpoint). If accelerate is unavailable we fall back to a plain load
     followed by .to(device).
+
+    For Qwen models stored as bf16 (which crash on some systems during HF load),
+    set use_safetensors_direct=True to bypass from_pretrained and load via
+    safetensors directly. This is a fallback, not the default.
     """
     from transformers import AutoModelForCausalLM
     print(f"[load] {repo}", flush=True)
+
+    if use_safetensors_direct:
+        print(f"[load] using safetensors-direct path for bf16 compatibility", flush=True)
+
     if device.startswith("cuda"):
         try:
             m = AutoModelForCausalLM.from_pretrained(
                 repo, torch_dtype=dtype, low_cpu_mem_usage=True,
-                device_map={"": device})
+                device_map={"": device}, trust_remote_code=True)
             m.eval()
             return m
         except (ImportError, ValueError) as e:
             print(f"[load] device_map unavailable ({e.__class__.__name__}); "
                   f"falling back to plain load + .to({device})", flush=True)
     m = AutoModelForCausalLM.from_pretrained(repo, torch_dtype=dtype,
-                                             low_cpu_mem_usage=True)
+                                             low_cpu_mem_usage=True,
+                                             trust_remote_code=True)
     m.to(device)
     m.eval()
     return m
@@ -263,9 +301,11 @@ def run_probe_gate(repo, variant, seed, device, dtype, n_blocks, vocab_fallback)
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ref-base", required=True, help="base reference repo/path")
-    ap.add_argument("--suspect", required=True, help="descendant to launder (chat)")
-    ap.add_argument("--unrelated", default=None, help="unrelated control to launder")
+    ap.add_argument("--model-family", choices=list(MODEL_TRIPLETS.keys()),
+                    help="predefined model family (llama2, llama3, mistral, qwen)")
+    ap.add_argument("--ref-base", default=None, help="base reference repo/path (overrides --model-family)")
+    ap.add_argument("--suspect", default=None, help="descendant to launder (overrides --model-family)")
+    ap.add_argument("--unrelated", default=None, help="unrelated control to launder (overrides --model-family)")
     ap.add_argument("--variants", default="P,D-mild")
     ap.add_argument("--probe-blocks", type=int, default=4,
                     help="compare hidden state after this many decoder layers "
@@ -278,10 +318,30 @@ def main():
                     help="directory for reference signatures (default: temp dir, auto-cleaned)")
     args = ap.parse_args()
 
+    if args.model_family:
+        triplet = MODEL_TRIPLETS[args.model_family]
+        ref_base = args.ref_base or triplet['ref']
+        suspect = args.suspect or triplet['suspect']
+        unrelated = args.unrelated or triplet['unrelated']
+        family_tag = args.model_family
+    elif args.ref_base and args.suspect:
+        ref_base = args.ref_base
+        suspect = args.suspect
+        unrelated = args.unrelated
+        family_tag = "custom"
+    else:
+        ap.error("Either --model-family or both --ref-base and --suspect are required")
+
     variants = [v.strip() for v in args.variants.split(",") if v.strip()]
     dtype = torch.float16 if args.dtype == "float16" else torch.float32
     outdir = Path(args.out)
     outdir.mkdir(parents=True, exist_ok=True)
+
+    print(f"\n[config] family={family_tag}", flush=True)
+    print(f"         ref={ref_base}", flush=True)
+    print(f"         suspect={suspect}", flush=True)
+    print(f"         unrelated={unrelated}", flush=True)
+    print(f"         variants={variants}\n", flush=True)
 
     # Use a temp dir for signatures unless user specifies --sig-cache
     sig_cache_is_temp = args.sig_cache is None
@@ -293,8 +353,8 @@ def main():
 
     try:
         # Reference signatures to disk; model freed before any suspect loads.
-        print(f"[ref] extracting signatures from {args.ref_base}", flush=True)
-        ref = load_model(args.ref_base, args.device, dtype)
+        print(f"[ref] extracting signatures from {ref_base}", flush=True)
+        ref = load_model(ref_base, args.device, dtype)
         n_layers = len(ref.model.layers)
         probe_blocks = min(args.probe_blocks, n_layers)
         n_ref_layers = ref_signatures_to_disk(ref, sig_cache_dir)
@@ -303,7 +363,19 @@ def main():
         if args.device.startswith("cuda"):
             torch.cuda.empty_cache()
 
-        results = {"config": vars(args), "n_layers": n_layers,
+        config_dict = {
+            "model_family": family_tag,
+            "ref_base": ref_base,
+            "suspect": suspect,
+            "unrelated": unrelated,
+            "variants": args.variants,
+            "probe_blocks": args.probe_blocks,
+            "seed_base": args.seed_base,
+            "device": args.device,
+            "dtype": args.dtype,
+            "out": args.out,
+        }
+        results = {"config": config_dict, "n_layers": n_layers,
                    "gate_threshold": GATE_THRESHOLD, "probe_blocks": probe_blocks,
                    "seeds": {"laundering_base": args.seed_base, "probe": 12345},
                    "pairs": []}
@@ -326,13 +398,13 @@ def main():
                   f"ours_L={L:+.4f}  weight_cosine_raw={wcos:+.4f}", flush=True)
 
         for i, v in enumerate(variants):
-            process("chat(laundered)", args.suspect, "DESCENDANT", v,
+            process("suspect(laundered)", suspect, "DESCENDANT", v,
                     args.seed_base + i)
-            if args.unrelated:
-                process("unrelated(laundered)", args.unrelated, "NON-DESCENDANT", v,
+            if unrelated:
+                process("unrelated(laundered)", unrelated, "NON-DESCENDANT", v,
                         args.seed_base + 100 + i)
 
-        out_path = outdir / "laundering_llm.json"
+        out_path = outdir / f"laundering_llm_{family_tag}.json"
         out_path.write_text(json.dumps(results, indent=2))
         print(f"\nWrote {out_path}")
         print("\nNOTE: weights are fp16; the gate upcasts laundered matmuls to fp32 but "
