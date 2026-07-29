@@ -1,0 +1,63 @@
+{
+  "config": {
+    "model_family": "llama3",
+    "ref_base": "meta-llama/Llama-3.1-8B",
+    "suspect": "meta-llama/Llama-3.1-8B-Instruct",
+    "unrelated": "mistralai/Mistral-7B-v0.1",
+    "variants": "P,D-mild",
+    "probe_blocks": 4,
+    "seed_base": 7000,
+    "device": "cuda",
+    "dtype": "float16",
+    "out": "results/laundering/"
+  },
+  "n_layers": 32,
+  "gate_threshold": 0.0001,
+  "probe_blocks": 4,
+  "seeds": {
+    "laundering_base": 7000,
+    "probe": 12345
+  },
+  "pairs": [
+    {
+      "tag": "suspect(laundered)",
+      "repo": "meta-llama/Llama-3.1-8B-Instruct",
+      "expected": "DESCENDANT",
+      "variant": "P",
+      "gate_max_deviation": 0.5,
+      "gate_pass": false,
+      "ours_L": 0.9945153729630462,
+      "weight_cosine_raw": 0.003130810730767834
+    },
+    {
+      "tag": "unrelated(laundered)",
+      "repo": "mistralai/Mistral-7B-v0.1",
+      "expected": "NON-DESCENDANT",
+      "variant": "P",
+      "gate_max_deviation": 0.03125,
+      "gate_pass": false,
+      "ours_L": -0.00028564903283280984,
+      "weight_cosine_raw": -6.452889375912512e-06
+    },
+    {
+      "tag": "suspect(laundered)",
+      "repo": "meta-llama/Llama-3.1-8B-Instruct",
+      "expected": "DESCENDANT",
+      "variant": "D-mild",
+      "gate_max_deviation": 0.25,
+      "gate_pass": false,
+      "ours_L": 0.9945151568910986,
+      "weight_cosine_raw": 0.9542027462909561
+    },
+    {
+      "tag": "unrelated(laundered)",
+      "repo": "mistralai/Mistral-7B-v0.1",
+      "expected": "NON-DESCENDANT",
+      "variant": "D-mild",
+      "gate_max_deviation": 0.05078125,
+      "gate_pass": false,
+      "ours_L": -0.0002856322028308487,
+      "weight_cosine_raw": -1.7567541560795716e-05
+    }
+  ]
+}

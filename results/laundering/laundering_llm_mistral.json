@@ -1,0 +1,43 @@
+{
+  "config": {
+    "model_family": "mistral",
+    "ref_base": "mistralai/Mistral-7B-v0.1",
+    "suspect": "mistralai/Mistral-7B-Instruct-v0.1",
+    "unrelated": null,
+    "variants": "P,D-mild",
+    "probe_blocks": 4,
+    "seed_base": 7000,
+    "device": "cuda",
+    "dtype": "float16",
+    "out": "results/laundering/"
+  },
+  "n_layers": 32,
+  "gate_threshold": 0.0001,
+  "probe_blocks": 4,
+  "seeds": {
+    "laundering_base": 7000,
+    "probe": 12345
+  },
+  "pairs": [
+    {
+      "tag": "suspect(laundered)",
+      "repo": "mistralai/Mistral-7B-Instruct-v0.1",
+      "expected": "DESCENDANT",
+      "variant": "P",
+      "gate_max_deviation": 0.03125,
+      "gate_pass": false,
+      "ours_L": 0.9519128159100962,
+      "weight_cosine_raw": 0.002944982085695177
+    },
+    {
+      "tag": "suspect(laundered)",
+      "repo": "mistralai/Mistral-7B-Instruct-v0.1",
+      "expected": "DESCENDANT",
+      "variant": "D-mild",
+      "gate_max_deviation": 0.03125,
+      "gate_pass": false,
+      "ours_L": 0.9519126536571852,
+      "weight_cosine_raw": 0.937341669610542
+    }
+  ]
+}

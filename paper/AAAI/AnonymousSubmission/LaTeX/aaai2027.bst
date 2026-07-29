@@ -1,5 +1,5 @@
 %%
-%% This is file `aaai2026.bst',
+%% This is file `aaai2027.bst',
 %% generated with the docstrip utility.
 %%
 %% The original source files were:
@@ -1490,4 +1490,4 @@ FUNCTION {end.bib}
 EXECUTE {end.bib}
 %% End of customized bst file
 %%
-%% End of file `aaai2026.bst'.
+%% End of file `aaai2027.bst'.

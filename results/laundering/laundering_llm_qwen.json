@@ -1,0 +1,43 @@
+{
+  "config": {
+    "model_family": "qwen",
+    "ref_base": "Qwen/Qwen2.5-1.5B",
+    "suspect": "Qwen/Qwen2.5-1.5B-Instruct",
+    "unrelated": null,
+    "variants": "P,D-mild",
+    "probe_blocks": 4,
+    "seed_base": 7000,
+    "device": "cuda",
+    "dtype": "float16",
+    "out": "results/laundering/"
+  },
+  "n_layers": 28,
+  "gate_threshold": 0.0001,
+  "probe_blocks": 4,
+  "seeds": {
+    "laundering_base": 7000,
+    "probe": 12345
+  },
+  "pairs": [
+    {
+      "tag": "suspect(laundered)",
+      "repo": "Qwen/Qwen2.5-1.5B-Instruct",
+      "expected": "DESCENDANT",
+      "variant": "P",
+      "gate_max_deviation": 8.0,
+      "gate_pass": false,
+      "ours_L": 0.9995099943223956,
+      "weight_cosine_raw": 0.003104013789069294
+    },
+    {
+      "tag": "suspect(laundered)",
+      "repo": "Qwen/Qwen2.5-1.5B-Instruct",
+      "expected": "DESCENDANT",
+      "variant": "D-mild",
+      "gate_max_deviation": 8.0,
+      "gate_pass": false,
+      "ours_L": 0.9995099496044996,
+      "weight_cosine_raw": 0.9505710876871764
+    }
+  ]
+}
