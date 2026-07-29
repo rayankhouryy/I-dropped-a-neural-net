@@ -147,7 +147,12 @@ def descendant_noise(parent, sigma_rel=0.02, seed=0):
     g = torch.Generator().manual_seed(seed)
     with torch.no_grad():
         for p in child.parameters():
-            std = p.detach().std().item() * sigma_rel + 1e-12
+            # std() Bessel-corrects (÷ n-1), so on a 1-element tensor (the head
+            # bias) it returns NaN; fall back to |value| as the noise scale for
+            # singletons. Multi-element params keep the exact p.std().item()
+            # path, so every non-singleton stays bit-identical to prior banks.
+            spread = p.detach().std() if p.numel() > 1 else p.detach().abs()
+            std = spread.item() * sigma_rel + 1e-12
             p.add_(torch.randn(p.shape, generator=g) * std)
     return child
 

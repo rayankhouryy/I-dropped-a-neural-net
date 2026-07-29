@@ -149,7 +149,6 @@ def build_bank(args):
     np.random.seed(0)
 
     refs, descendants, unrelated = {}, [], []
-    head_fixes = 0  # non-finite head values sanitized (descendant_noise artifact)
     for ref_idx in range(args.n_refs):
         target_key = 42 + ref_idx
         X, y = make_data(args.in_dim, n=2000, seed=ref_idx, target_key=target_key)
@@ -164,13 +163,13 @@ def build_bank(args):
               flush=True)
 
         # ----- 30 related descendants (kept as torch models for laundering) -----
-        # descendant_noise poisons the 1-element last.bias with NaN (torch std()
-        # Bessel correction on a singleton; pre-existing shared-code artifact). The
-        # head is read by no scorer and no operator, so we sanitize each descendant
-        # here (count for the report) to keep predictions and PDFT fine-tuning finite.
+        # descendant_noise's head-bias NaN is now fixed at the root (singleton
+        # std() guard in lineage_phase1_mlp), so every descendant is finite by
+        # construction. Assert it here rather than sanitize after the fact.
         def _add(kind, model):
-            nonlocal head_fixes
-            head_fixes += lops.sanitize_nonfinite_head(model)
+            bad = [n for n, p in model.named_parameters()
+                   if not torch.isfinite(p).all()]
+            assert not bad, f"non-finite parameters in {kind} descendant: {bad}"
             descendants.append({"ref": ref_idx, "kind": kind, "model": model})
 
         for k in range(args.n_per_descendant_type):
@@ -203,7 +202,7 @@ def build_bank(args):
                               "bundle": bundle(stu, refs[ref_idx]["Xv"])})
         print(f"[ref {ref_idx}] bank done ({len(descendants)} desc, "
               f"{len(unrelated)} unrelated so far)", flush=True)
-    return refs, descendants, unrelated, head_fixes
+    return refs, descendants, unrelated
 
 
 # ---------------------------------------------------------- laundering + gate
@@ -309,12 +308,11 @@ def main():
     t0 = time.time()
     print(f"Building bank (seed 0)... variants={variants} workers={n_workers}",
           flush=True)
-    refs, descendants, unrelated, head_fixes = build_bank(args)
+    refs, descendants, unrelated = build_bank(args)
     assert len(descendants) == args.n_refs * args.n_per_descendant_type * 5, \
         f"expected {args.n_refs*args.n_per_descendant_type*5} descendants, got {len(descendants)}"
-    print(f"Bank: {len(descendants)} related, {len(unrelated)} unrelated; "
-          f"sanitized {head_fixes} non-finite head value(s) ({time.time()-t0:.1f}s)",
-          flush=True)
+    print(f"Bank: {len(descendants)} related, {len(unrelated)} unrelated "
+          f"({time.time()-t0:.1f}s)", flush=True)
 
     probes = lops.make_probes(args.in_dim, n=lops.N_PROBES, seed=12345)
 
@@ -441,7 +439,6 @@ def main():
                     "completeness_on_M": COMPLETENESS_METHODS},
         "gate_threshold": lops.GATE_THRESHOLD,
         "n_probes": lops.N_PROBES,
-        "sanitized_head_values": head_fixes,
         "summary": summary,
         "gate_deviations": {v: gate_by_variant[v] for v in variants},
         "gate_max_deviation": {v: (max(g["max_deviation"] for g in gate_by_variant[v])

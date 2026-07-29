@@ -87,6 +87,12 @@ def predictions(model: ResNet, X: torch.Tensor) -> np.ndarray:
 # ----------------------------------------------------------------- model packs
 
 def model_pack(model: ResNet, X: torch.Tensor) -> dict:
+    # Every ref/descendant/non-descendant flows through here, so this is the one
+    # place to guarantee no non-finite weights leak into scoring. The head-bias
+    # NaN from descendant_noise (std() on a singleton) survived to submission
+    # only because nothing ever checked; this makes the whole class impossible.
+    bad = [n for n, p in model.named_parameters() if not torch.isfinite(p).all()]
+    assert not bad, f"non-finite parameters after construction: {bad}"
     return {
         "model": model,
         "Ms": branch_products(model),

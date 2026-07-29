@@ -2,7 +2,7 @@
   "variant": "P",
   "method": "ipguard_regr",
   "AUROC": 0.7,
-  "mean_related": 0.7025833333333333,
+  "mean_related": 0.7170000000000001,
   "min_related": 0.09,
   "mean_unrelated": 0.6404545454545455,
   "max_unrelated": 0.6825,
@@ -21,7 +21,7 @@
     {
       "ref": 0,
       "kind": "noise",
-      "score": 0.78
+      "score": 0.95
     },
     {
       "ref": 0,
@@ -46,7 +46,7 @@
     {
       "ref": 0,
       "kind": "noise",
-      "score": 0.8425
+      "score": 0.9425
     },
     {
       "ref": 0,
@@ -71,7 +71,7 @@
     {
       "ref": 0,
       "kind": "noise",
-      "score": 0.81
+      "score": 0.9675
     },
     {
       "ref": 0,
@@ -96,7 +96,7 @@
     {
       "ref": 1,
       "kind": "noise",
-      "score": 0.9475
+      "score": 0.95
     },
     {
       "ref": 1,
@@ -121,7 +121,7 @@
     {
       "ref": 1,
       "kind": "noise",
-      "score": 0.9175
+      "score": 0.92
     },
     {
       "ref": 1,

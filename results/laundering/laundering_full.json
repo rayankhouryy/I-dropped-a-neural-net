@@ -52,7 +52,6 @@
   },
   "gate_threshold": 0.0001,
   "n_probes": 512,
-  "sanitized_head_values": 6,
   "summary": {
     "none": {
       "diagonal_dominance": {
@@ -105,7 +104,7 @@
       },
       "ipguard_regr": {
         "AUROC": 0.7,
-        "mean_related": 0.7025833333333333,
+        "mean_related": 0.7170000000000001,
         "min_related": 0.09,
         "mean_unrelated": 0.6404545454545455,
         "max_unrelated": 0.6825,
@@ -203,7 +202,7 @@
       },
       "ipguard_regr": {
         "AUROC": 0.7,
-        "mean_related": 0.7025833333333333,
+        "mean_related": 0.7170000000000001,
         "min_related": 0.09,
         "mean_unrelated": 0.6404545454545455,
         "max_unrelated": 0.6825,
@@ -301,7 +300,7 @@
       },
       "ipguard_regr": {
         "AUROC": 0.7,
-        "mean_related": 0.7025833333333333,
+        "mean_related": 0.7170000000000001,
         "min_related": 0.09,
         "mean_unrelated": 0.6404545454545455,
         "max_unrelated": 0.6825,
@@ -399,7 +398,7 @@
       },
       "ipguard_regr": {
         "AUROC": 0.7,
-        "mean_related": 0.7025833333333333,
+        "mean_related": 0.7170000000000001,
         "min_related": 0.09,
         "mean_unrelated": 0.6404545454545455,
         "max_unrelated": 0.6825,
@@ -497,7 +496,7 @@
       },
       "ipguard_regr": {
         "AUROC": 0.7,
-        "mean_related": 0.7025833333333333,
+        "mean_related": 0.7170000000000001,
         "min_related": 0.09,
         "mean_unrelated": 0.6404545454545455,
         "max_unrelated": 0.6825,
@@ -547,7 +546,7 @@
     "PDFT": {
       "diagonal_dominance": {
         "AUROC": 1.0,
-        "mean_related": 0.3669407340912796,
+        "mean_related": 0.36691886444008237,
         "min_related": 0.20834927876391854,
         "mean_unrelated": 0.029582419479043023,
         "max_unrelated": 0.04272708876565773,
@@ -555,7 +554,7 @@
       },
       "raw_aligned_frobenius": {
         "AUROC": 0.0,
-        "mean_related": -3.329846684655351,
+        "mean_related": -3.329849625709378,
         "min_related": -3.4595286420494364,
         "mean_unrelated": -1.3707063989506505,
         "max_unrelated": -1.3562835193045863,
@@ -563,7 +562,7 @@
       },
       "raw_singular_value_dist": {
         "AUROC": 0.0,
-        "mean_related": -1.092117807661729,
+        "mean_related": -1.0921190256513236,
         "min_related": -1.1599043911864284,
         "mean_unrelated": -0.021866452948808814,
         "max_unrelated": -0.020270383819985735,
@@ -571,7 +570,7 @@
       },
       "raw_weight_cosine": {
         "AUROC": 0.8045454545454546,
-        "mean_related": 0.05899702291927844,
+        "mean_related": 0.058996621557126476,
         "min_related": 0.0517823746839763,
         "mean_unrelated": 0.05492224553398217,
         "max_unrelated": 0.05979093747386672,
@@ -579,7 +578,7 @@
       },
       "cka": {
         "AUROC": 0.9939393939393939,
-        "mean_related": 0.9768499353779155,
+        "mean_related": 0.9768590598695646,
         "min_related": 0.8482699260400062,
         "mean_unrelated": 0.8207612444552024,
         "max_unrelated": 0.8540146184660328,
@@ -587,7 +586,7 @@
       },
       "svcca": {
         "AUROC": 1.0,
-        "mean_related": 0.9903979034408683,
+        "mean_related": 0.9903993514164323,
         "min_related": 0.948719971904594,
         "mean_unrelated": 0.8823888263521316,
         "max_unrelated": 0.8892526123591502,
@@ -595,7 +594,7 @@
       },
       "ipguard_regr": {
         "AUROC": 0.8272727272727273,
-        "mean_related": 0.8224166666666666,
+        "mean_related": 0.8248333333333334,
         "min_related": 0.5475,
         "mean_unrelated": 0.6404545454545455,
         "max_unrelated": 0.6825,
@@ -603,7 +602,7 @@
       },
       "rebasin_frobenius": {
         "AUROC": 0.0,
-        "mean_related": -2.6919414800095467,
+        "mean_related": -2.691945038871582,
         "min_related": -2.8175256131846447,
         "mean_unrelated": -1.1303727546082178,
         "max_unrelated": -1.1208175318099904,
@@ -611,7 +610,7 @@
       },
       "rebasin_scale_frobenius": {
         "AUROC": 1.0,
-        "mean_related": -0.07434811416078854,
+        "mean_related": -0.07432261707829825,
         "min_related": -0.16526038508088176,
         "mean_unrelated": -2.0094766001872424,
         "max_unrelated": -1.5599259549402724,
@@ -619,7 +618,7 @@
       },
       "aligned_frobenius_M": {
         "AUROC": 1.0,
-        "mean_related": -0.12514898019484275,
+        "mean_related": -0.12506583801093243,
         "min_related": -0.3820668022338327,
         "mean_unrelated": -1.324295393358653,
         "max_unrelated": -1.2854875438014104,
@@ -627,7 +626,7 @@
       },
       "singular_value_dist_M": {
         "AUROC": 0.9863636363636363,
-        "mean_related": -0.010185725210784626,
+        "mean_related": -0.010181025532298299,
         "min_related": -0.028950317020292108,
         "mean_unrelated": -0.03048408729472932,
         "max_unrelated": -0.027113827202687162,
@@ -635,7 +634,7 @@
       },
       "weight_cosine_M": {
         "AUROC": 1.0,
-        "mean_related": 0.9849675307915646,
+        "mean_related": 0.9849699387634349,
         "min_related": 0.9322942001908521,
         "mean_unrelated": 0.09867504827139131,
         "max_unrelated": 0.12619701218476992,
@@ -1779,8 +1778,8 @@
     {
       "ref": 0,
       "kind": "noise",
-      "utility_laundered": 0.43682312965393066,
-      "utility_unlaundered": 0.470886766910553
+      "utility_laundered": 0.4196850657463074,
+      "utility_unlaundered": 0.41683414578437805
     },
     {
       "ref": 0,
@@ -1809,8 +1808,8 @@
     {
       "ref": 0,
       "kind": "noise",
-      "utility_laundered": 0.4541065990924835,
-      "utility_unlaundered": 0.4728306829929352
+      "utility_laundered": 0.4237641990184784,
+      "utility_unlaundered": 0.4442850351333618
     },
     {
       "ref": 0,
@@ -1839,8 +1838,8 @@
     {
       "ref": 0,
       "kind": "noise",
-      "utility_laundered": 0.44121018052101135,
-      "utility_unlaundered": 0.4937162697315216
+      "utility_laundered": 0.4438835382461548,
+      "utility_unlaundered": 0.44421204924583435
     },
     {
       "ref": 0,
@@ -1869,8 +1868,8 @@
     {
       "ref": 1,
       "kind": "noise",
-      "utility_laundered": 0.2174002081155777,
-      "utility_unlaundered": 0.22304774820804596
+      "utility_laundered": 0.21200747787952423,
+      "utility_unlaundered": 0.2221134901046753
     },
     {
       "ref": 1,
@@ -1899,8 +1898,8 @@
     {
       "ref": 1,
       "kind": "noise",
-      "utility_laundered": 0.21557509899139404,
-      "utility_unlaundered": 0.2172805815935135
+      "utility_laundered": 0.21549485623836517,
+      "utility_unlaundered": 0.21673473715782166
     },
     {
       "ref": 1,
@@ -1929,8 +1928,8 @@
     {
       "ref": 1,
       "kind": "noise",
-      "utility_laundered": 0.2099539041519165,
-      "utility_unlaundered": 0.21120589971542358
+      "utility_laundered": 0.2132171243429184,
+      "utility_unlaundered": 0.21096448600292206
     },
     {
       "ref": 1,
@@ -2083,5 +2082,5 @@
     "0": 0.42036423087120056,
     "1": 0.21327555179595947
   },
-  "wall_seconds": 76.47462487220764
+  "wall_seconds": 74.4762110710144
 }
