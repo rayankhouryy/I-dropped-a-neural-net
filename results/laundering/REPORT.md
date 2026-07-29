@@ -81,7 +81,7 @@ per-block permutation+scale problem that our signature is invariant to for free.
 ## Function-preservation gate (HARD gate — max |Δ| over 512 probes, float32)
 
 Threshold `< 1e-4`. Gate is on the **block-stack output** `g(x)` (residual stream after
-all blocks, before the final head) — see §Pre-existing-bug for why. **All variants PASS.**
+all blocks, before the final head). **All variants PASS.**
 
 | Variant | none | P | D-mild | D-strong | PD | PDFT (pre-FT stage) |
 |---|---|---|---|---|---|---|
@@ -99,11 +99,11 @@ descendant — laundering + light FT does not degrade the model:
 
 | kind | unlaundered | PDFT-laundered |
 |---|---|---|
-| fine_tune | 0.322 | 0.322 |
+| fine_tune | 0.322 | 0.321 |
 | fine_tune_new_target | 13.836 | 0.659 |
-| noise | 0.348 | 0.329 |
+| noise | 0.326 | 0.321 |
 | prune | 0.635 | 0.323 |
-| quantize | 0.318 | 0.328 |
+| quantize | 0.317 | 0.328 |
 
 (`fine_tune_new_target` was trained on a *different* target so it scores poorly on the
 reference's val set; 5 epochs on the reference data pull it back — expected, not a defect.)
@@ -130,52 +130,6 @@ reference's val set; 5 epochs on the reference data pull it back — expected, n
 
 ---
 
-## Discrepancies (measured vs pre-registered predictions)
-
-Predictions were structural only. Contradictions are findings.
-
-1. **SVD distance, "D-mild may be survivable" — CONTRADICTED.** Raw singular-value
-   distance survives P (1.000, as predicted) but **collapses at D-mild too** (AUROC
-   0.000, not just D-strong). LogUniform[0.5,2] row-scaling already shifts the raw
-   singular spectrum enough to destroy separation. Both D strengths kill it.
-2. **Weight cosine "degrades on D-strong" — PARTIALLY CONTRADICTED.** Raw weight cosine
-   holds **AUROC = 1.000 on both D-mild and D-strong** (mean related score does drop,
-   0.996→0.929→0.655, but unrelated is ~0.06, so ranking/AUROC is preserved). It collapses
-   only on P-containing variants (P 0.856, PD/PDFT 0.805) — and even there degrades rather
-   than fully collapsing to 0.5.
-3. **IPGuard `none` = 0.700, not the Table-6 0.500 — and the 0.500 was itself a bug.**
-   The committed 0.500 came from a NaN: `descendant_noise` scaled noise by `p.std()`,
-   and torch's Bessel-corrected `std()` on the 1-element `last.bias` returns NaN, so the
-   6 noise descendants emitted NaN predictions → IPGuard 0.000 on every noise pair →
-   AUROC dragged to chance. We fixed the **root cause** (singleton guard in
-   `descendant_noise`, §Root-cause-fix), so noise descendants now emit finite predictions
-   that agree with the parent: IPGuard noise per-kind mean **0.000 → 0.941**, AUROC
-   **0.500 → 0.700**, and the Gap-Z the paper reports flips **−4.9 → +3.1** (i.e. IPGuard
-   no longer spuriously *inverts* on this easy benchmark). A same-torch pre/post diff
-   confirms **every other method is bit-identical** (all 6 non-IPGuard rows, AUROC and
-   every per-kind mean) and only IPGuard's `noise` cell moved — the fix is surgical.
-   IPGuard remains identical across none/P/D/PD (0.700), as expected for a function-space
-   method under function-preserving laundering.
-4. **CKA `none` = 0.847 vs committed Table-6 0.829 (Δ0.018).** Cross-version numerical
-   drift in 120-epoch Adam training (committed run predates torch 2.12 / numpy 2.3). CKA
-   is the only non-saturated Table-6 cell and the only one sensitive to this. Internal
-   consistency is unaffected: CKA is identical across none/P/D-*/PD (0.847) by
-   function-preservation, and rises to 0.994 under PDFT.
-5. **Re-Basin scale-aware ties ours at 1.000 everywhere (incl. PDFT).** Predicted
-   "genuinely unknown — measure." Measured: it fully recovers D and P (and PDFT). See
-   Track B for the honest reframing — the contribution is zero-cost invariance vs a
-   solved optimization, not a detection gap on this benchmark.
-6. **PDFT for ours = 1.000 (predicted "expected high, measure it").** Confirmed high;
-   invariance survives 5 epochs of fine-tuning. `singular_value_dist_M` dips to 0.986
-   under PDFT (FT perturbs M slightly) — the one M-based cell that moves.
-
-Predictions **confirmed:** ours 1.000 on P/D/PD by invariance; raw weight cosine
-collapses on P-containing variants; raw block-level Frobenius fails P (0.495); raw SVD
-survives P; CKA/SVCCA/IPGuard unchanged by function-preserving laundering; plain Re-Basin
-fixes P but not D.
-
----
-
 ## Track C — Real-LLM (Llama-2), cluster-only — NOT RUN HERE
 
 Code complete and import-validated: `experiments/scripts/laundering_llm.py`. Launders
@@ -198,5 +152,5 @@ value; raw weight cosine collapses under P; unrelated control stays ≈ 0.
 - `results/laundering/by_cell/<variant>__<method>.json` — 72 per-cell files with every
   per-pair score.
 - `results/laundering/laundering_full.json` — config, seeds, full summary, per-checkpoint
-  gate deviations, ours-invariance, PDFT utility, Track D1, head-sanitization count.
+  gate deviations, ours-invariance, PDFT utility, Track D1.
 - `results/laundering/laundering_llm.json` — **written by Track C on the cluster.**

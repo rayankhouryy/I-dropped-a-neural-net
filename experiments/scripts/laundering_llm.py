@@ -24,6 +24,11 @@ This machine has no Llama weights and no CUDA -- run on the cluster where the
 Llama-2 / OpenLLaMA weights are downloaded. The forward passes use transformers
 so attention/RoPE/RMSNorm are exact and only MLP weights are perturbed.
 
+Memory optimization for ml.g6.xlarge (24 GB GPU, 16 GB host RAM):
+    - Reference signatures are spilled to disk (~10 GB as .npy), not held in RAM
+    - Suspect signatures are streamed layer-by-layer and reduced to scalars immediately
+    - Peak host RAM: ~4 GB (model loading buffers + one layer's signatures)
+
 Usage (cluster):
     python laundering_llm.py \
         --ref-base  NousResearch/Llama-2-7b-hf \
@@ -36,7 +41,9 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -146,22 +153,26 @@ def _layer_signatures(layer):
 
 
 @torch.no_grad()
-def ref_signatures(model):
-    """Per-layer (phi, raw) for the REFERENCE, stored as fp16 numpy to save host RAM.
+def ref_signatures_to_disk(model, cache_dir: Path):
+    """Write per-layer (phi, raw) to disk as fp16 .npy files.
 
-    For a 7B model this is ~1 GB (phis) + ~8.7 GB (raw) in fp16, versus ~19 GB in
-    fp32 -- the difference between fitting and OOMing a 16 GB host (e.g. an
-    ml.g6.xlarge, which pairs a 24 GB L4 GPU with only 16 GB system RAM). The
-    suspect is never stored in full; see score_against_ref.
+    For a 7B model this writes ~10 GB to disk but keeps host RAM at ~0.3 GB per
+    layer (one layer resident at a time). This is critical for ml.g6.xlarge which
+    has only 16 GB host RAM — holding ~10 GB of signatures in RAM leaves no room
+    for model loading buffers and causes OOM.
     """
-    phis, raws = [], []
-    for layer in model.model.layers:
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    n_layers = len(model.model.layers)
+    for li, layer in enumerate(model.model.layers):
         phi, raw = _layer_signatures(layer)
-        phis.append(phi.to(torch.float16).numpy())
-        raws.append(raw.to(torch.float16).numpy())
+        np.save(cache_dir / f"phi_{li:03d}.npy", phi.to(torch.float16).numpy())
+        np.save(cache_dir / f"raw_{li:03d}.npy", raw.to(torch.float16).numpy())
         del phi, raw
         gc.collect()
-    return phis, raws
+        if (li + 1) % 8 == 0:
+            print(f"  [ref sigs] {li + 1}/{n_layers} layers written", flush=True)
+    print(f"  [ref sigs] {n_layers} layers -> {cache_dir}", flush=True)
+    return n_layers
 
 
 def _cosine(a: np.ndarray, b: np.ndarray) -> float:
@@ -169,27 +180,27 @@ def _cosine(a: np.ndarray, b: np.ndarray) -> float:
 
 
 @torch.no_grad()
-def score_against_ref(model, ref_phis, ref_raws):
-    """Stream the suspect layer-by-layer -> (ours_L, weight_cosine_raw).
+def score_against_ref(model, ref_cache_dir: Path, n_ref_layers: int):
+    """Stream suspect and reference layer-by-layer -> (ours_L, weight_cosine_raw).
 
-    Each layer is reduced to two scalar cosines immediately and discarded, so the
-    host-RAM peak is the (fp16) reference plus a single fp32 layer (~0.6 GB), not
-    a second full 7B signature set. Identity-aligned mean over layers (P/D leave
-    M invariant, so ours needs no unit alignment; the raw cosine does not either,
-    which is exactly why it collapses under P).
+    Reference signatures are read from disk one layer at a time; suspect signatures
+    are computed on-the-fly. Each layer is reduced to two scalar cosines immediately
+    and discarded. Peak host RAM: ~0.6 GB (one layer's signatures in fp32).
     """
-    n_ref, n_sus = len(ref_phis), len(model.model.layers)
-    if n_ref != n_sus:
-        print(f"[warn] layer-count mismatch ref={n_ref} suspect={n_sus}; "
-              f"scoring the first {min(n_ref, n_sus)} layers", flush=True)
+    n_sus = len(model.model.layers)
+    if n_ref_layers != n_sus:
+        print(f"[warn] layer-count mismatch ref={n_ref_layers} suspect={n_sus}; "
+              f"scoring the first {min(n_ref_layers, n_sus)} layers", flush=True)
     L_terms, wcos_terms = [], []
     for li, layer in enumerate(model.model.layers):
-        if li >= n_ref:
+        if li >= n_ref_layers:
             break
-        phi, raw = _layer_signatures(layer)
-        L_terms.append(_cosine(ref_phis[li].astype(np.float32), phi.numpy()))
-        wcos_terms.append(_cosine(ref_raws[li].astype(np.float32), raw.numpy()))
-        del phi, raw
+        ref_phi = np.load(ref_cache_dir / f"phi_{li:03d}.npy").astype(np.float32)
+        ref_raw = np.load(ref_cache_dir / f"raw_{li:03d}.npy").astype(np.float32)
+        sus_phi, sus_raw = _layer_signatures(layer)
+        L_terms.append(_cosine(ref_phi, sus_phi.numpy()))
+        wcos_terms.append(_cosine(ref_raw, sus_raw.numpy()))
+        del ref_phi, ref_raw, sus_phi, sus_raw
         gc.collect()
     return float(np.mean(L_terms)), float(np.mean(wcos_terms))
 
@@ -263,6 +274,8 @@ def main():
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     ap.add_argument("--dtype", default="float16", choices=["float16", "float32"])
     ap.add_argument("--out", default="results/laundering/")
+    ap.add_argument("--sig-cache", default=None,
+                    help="directory for reference signatures (default: temp dir, auto-cleaned)")
     args = ap.parse_args()
 
     variants = [v.strip() for v in args.variants.split(",") if v.strip()]
@@ -270,52 +283,67 @@ def main():
     outdir = Path(args.out)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    # Reference signatures once (unlaundered base); model freed before any suspect loads.
-    ref = load_model(args.ref_base, args.device, dtype)
-    n_layers = len(ref.model.layers)
-    probe_blocks = min(args.probe_blocks, n_layers)
-    ref_phis, ref_raw = ref_signatures(ref)
-    del ref
-    gc.collect()
-    if args.device.startswith("cuda"):
-        torch.cuda.empty_cache()
+    # Use a temp dir for signatures unless user specifies --sig-cache
+    sig_cache_is_temp = args.sig_cache is None
+    if sig_cache_is_temp:
+        sig_cache_dir = Path(tempfile.mkdtemp(prefix="llm_sigs_"))
+    else:
+        sig_cache_dir = Path(args.sig_cache)
+    print(f"[sig cache] {sig_cache_dir} (temp={sig_cache_is_temp})", flush=True)
 
-    results = {"config": vars(args), "n_layers": n_layers,
-               "gate_threshold": GATE_THRESHOLD, "probe_blocks": probe_blocks,
-               "seeds": {"laundering_base": args.seed_base, "probe": 12345},
-               "pairs": []}
-
-    def process(tag, repo, expected, variant, seed):
-        dev, model = run_probe_gate(repo, variant, seed, args.device, dtype,
-                                    probe_blocks, vocab_fallback=32000)
-        gate_pass = dev < GATE_THRESHOLD
-        L, wcos = score_against_ref(model, ref_phis, ref_raw)
-        del model
+    try:
+        # Reference signatures to disk; model freed before any suspect loads.
+        print(f"[ref] extracting signatures from {args.ref_base}", flush=True)
+        ref = load_model(args.ref_base, args.device, dtype)
+        n_layers = len(ref.model.layers)
+        probe_blocks = min(args.probe_blocks, n_layers)
+        n_ref_layers = ref_signatures_to_disk(ref, sig_cache_dir)
+        del ref
         gc.collect()
         if args.device.startswith("cuda"):
             torch.cuda.empty_cache()
-        rec = {"tag": tag, "repo": repo, "expected": expected, "variant": variant,
-               "gate_max_deviation": dev, "gate_pass": bool(gate_pass),
-               "ours_L": L, "weight_cosine_raw": wcos}
-        results["pairs"].append(rec)
-        print(f"[{tag:22s} {variant:7s}] gate_dev={dev:.3e} "
-              f"{'PASS' if gate_pass else 'FAIL(reported)'}  "
-              f"ours_L={L:+.4f}  weight_cosine_raw={wcos:+.4f}", flush=True)
 
-    for i, v in enumerate(variants):
-        process("chat(laundered)", args.suspect, "DESCENDANT", v,
-                args.seed_base + i)
-        if args.unrelated:
-            process("unrelated(laundered)", args.unrelated, "NON-DESCENDANT", v,
-                    args.seed_base + 100 + i)
+        results = {"config": vars(args), "n_layers": n_layers,
+                   "gate_threshold": GATE_THRESHOLD, "probe_blocks": probe_blocks,
+                   "seeds": {"laundering_base": args.seed_base, "probe": 12345},
+                   "pairs": []}
 
-    out_path = outdir / "laundering_llm.json"
-    out_path.write_text(json.dumps(results, indent=2))
-    print(f"\nWrote {out_path}")
-    print("\nNOTE: weights are fp16; the gate upcasts laundered matmuls to fp32 but "
-          "the forward pass runs at the model dtype. If gate_dev exceeds 1e-4 due to "
-          "fp16 rounding, the MEASURED deviation is reported (not forced) -- rerun "
-          "with --dtype float32 for a stricter check if memory allows.")
+        def process(tag, repo, expected, variant, seed):
+            dev, model = run_probe_gate(repo, variant, seed, args.device, dtype,
+                                        probe_blocks, vocab_fallback=32000)
+            gate_pass = dev < GATE_THRESHOLD
+            L, wcos = score_against_ref(model, sig_cache_dir, n_ref_layers)
+            del model
+            gc.collect()
+            if args.device.startswith("cuda"):
+                torch.cuda.empty_cache()
+            rec = {"tag": tag, "repo": repo, "expected": expected, "variant": variant,
+                   "gate_max_deviation": dev, "gate_pass": bool(gate_pass),
+                   "ours_L": L, "weight_cosine_raw": wcos}
+            results["pairs"].append(rec)
+            print(f"[{tag:22s} {variant:7s}] gate_dev={dev:.3e} "
+                  f"{'PASS' if gate_pass else 'FAIL(reported)'}  "
+                  f"ours_L={L:+.4f}  weight_cosine_raw={wcos:+.4f}", flush=True)
+
+        for i, v in enumerate(variants):
+            process("chat(laundered)", args.suspect, "DESCENDANT", v,
+                    args.seed_base + i)
+            if args.unrelated:
+                process("unrelated(laundered)", args.unrelated, "NON-DESCENDANT", v,
+                        args.seed_base + 100 + i)
+
+        out_path = outdir / "laundering_llm.json"
+        out_path.write_text(json.dumps(results, indent=2))
+        print(f"\nWrote {out_path}")
+        print("\nNOTE: weights are fp16; the gate upcasts laundered matmuls to fp32 but "
+              "the forward pass runs at the model dtype. If gate_dev exceeds 1e-4 due to "
+              "fp16 rounding, the MEASURED deviation is reported (not forced) -- rerun "
+              "with --dtype float32 for a stricter check if memory allows.")
+
+    finally:
+        if sig_cache_is_temp and sig_cache_dir.exists():
+            print(f"[cleanup] removing temp sig cache {sig_cache_dir}", flush=True)
+            shutil.rmtree(sig_cache_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
