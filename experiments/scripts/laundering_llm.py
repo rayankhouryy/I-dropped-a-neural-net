@@ -77,7 +77,7 @@ MODEL_TRIPLETS = {
     'mistral': {
         'ref': 'mistralai/Mistral-7B-v0.1',
         'suspect': 'mistralai/Mistral-7B-Instruct-v0.1',
-        'unrelated': 'NousResearch/Llama-2-7b-hf',
+        'unrelated': None,  # d_ff=14336 differs from LLaMA-2's 11008; skip unrelated control
     },
     'qwen': {
         'ref': 'Qwen/Qwen2.5-1.5B',
