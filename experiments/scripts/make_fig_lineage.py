@@ -228,12 +228,11 @@ def make_panel_c_only_pdf(data, out_path):
 
 
 def make_combined(data, out_path):
-    """Create 1x2 panel figure: ROC (a) and Utility tradeoff (b) only.
+    """Create single-panel figure: ROC only.
 
-    Panels removed as redundant with Figure 1(c).
+    Panel (b) removed as redundant with Figure 1(c).
     """
-    # Large figure for full-width display, extra width for external legend
-    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+    fig, ax = plt.subplots(figsize=(7, 5))
 
     # Increase font sizes globally for this figure
     plt.rcParams.update({
@@ -245,15 +244,36 @@ def make_combined(data, out_path):
         'legend.fontsize': 11,
     })
 
-    panel_b_roc_large(axes[0], data)
-    panel_c_utility_large(axes[1], data)
+    panel_b_roc_single(ax, data)
 
     fig.tight_layout()
-    # Make room for external legend on the right
-    fig.subplots_adjust(wspace=0.3, right=0.85)
     fig.savefig(out_path, bbox_inches='tight')
     fig.savefig(out_path.with_suffix('.png'), dpi=200, bbox_inches='tight')
     plt.close(fig)
+
+
+def panel_b_roc_single(ax, data):
+    """ROC panel for single-figure display (no panel letter)."""
+    pairs = data['pairs']
+    labels = np.array([1 if p['label'] == 'descendant' else 0 for p in pairs])
+    score_metrics = [
+        ('lineage',   r'Residual-signature (ours)', '#0072B2', '-',  3.0),
+        ('diag_only', r'Diagonal-only (ablation)', '#D55E00', '--', 2.5),
+    ]
+    for key, label, color, ls, lw in score_metrics:
+        scores = [p.get(key, 0.0) for p in pairs]
+        fpr, tpr, auroc = _roc_curve(scores, labels)
+        ax.plot(fpr, tpr, label=f'{label}  (AUROC={auroc:.3f})',
+                color=color, linestyle=ls, linewidth=lw)
+    ax.plot([0, 1], [0, 1], 'k--', alpha=0.3, linewidth=1)
+    ax.set_xlabel('False positive rate', fontsize=13)
+    ax.set_ylabel('True positive rate', fontsize=13)
+    ax.set_title('ROC: lineage detection', fontsize=14, fontweight='bold')
+    ax.legend(loc='lower right', fontsize=11, framealpha=0.95)
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1.02)
+    ax.tick_params(axis='both', labelsize=11)
 
 
 def panel_b_roc_large(ax, data):
