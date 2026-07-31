@@ -121,7 +121,7 @@ def lineage_score(phis_a, phis_b):
     return float(np.mean(scores))
 
 
-def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=0.1, device='cuda',
+def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=1.0, device='cuda',
                         attack_layers=None):
     """Run gradient attack on LLM to minimize lineage score.
 
@@ -160,9 +160,10 @@ def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=0.1, device='cuda
         original_dtypes[i] = layer.mlp.up_proj.weight.dtype
         layer.mlp.up_proj.weight.data = layer.mlp.up_proj.weight.data.float()
         layer.mlp.down_proj.weight.data = layer.mlp.down_proj.weight.data.float()
-        # Add small noise to break symmetry - gradient of cos(x,x) is zero!
-        layer.mlp.up_proj.weight.data.add_(torch.randn_like(layer.mlp.up_proj.weight) * 0.001)
-        layer.mlp.down_proj.weight.data.add_(torch.randn_like(layer.mlp.down_proj.weight) * 0.001)
+        # Add noise to break symmetry - gradient of cos(x,x) is zero at x=ref!
+        # Use larger noise (1%) to escape the flat plateau near cos=1
+        layer.mlp.up_proj.weight.data.add_(torch.randn_like(layer.mlp.up_proj.weight) * 0.01)
+        layer.mlp.down_proj.weight.data.add_(torch.randn_like(layer.mlp.down_proj.weight) * 0.01)
         layer.mlp.up_proj.weight.requires_grad_(True)
         layer.mlp.down_proj.weight.requires_grad_(True)
         params.append(layer.mlp.up_proj.weight)
@@ -191,9 +192,10 @@ def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=0.1, device='cuda
 
         cos_mean = cos_sum / len(attack_layers)
 
-        # Skip utility loss - just minimize lineage cosine
-        # (utility can be checked before/after attack separately)
-        loss = cos_mean * 100
+        # MINIMIZE cosine similarity to erase fingerprint
+        # Negate so gradient descent reduces cosine (not increases it)
+        # Scale by 1000 to get meaningful gradients (cosine gradient is small near 1)
+        loss = -cos_mean * 1000
 
         opt.zero_grad()
         loss.backward()
@@ -218,7 +220,8 @@ def main():
     ap.add_argument("--model-family", choices=list(MODEL_CONFIGS.keys()), required=True)
     ap.add_argument("--attack-lambdas", default="0.01,0.05,0.1,0.2,0.5,1.0",
                     help="Comma-separated lambda values for attack (matches MLP benchmark)")
-    ap.add_argument("--attack-steps", type=int, default=100)
+    ap.add_argument("--attack-steps", type=int, default=500,
+                    help="Number of gradient steps (default 500, use 1000+ for stronger attack)")
     ap.add_argument("--attack-layers", default=None,
                     help="Comma-separated layer indices to attack, or 'auto' for memory-safe subset")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
