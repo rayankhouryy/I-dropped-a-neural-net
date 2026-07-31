@@ -220,8 +220,8 @@ def main():
     ap.add_argument("--model-family", choices=list(MODEL_CONFIGS.keys()), required=True)
     ap.add_argument("--attack-lambdas", default="0.01,0.05,0.1,0.2,0.5,1.0",
                     help="Comma-separated lambda values for attack (matches MLP benchmark)")
-    ap.add_argument("--attack-steps", type=int, default=500,
-                    help="Number of gradient steps (default 500, use 1000+ for stronger attack)")
+    ap.add_argument("--attack-steps", type=int, default=100,
+                    help="Number of gradient steps (converges by ~100)")
     ap.add_argument("--attack-layers", default=None,
                     help="Comma-separated layer indices to attack, or 'auto' for memory-safe subset")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
