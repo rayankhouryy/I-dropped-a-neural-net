@@ -158,15 +158,23 @@ class BenchmarkConfig:
             config.distillation.epochs = 1
 
         elif preset == "paper":
-            # Option A: 8 roots, 50K samples, 3 epochs (~6-8 hours)
+            # Option A: 8 roots, 50K samples, 3 epochs (~3-4 hours)
             config.n_calibration_roots = 2
             config.n_development_roots = 3
             config.n_test_roots = 3
             config.max_train_samples = 50000
             config.training.epochs = 3
             config.training.batch_size = 8
-            # Keep default descendant config (full variety)
-            config.distillation.epochs = 3
+            # Reduced descendant epochs for speed
+            config.descendant.cont_pt_same_epochs = [1, 2]  # 2 instead of 3
+            config.descendant.cont_pt_shift_epochs = [1]  # 1 instead of 2
+            config.descendant.sft_epochs = [1]  # 1 instead of 2
+            config.descendant.lora_ranks = [8]  # 1 instead of 3
+            config.descendant.lora_epochs = 1
+            config.descendant.prune_sparsities = [0.3, 0.5, 0.7]  # keep 3
+            config.descendant.quant_levels = [256, 64]  # keep 2
+            config.distillation.temperatures = [2.0]  # 1 instead of 2
+            config.distillation.epochs = 2
 
         elif preset == "full":
             # Full benchmark: 10 roots, 100K samples, 5 epochs
