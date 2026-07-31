@@ -196,8 +196,8 @@ def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-4, device='cud
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model-family", choices=list(MODEL_CONFIGS.keys()), required=True)
-    ap.add_argument("--attack-lambdas", default="0.1,1.0",
-                    help="Comma-separated lambda values for attack")
+    ap.add_argument("--attack-lambdas", default="0.01,0.05,0.1,0.2,0.5,1.0",
+                    help="Comma-separated lambda values for attack (matches MLP benchmark)")
     ap.add_argument("--attack-steps", type=int, default=100)
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = ap.parse_args()
