@@ -169,8 +169,8 @@ def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=1.0, device='cuda
         params.append(layer.mlp.up_proj.weight)
         params.append(layer.mlp.down_proj.weight)
 
-    # Use SGD with high LR - the cosine objective has tiny gradients
-    opt = torch.optim.SGD(params, lr=lr, momentum=0.9)
+    # Use SGD without momentum to save memory on large models
+    opt = torch.optim.SGD(params, lr=lr, momentum=0.0)
 
     for step in range(n_steps):
         # Compute lineage objective only over attacked layers
@@ -319,12 +319,15 @@ def main():
         # Determine layers to attack
         n_layers = len(attack_model.model.layers)
         if args.attack_layers is None or args.attack_layers == 'auto':
-            # For 7B+ models, attack every 4th layer to fit in 24GB
+            # For 7B+ models, attack every 8th layer to fit in 24GB
             # For smaller models, attack all
             model_size_gb = sum(p.numel() for p in attack_model.parameters()) * 2 / 1e9
-            if model_size_gb > 5:  # >5GB model, use subset
-                attack_layer_indices = list(range(0, n_layers, 4))
+            if model_size_gb > 10:  # >10GB model (7B), sparse subset
+                attack_layer_indices = list(range(0, n_layers, 8))
                 print(f"  Large model ({model_size_gb:.1f}GB), attacking {len(attack_layer_indices)}/{n_layers} layers")
+            elif model_size_gb > 5:  # 3-7B, attack every 4th
+                attack_layer_indices = list(range(0, n_layers, 4))
+                print(f"  Medium model ({model_size_gb:.1f}GB), attacking {len(attack_layer_indices)}/{n_layers} layers")
             else:
                 attack_layer_indices = None  # all layers
         else:
