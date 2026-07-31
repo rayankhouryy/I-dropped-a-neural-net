@@ -2,15 +2,15 @@
 import argparse
 import json
 import time
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, Optional
 
 import torch
 import numpy as np
 
-from .config import BenchmarkConfig, ModelConfig, TrainingConfig
+from .config import BenchmarkConfig
 from .data import create_dataloaders, create_domain_shift_loader, get_tokenizer
 from .model import create_model, load_checkpoint, get_model_info
 from .train import train_root
@@ -366,12 +366,14 @@ def run_benchmark(
 
 def main():
     parser = argparse.ArgumentParser(description="Run GPT-2 lineage benchmark")
-    parser.add_argument("--n-calibration-roots", type=int, default=3)
-    parser.add_argument("--n-development-roots", type=int, default=3)
-    parser.add_argument("--n-test-roots", type=int, default=4)
-    parser.add_argument("--epochs", type=int, default=5)
-    parser.add_argument("--batch-size", type=int, default=8)
-    parser.add_argument("--output-dir", default="results/lineage_benchmark_gpt2")
+    parser.add_argument("--preset", choices=["smoke", "paper", "full"],
+                        help="Use preset config (smoke=2min, paper=6-8hr, full=15-20hr)")
+    parser.add_argument("--n-calibration-roots", type=int, default=None)
+    parser.add_argument("--n-development-roots", type=int, default=None)
+    parser.add_argument("--n-test-roots", type=int, default=None)
+    parser.add_argument("--epochs", type=int, default=None)
+    parser.add_argument("--batch-size", type=int, default=None)
+    parser.add_argument("--output-dir", default=None)
     parser.add_argument("--skip-training", action="store_true",
                         help="Load roots from checkpoints if available")
     parser.add_argument("--max-train-samples", type=int, default=None,
@@ -383,16 +385,30 @@ def main():
 
     args = parser.parse_args()
 
-    config = BenchmarkConfig(
-        n_calibration_roots=args.n_calibration_roots,
-        n_development_roots=args.n_development_roots,
-        n_test_roots=args.n_test_roots,
-        output_dir=args.output_dir,
-        checkpoint_dir=f"{args.output_dir}/checkpoints",
-        max_train_samples=args.max_train_samples,
-    )
-    config.training.epochs = args.epochs
-    config.training.batch_size = args.batch_size
+    # Start from preset or default
+    if args.preset:
+        config = BenchmarkConfig.from_preset(args.preset)
+        default_output = f"results/lineage_benchmark_gpt2_{args.preset}"
+    else:
+        config = BenchmarkConfig()
+        default_output = "results/lineage_benchmark_gpt2"
+
+    # Override with CLI args if provided
+    if args.n_calibration_roots is not None:
+        config.n_calibration_roots = args.n_calibration_roots
+    if args.n_development_roots is not None:
+        config.n_development_roots = args.n_development_roots
+    if args.n_test_roots is not None:
+        config.n_test_roots = args.n_test_roots
+    if args.epochs is not None:
+        config.training.epochs = args.epochs
+    if args.batch_size is not None:
+        config.training.batch_size = args.batch_size
+    if args.max_train_samples is not None:
+        config.max_train_samples = args.max_train_samples
+
+    config.output_dir = args.output_dir or default_output
+    config.checkpoint_dir = f"{config.output_dir}/checkpoints"
 
     run_benchmark(
         config=config,

@@ -125,3 +125,58 @@ class BenchmarkConfig:
             return "development"
         else:
             return "test"
+
+    @classmethod
+    def from_preset(cls, preset: str) -> "BenchmarkConfig":
+        """Create config from preset name.
+
+        Presets:
+        - smoke: 2 roots, 500 samples, 1 epoch (~2 min)
+        - paper: 8 roots, 50K samples, 3 epochs (~6-8 hr) [Option A]
+        - full: 10 roots, 100K samples, 5 epochs (~15-20 hr)
+        """
+        config = cls()
+
+        if preset == "smoke":
+            config.n_calibration_roots = 1
+            config.n_development_roots = 1
+            config.n_test_roots = 0
+            config.max_train_samples = 500
+            config.model.num_layers = 4
+            config.model.d_model = 256
+            config.model.d_ff = 1024
+            config.model.num_heads = 4
+            config.training.epochs = 1
+            config.training.batch_size = 8
+            config.descendant.cont_pt_same_epochs = [1]
+            config.descendant.cont_pt_shift_epochs = []
+            config.descendant.sft_epochs = []
+            config.descendant.lora_ranks = [4]
+            config.descendant.prune_sparsities = [0.5]
+            config.descendant.quant_levels = [256]
+            config.distillation.temperatures = [2.0]
+            config.distillation.epochs = 1
+
+        elif preset == "paper":
+            # Option A: 8 roots, 50K samples, 3 epochs (~6-8 hours)
+            config.n_calibration_roots = 2
+            config.n_development_roots = 3
+            config.n_test_roots = 3
+            config.max_train_samples = 50000
+            config.training.epochs = 3
+            config.training.batch_size = 8
+            # Keep default descendant config (full variety)
+            config.distillation.epochs = 3
+
+        elif preset == "full":
+            # Full benchmark: 10 roots, 100K samples, 5 epochs
+            config.n_calibration_roots = 3
+            config.n_development_roots = 3
+            config.n_test_roots = 4
+            config.max_train_samples = 100000
+            config.training.epochs = 5
+
+        else:
+            raise ValueError(f"Unknown preset: {preset}. Use: smoke, paper, full")
+
+        return config
