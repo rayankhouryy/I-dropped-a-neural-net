@@ -160,6 +160,9 @@ def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=0.1, device='cuda
         original_dtypes[i] = layer.mlp.up_proj.weight.dtype
         layer.mlp.up_proj.weight.data = layer.mlp.up_proj.weight.data.float()
         layer.mlp.down_proj.weight.data = layer.mlp.down_proj.weight.data.float()
+        # Add small noise to break symmetry - gradient of cos(x,x) is zero!
+        layer.mlp.up_proj.weight.data.add_(torch.randn_like(layer.mlp.up_proj.weight) * 0.001)
+        layer.mlp.down_proj.weight.data.add_(torch.randn_like(layer.mlp.down_proj.weight) * 0.001)
         layer.mlp.up_proj.weight.requires_grad_(True)
         layer.mlp.down_proj.weight.requires_grad_(True)
         params.append(layer.mlp.up_proj.weight)
