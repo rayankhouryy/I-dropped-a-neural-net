@@ -1,5 +1,23 @@
 \appendix
 
+\section{Limitations}\label{app:limitations}
+
+\textbf{Scope and architecture constraints.} Our method needs white-box access to both checkpoints, so API-only models cannot be verified. It also only works for residual architectures: plain feedforward networks, RNNs, and state-space models are out of scope. Comparisons are further limited to models with matching depth and hidden dimension, so cross-architecture verification (e.g., LLaMA vs.\ GPT-2, or ViT vs.\ ResNet) is not supported.
+
+\textbf{Lineage determination.} The lineage score is symmetric, so without external metadata we cannot tell which checkpoint is the ancestor. The score decays monotonically with genealogical distance, but the method compares single pairs and does not reconstruct multi-hop ancestry or family trees. Under partial inheritance (layer grafts, linear merges), the score reflects the fraction of shared blocks but not which blocks were inherited.
+
+\textbf{Signal degradation under transformation.} The fingerprint survives common post-training modifications, but weakens as transformations grow more aggressive. Heavy pruning drops the signal to $\mathcal{L}=0.58$ at 85\% sparsity, and extensive continued pretraining (CodeLlama) lowers it to $\mathcal{L}=0.336$, though both remain detectable above the null. A white-box adversary can push the score to chance, but only by sacrificing at least 12\% utility; no tested attack removes the signal while preserving model function.
+
+\textbf{Calibration and validation.} Verification requires calibrating a null distribution from independently trained models of the same architecture, and the threshold may need adjustment across architecture families. Our real-world validation covers a limited set of public checkpoints (four LLaMA-2 pairs plus four other model families), so broader ecosystem coverage is untested. SwiGLU architectures (Qwen2.5, DeepSeek-R1) also reach only 80\% block-pairing accuracy, and need joint factorization to recover sub-paths reliably. Broader checkpoint-level lineage evaluation across independently trained roots and additional architecture families remains necessary; the nine-family result in this paper establishes projection-pair recovery rather than lineage verification across all nine families.
+
+\section{Reproducibility Statement}\label{app:reproducibility}
+
+All results in this paper are produced by deterministic scripts with fixed seeds. The 52-pair MLP lineage benchmark (Tables~\ref{tab:survival}, \ref{tab:baselines}) uses depth-16 MLPs (in\_dim=16, hidden=48) and is constructed from $2$ trained reference checkpoints, each paired with $5$ related-checkpoint kinds $\times 6$ derivative seeds $=30$ truly-related pairs (fine-tune, fine-tune to a new target, $\sigma_{\text{rel}} \in [0.01,0.15]$ Gaussian noise, $10$--$85\%$ magnitude pruning, and $16$--$256$-level uniform quantization), plus $16$ different-seed same-task pairs and $6$ distilled-student pairs as unrelated checkpoints. The expanded 159-pair set (Figure~\ref{fig:hero}c) uses $3$ depth-24 MLP reference models: each reference is paired with $25$ related checkpoints ($5$ transformation types $\times$ $5$ variations) and $28$ unrelated checkpoints ($15$ independent same-task $+$ $5$ independent different-task $+$ $5$ random-init $+$ $3$ distilled), yielding $3 \times 25 = 75$ related pairs and $3 \times 28 = 84$ unrelated pairs ($75 + 84 = 159$ total). Exact parameters are listed in Appendix~\ref{app:benchmarks}; null calibration uses the $50$ different-seed pairs from Appendix~\ref{app:verification}. Real-architecture pairing (Table~\ref{tab:transformer-family}) loads public HuggingFace checkpoints. Code, configuration files, baseline implementations (aligned Frobenius, singular-value distance, weight cosine, CKA, SVCCA, IPGuard regression analogue), the per-pair score JSONs, and the plotting scripts will be released upon acceptance.
+
+\section{Use of AI Assistants}\label{app:ai-assistants}
+
+The authors bear full responsibility for all scientific claims, experimental results, and analysis in this work. During manuscript preparation, we used Claude to support literature searches, experimental design, code development, and the drafting and editing of text. All AI-assisted material was reviewed, verified, and revised by the authors.
+
 \section{Extended Theoretical Results}\label{app:proofs}
 
 \subsection{Null Model (Corollary)}
@@ -213,5 +231,45 @@ $10^{-1}$   & 0.083 & 0.70 & +1.5\% loss \\
 $\ge 1$     & 0.91+ & 0.69 & utility preserved \\
 \bottomrule
 \end{tabular}
-\caption{Pareto frontier: suppressing $\mathcal{L}$ to chance level requires $\ge$12\% utility loss.}
+\caption{MLP Pareto frontier: suppressing $\mathcal{L}$ to chance level requires $\ge$12\% utility loss.}
+\label{tab:mlp-attack}
 \end{table}
+
+\subsection{LLM Fingerprint Attack}\label{app:llm-attack}
+
+We extend the adversarial analysis to large language models, testing whether gradient-based attacks can erase the fingerprint from real LLM checkpoints. The attack minimizes cosine similarity between the attacked model's centered signatures $\phi_\ell$ and the original:
+\begin{equation}
+\min_{W} \frac{1}{L} \sum_{\ell} \langle \phi_\ell(W), \phi_\ell(W_{\mathrm{orig}}) \rangle
+\end{equation}
+where $\phi_\ell$ is the unit-normalized centered signature from Equation~\ref{eq:centered-fingerprint}. We use SGD with learning rate 1.0 for 100 steps, converting MLP weights to float32 for gradient computation. Initial noise (1\% of weight magnitude) breaks the symmetry at $\cos = 1$ where gradients vanish.
+
+\paragraph{Qwen-1.5B (full attack).} Attacking all 28 SwiGLU MLP layers:
+\begin{itemize}[nosep]
+\item Lineage drops from $+0.9995$ (related) to $\mathbf{-0.996}$ (anti-correlated)
+\item Diagonal dominance collapses: $19.8 \to 2.3$
+\item Signature norm explodes: $\|E\| = 108 \to 480$
+\end{itemize}
+The attack successfully erases the positive fingerprint but \emph{overshoots} into strong negative correlation. This is detectable: genuinely unrelated models (e.g., OpenLLaMA vs LLaMA-2) score $\mathcal{L} \approx 0$, not $-1$. A verifier using $|\mathcal{L}| > \tau$ catches both related checkpoints and adversarially attacked ones.
+
+\paragraph{LLaMA-2-7B (partial attack).} Memory constraints limit the attack to 4 of 32 layers (every 8th):
+\begin{itemize}[nosep]
+\item Lineage drops from $+0.995$ to $+0.751$
+\item Still ${\sim}15{,}000\times$ above the unrelated null ($5 \times 10^{-5}$)
+\item Unattacked layers preserve the fingerprint
+\end{itemize}
+Partial attacks leave the model detectable. A full attack would require attacking all layers, risking utility collapse as seen in the MLP experiments.
+
+\paragraph{Detection via structural anomalies.} Beyond lineage, attacked models show anomalous structure:
+\begin{center}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Metric & Normal range & Attacked \\
+\midrule
+$\|E\| / \mathrm{DD}$ ratio & $5$--$15$ & ${\sim}210$ \\
+DD (diagonal dominance) & $14$--$21$ & $2.3$ \\
+$\|E\|$ (signature norm) & $100$--$210$ & $480$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+These provide secondary detection signals independent of the lineage score.
