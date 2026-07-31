@@ -193,9 +193,9 @@ def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=1.0, device='cuda
         cos_mean = cos_sum / len(attack_layers)
 
         # MINIMIZE cosine similarity to erase fingerprint
-        # Negate so gradient descent reduces cosine (not increases it)
-        # Scale by 1000 to get meaningful gradients (cosine gradient is small near 1)
-        loss = -cos_mean * 1000
+        # Positive loss → gradient descent minimizes cos_mean
+        # (negative would maximize it, which is what we saw going to 1.0)
+        loss = cos_mean * 1000
 
         opt.zero_grad()
         loss.backward()
