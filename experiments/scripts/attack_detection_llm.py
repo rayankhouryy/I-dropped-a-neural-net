@@ -121,25 +121,34 @@ def lineage_score(phis_a, phis_b):
     return float(np.mean(scores))
 
 
-def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-4, device='cuda'):
+def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-3, device='cuda',
+                        attack_layers=None):
     """Run gradient attack on LLM to minimize lineage score.
 
     Attacks only the MLP up_proj and down_proj weights (SwiGLU path).
+    Uses SGD to avoid Adam's 2x memory overhead from momentum buffers.
+
+    Args:
+        attack_layers: List of layer indices to attack, or None for all.
+                      For 7B models, attack subset to avoid OOM.
     """
-    print(f"  Running gradient attack (λ={lambda_utility}, steps={n_steps})...", flush=True)
+    n_total_layers = len(model.model.layers)
+    if attack_layers is None:
+        attack_layers = list(range(n_total_layers))
+
+    print(f"  Running gradient attack (λ={lambda_utility}, steps={n_steps}, "
+          f"layers={len(attack_layers)}/{n_total_layers})...", flush=True)
 
     # Store reference signatures
     ref_metrics = compute_model_metrics(model)
     ref_phis = ref_metrics['phis']
 
-    # Enable gradients on MLP weights only
-    for layer in model.model.layers:
+    # Enable gradients on MLP weights only for selected layers
+    params = []
+    for i in attack_layers:
+        layer = model.model.layers[i]
         layer.mlp.up_proj.weight.requires_grad_(True)
         layer.mlp.down_proj.weight.requires_grad_(True)
-
-    # Collect parameters to optimize
-    params = []
-    for layer in model.model.layers:
         params.append(layer.mlp.up_proj.weight)
         params.append(layer.mlp.down_proj.weight)
 
@@ -149,14 +158,15 @@ def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-4, device='cud
     with torch.no_grad():
         ref_logits = model(probe_ids).logits.detach()
 
-    opt = torch.optim.Adam(params, lr=lr)
+    # Use SGD instead of Adam to save memory (no momentum buffers)
+    opt = torch.optim.SGD(params, lr=lr, momentum=0.9)
 
     for step in range(n_steps):
-        # Compute lineage objective (mean cosine of centered signatures)
+        # Compute lineage objective only over attacked layers
         cos_sum = 0.0
-        n_layers = len(model.model.layers)
 
-        for i, layer in enumerate(model.model.layers):
+        for i in attack_layers:
+            layer = model.model.layers[i]
             Wu = layer.mlp.up_proj.weight
             Wd = layer.mlp.down_proj.weight
             M = Wd @ Wu
@@ -168,7 +178,7 @@ def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-4, device='cud
             ref_phi = ref_phis[i].to(device)
             cos_sum = cos_sum + (phi * ref_phi).sum()
 
-        cos_mean = cos_sum / n_layers
+        cos_mean = cos_sum / len(attack_layers)
 
         # Utility objective
         curr_logits = model(probe_ids).logits
@@ -186,7 +196,8 @@ def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-4, device='cud
                   flush=True)
 
     # Disable gradients
-    for layer in model.model.layers:
+    for i in attack_layers:
+        layer = model.model.layers[i]
         layer.mlp.up_proj.weight.requires_grad_(False)
         layer.mlp.down_proj.weight.requires_grad_(False)
 
@@ -199,6 +210,8 @@ def main():
     ap.add_argument("--attack-lambdas", default="0.01,0.05,0.1,0.2,0.5,1.0",
                     help="Comma-separated lambda values for attack (matches MLP benchmark)")
     ap.add_argument("--attack-steps", type=int, default=100)
+    ap.add_argument("--attack-layers", default=None,
+                    help="Comma-separated layer indices to attack, or 'auto' for memory-safe subset")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = ap.parse_args()
 
@@ -291,10 +304,25 @@ def main():
         # Reload base for attack
         attack_model = load_model(config['base'], args.device, config['dtype'])
 
+        # Determine layers to attack
+        n_layers = len(attack_model.model.layers)
+        if args.attack_layers is None or args.attack_layers == 'auto':
+            # For 7B+ models, attack every 4th layer to fit in 24GB
+            # For smaller models, attack all
+            model_size_gb = sum(p.numel() for p in attack_model.parameters()) * 2 / 1e9
+            if model_size_gb > 5:  # >5GB model, use subset
+                attack_layer_indices = list(range(0, n_layers, 4))
+                print(f"  Large model ({model_size_gb:.1f}GB), attacking {len(attack_layer_indices)}/{n_layers} layers")
+            else:
+                attack_layer_indices = None  # all layers
+        else:
+            attack_layer_indices = [int(x) for x in args.attack_layers.split(',')]
+
         # Run attack
         attack_model = gradient_attack_llm(
             attack_model, lambda_utility=lam,
-            n_steps=args.attack_steps, device=args.device
+            n_steps=args.attack_steps, device=args.device,
+            attack_layers=attack_layer_indices
         )
 
         # Compute metrics
