@@ -121,7 +121,7 @@ def lineage_score(phis_a, phis_b):
     return float(np.mean(scores))
 
 
-def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-3, device='cuda',
+def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=0.1, device='cuda',
                         attack_layers=None):
     """Run gradient attack on LLM to minimize lineage score.
 
@@ -137,16 +137,29 @@ def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-3, device='cud
         attack_layers = list(range(n_total_layers))
 
     print(f"  Running gradient attack (λ={lambda_utility}, steps={n_steps}, "
-          f"layers={len(attack_layers)}/{n_total_layers})...", flush=True)
+          f"layers={len(attack_layers)}/{n_total_layers}, lr={lr})...", flush=True)
 
-    # Store reference signatures
-    ref_metrics = compute_model_metrics(model)
-    ref_phis = ref_metrics['phis']
+    # Store reference signatures (detached, in fp32)
+    ref_phis = []
+    for layer in model.model.layers:
+        Wu = layer.mlp.up_proj.weight.detach().float()
+        Wd = layer.mlp.down_proj.weight.detach().float()
+        M = Wd @ Wu
+        d = M.shape[0]
+        alpha = torch.trace(M) / d
+        E = M - alpha * torch.eye(d, dtype=torch.float32, device=Wu.device)
+        phi = (E / torch.linalg.matrix_norm(E)).flatten()
+        ref_phis.append(phi)
 
-    # Enable gradients on MLP weights only for selected layers
+    # Convert attacked layers to fp32 for gradient computation
+    # This is crucial - bf16 gradients get rounded to zero
+    original_dtypes = {}
     params = []
     for i in attack_layers:
         layer = model.model.layers[i]
+        original_dtypes[i] = layer.mlp.up_proj.weight.dtype
+        layer.mlp.up_proj.weight.data = layer.mlp.up_proj.weight.data.float()
+        layer.mlp.down_proj.weight.data = layer.mlp.down_proj.weight.data.float()
         layer.mlp.up_proj.weight.requires_grad_(True)
         layer.mlp.down_proj.weight.requires_grad_(True)
         params.append(layer.mlp.up_proj.weight)
@@ -156,9 +169,9 @@ def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-3, device='cud
     vocab_size = model.config.vocab_size
     probe_ids = torch.randint(1, vocab_size, (4, 16), device=device)
     with torch.no_grad():
-        ref_logits = model(probe_ids).logits.detach()
+        ref_logits = model(probe_ids).logits.detach().float()
 
-    # Use SGD instead of Adam to save memory (no momentum buffers)
+    # Use SGD with high LR - the cosine objective has tiny gradients
     opt = torch.optim.SGD(params, lr=lr, momentum=0.9)
 
     for step in range(n_steps):
@@ -172,34 +185,42 @@ def gradient_attack_llm(model, lambda_utility, n_steps=100, lr=1e-3, device='cud
             M = Wd @ Wu
             d = M.shape[0]
             alpha = torch.trace(M) / d
-            E = M - alpha * torch.eye(d, dtype=M.dtype, device=M.device)
-            phi = (E / (torch.linalg.matrix_norm(E) + 1e-12)).flatten()
+            E = M - alpha * torch.eye(d, dtype=torch.float32, device=device)
+            E_norm = torch.linalg.matrix_norm(E)
+            phi = (E / (E_norm + 1e-12)).flatten()
 
-            ref_phi = ref_phis[i].to(device)
+            ref_phi = ref_phis[i]
             cos_sum = cos_sum + (phi * ref_phi).sum()
 
         cos_mean = cos_sum / len(attack_layers)
 
-        # Utility objective
-        curr_logits = model(probe_ids).logits
-        utility_loss = F.mse_loss(curr_logits, ref_logits)
+        # Utility objective (skip forward pass most steps for speed)
+        if step % 10 == 0:
+            with torch.enable_grad():
+                curr_logits = model(probe_ids).logits.float()
+                utility_loss = F.mse_loss(curr_logits, ref_logits)
+        else:
+            utility_loss = torch.tensor(0.0, device=device)
 
         # Total loss: minimize cos (to break lineage) + preserve utility
-        loss = cos_mean + lambda_utility * utility_loss
+        # Scale cos_mean to make gradients larger
+        loss = cos_mean * 100 + lambda_utility * utility_loss
 
         opt.zero_grad()
         loss.backward()
         opt.step()
 
         if step % 25 == 0 or step == n_steps - 1:
-            print(f"    step {step}: cos={float(cos_mean):.4f}, util={float(utility_loss):.4e}",
-                  flush=True)
+            print(f"    step {step}: cos={float(cos_mean.detach()):.4f}, "
+                  f"util={float(utility_loss.detach()):.4e}", flush=True)
 
-    # Disable gradients
+    # Disable gradients and convert back to original dtype
     for i in attack_layers:
         layer = model.model.layers[i]
         layer.mlp.up_proj.weight.requires_grad_(False)
         layer.mlp.down_proj.weight.requires_grad_(False)
+        layer.mlp.up_proj.weight.data = layer.mlp.up_proj.weight.data.to(original_dtypes[i])
+        layer.mlp.down_proj.weight.data = layer.mlp.down_proj.weight.data.to(original_dtypes[i])
 
     return model
 
