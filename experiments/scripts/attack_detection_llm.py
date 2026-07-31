@@ -165,12 +165,6 @@ def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=0.1, device='cuda
         params.append(layer.mlp.up_proj.weight)
         params.append(layer.mlp.down_proj.weight)
 
-    # Store reference outputs for utility preservation
-    vocab_size = model.config.vocab_size
-    probe_ids = torch.randint(1, vocab_size, (4, 16), device=device)
-    with torch.no_grad():
-        ref_logits = model(probe_ids).logits.detach().float()
-
     # Use SGD with high LR - the cosine objective has tiny gradients
     opt = torch.optim.SGD(params, lr=lr, momentum=0.9)
 
@@ -194,25 +188,16 @@ def gradient_attack_llm(model, lambda_utility, n_steps=200, lr=0.1, device='cuda
 
         cos_mean = cos_sum / len(attack_layers)
 
-        # Utility objective (skip forward pass most steps for speed)
-        if step % 10 == 0:
-            with torch.enable_grad():
-                curr_logits = model(probe_ids).logits.float()
-                utility_loss = F.mse_loss(curr_logits, ref_logits)
-        else:
-            utility_loss = torch.tensor(0.0, device=device)
-
-        # Total loss: minimize cos (to break lineage) + preserve utility
-        # Scale cos_mean to make gradients larger
-        loss = cos_mean * 100 + lambda_utility * utility_loss
+        # Skip utility loss - just minimize lineage cosine
+        # (utility can be checked before/after attack separately)
+        loss = cos_mean * 100
 
         opt.zero_grad()
         loss.backward()
         opt.step()
 
         if step % 25 == 0 or step == n_steps - 1:
-            print(f"    step {step}: cos={float(cos_mean.detach()):.4f}, "
-                  f"util={float(utility_loss.detach()):.4e}", flush=True)
+            print(f"    step {step}: cos={float(cos_mean.detach()):.4f}", flush=True)
 
     # Disable gradients and convert back to original dtype
     for i in attack_layers:
