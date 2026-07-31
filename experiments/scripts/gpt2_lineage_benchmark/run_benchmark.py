@@ -1,6 +1,7 @@
 """Main orchestration script for the GPT-2 lineage benchmark."""
 import argparse
 import json
+import pickle
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
@@ -25,43 +26,25 @@ from .evaluation import (
 )
 
 
-def run_benchmark(
-    config: Optional[BenchmarkConfig] = None,
+def run_phase_roots(
+    config: BenchmarkConfig,
     device: str = "cuda",
-    skip_training: bool = False,
     verbose: bool = True,
-    num_workers: int = 4,
 ) -> Dict[str, Any]:
-    """Run the full GPT-2 lineage benchmark.
-
-    Args:
-        config: Benchmark configuration
-        device: GPU device (cuda, mps, or cpu)
-        skip_training: Load roots from checkpoints if available
-        verbose: Print progress
-        num_workers: Number of parallel workers for CPU-bound tasks
-    """
-    if config is None:
-        config = BenchmarkConfig()
-
+    """Phase 1: Train root models (~1 hour for paper preset)."""
     output_dir = Path(config.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_dir = Path(config.checkpoint_dir)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
-    results = {
-        "config": asdict(config),
-        "roots": [],
-        "descendants": [],
-        "distilled_students": [],
-        "pairs": [],
-        "metrics": {},
-    }
 
-    # Get tokenizer and dataloaders
     if verbose:
+        print("=" * 60)
+        print("PHASE 1: Training root models")
+        print("=" * 60)
         print("Loading data...")
+
     tokenizer = get_tokenizer()
     dataloaders = create_dataloaders(
         dataset_name=config.dataset,
@@ -73,37 +56,31 @@ def run_benchmark(
     train_loader = dataloaders["train"]
     val_loader = dataloaders["val"]
 
-    domain_shift_loader = create_domain_shift_loader(
-        tokenizer=tokenizer,
-        max_length=config.model.max_seq_len,
-        batch_size=config.training.batch_size,
-    )
-
     if verbose:
+        info = get_model_info(create_model(config.model, seed=0, device='cpu'))
         print(f"Train batches: {len(train_loader)}, Val batches: {len(val_loader)}")
-        print(f"Model config: {get_model_info(create_model(config.model, seed=0, device='cpu'))}")
+        print(f"Model: {info['total_params_millions']:.1f}M params")
 
-    # Phase 1: Train root models
-    roots = []
-    root_Ms = []
+    roots_info = []
+    root_signatures = []
 
     for root_idx in range(config.n_roots):
         split = config.get_split(root_idx)
-        root_ckpt = checkpoint_dir / f"root_{root_idx}" / f"epoch_{config.training.epochs}.pt"
+        ckpt_path = checkpoint_dir / f"root_{root_idx}"
+        final_ckpt = ckpt_path / f"epoch_{config.training.epochs}.pt"
 
-        if skip_training and root_ckpt.exists():
+        if final_ckpt.exists():
             if verbose:
-                print(f"\n[root-{root_idx}] ({split}) Loading from checkpoint...")
-            model, epoch, metrics = load_checkpoint(root_ckpt, config.model, device)
+                print(f"\n[root-{root_idx}] ({split}) Already trained, loading...")
+            model, _, metrics = load_checkpoint(final_ckpt, config.model, device)
             root_info = {
                 "root_idx": root_idx,
                 "split": split,
                 "final_val_ppl": metrics.get("val_ppl", 0.0) if metrics else 0.0,
-                "loaded_from_checkpoint": True,
             }
         else:
             if verbose:
-                print(f"\n[root-{root_idx}] ({split}) Training from scratch...")
+                print(f"\n[root-{root_idx}] ({split}) Training...")
             result = train_root(
                 root_idx=root_idx,
                 train_loader=train_loader,
@@ -120,36 +97,106 @@ def run_benchmark(
                 "split": split,
                 "final_val_ppl": result["final_val_ppl"],
                 "training_time_seconds": result["training_time_seconds"],
-                "seed": result["seed"],
             }
 
-        # Extract branch products
+        # Extract and save signatures
         Ms = extract_branch_products(model)
-        root_Ms.append(Ms)
         root_info["mean_diag_score"] = float(np.mean([
             abs(np.trace(M)) / np.linalg.norm(M, 'fro') for M in Ms
         ]))
-
-        roots.append({"info": root_info, "model": model, "Ms": Ms})
-        results["roots"].append(root_info)
+        roots_info.append(root_info)
+        root_signatures.append(Ms)
 
         if verbose:
             print(f"  Mean diag score: {root_info['mean_diag_score']:.4f}")
 
-    # Compute tau_s from all roots
-    tau_s = choose_tau_s(root_Ms)
-    results["tau_s"] = tau_s
+        # Free GPU memory
+        model.cpu()
+        del model
+        torch.cuda.empty_cache()
+
+    # Save phase 1 results
+    tau_s = choose_tau_s(root_signatures)
+    phase1_data = {
+        "roots_info": roots_info,
+        "root_signatures": root_signatures,
+        "tau_s": tau_s,
+        "config": asdict(config),
+    }
+    phase1_path = output_dir / "phase1_roots.pkl"
+    with open(phase1_path, "wb") as f:
+        pickle.dump(phase1_data, f)
+
     if verbose:
         print(f"\ntau_s = {tau_s:.4f}")
+        print(f"Phase 1 completed in {(time.time()-t0)/60:.1f} min")
+        print(f"Saved to {phase1_path}")
 
-    # Phase 2: Generate descendants
+    return phase1_data
+
+
+def run_phase_descendants(
+    config: BenchmarkConfig,
+    device: str = "cuda",
+    verbose: bool = True,
+    num_workers: int = 4,
+) -> Dict[str, Any]:
+    """Phase 2: Generate descendants + distilled students (~1-2 hours)."""
+    output_dir = Path(config.output_dir)
+    checkpoint_dir = Path(config.checkpoint_dir)
+
+    # Load phase 1 data
+    phase1_path = output_dir / "phase1_roots.pkl"
+    if not phase1_path.exists():
+        raise RuntimeError(f"Phase 1 not complete. Run --phase roots first.")
+
+    with open(phase1_path, "rb") as f:
+        phase1_data = pickle.load(f)
+
+    roots_info = phase1_data["roots_info"]
+    root_signatures = phase1_data["root_signatures"]
+
+    t0 = time.time()
+
+    if verbose:
+        print("=" * 60)
+        print("PHASE 2: Generating descendants and distilled students")
+        print("=" * 60)
+        print("Loading data...")
+
+    tokenizer = get_tokenizer()
+    dataloaders = create_dataloaders(
+        dataset_name=config.dataset,
+        tokenizer=tokenizer,
+        max_length=config.model.max_seq_len,
+        batch_size=config.training.batch_size,
+        max_train_samples=config.max_train_samples,
+    )
+    train_loader = dataloaders["train"]
+    val_loader = dataloaders["val"]
+
+    domain_shift_loader = None
+    if config.descendant.cont_pt_shift_epochs:
+        domain_shift_loader = create_domain_shift_loader(
+            tokenizer=tokenizer,
+            max_length=config.model.max_seq_len,
+            batch_size=config.training.batch_size,
+        )
+
     all_descendants = []
-    for root_idx, root in enumerate(roots):
+    all_students = []
+
+    for root_idx, root_info in enumerate(roots_info):
+        # Load root model
+        ckpt = checkpoint_dir / f"root_{root_idx}" / f"epoch_{config.training.epochs}.pt"
+        model, _, _ = load_checkpoint(ckpt, config.model, device)
+
         if verbose:
             print(f"\n[root-{root_idx}] Generating descendants...")
 
+        # Generate descendants
         descendants = generate_all_descendants(
-            parent=root["model"],
+            parent=model,
             root_idx=root_idx,
             train_loader=train_loader,
             val_loader=val_loader,
@@ -160,41 +207,28 @@ def run_benchmark(
             parallel_cpu=True,
         )
 
-        # Extract branch products in parallel (CPU-bound)
-        def extract_and_annotate(desc):
+        # Extract signatures
+        def extract_desc(desc):
             desc["Ms"] = extract_branch_products(desc["model"])
             desc["mean_diag_score"] = float(np.mean([
                 abs(np.trace(M)) / np.linalg.norm(M, 'fro') for M in desc["Ms"]
             ]))
+            del desc["model"]
             return desc
 
         if verbose:
-            print(f"  Extracting signatures for {len(descendants)} descendants...")
+            print(f"  Extracting {len(descendants)} descendant signatures...")
 
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
-            descendants = list(executor.map(extract_and_annotate, descendants))
+            descendants = list(executor.map(extract_desc, descendants))
+        all_descendants.extend(descendants)
 
-        for desc in descendants:
-            # Remove model to save memory, keep Ms for scoring
-            desc_info = {k: v for k, v in desc.items() if k != "model"}
-            desc_info.pop("Ms", None)
-            results["descendants"].append(desc_info)
-            del desc["model"]  # Free GPU/CPU memory
-            all_descendants.append(desc)
-
-        # Clear parent model from GPU
-        root["model"].cpu()
-        torch.cuda.empty_cache()
-
-    # Phase 3: Generate distilled students
-    all_students = []
-    for root_idx, root in enumerate(roots):
+        # Generate distilled students
         if verbose:
-            print(f"\n[root-{root_idx}] Generating distilled students...")
+            print(f"  Generating distilled students...")
 
-        root["model"].to(device)
         students = generate_distilled_students(
-            teacher=root["model"],
+            teacher=model,
             root_idx=root_idx,
             train_loader=train_loader,
             val_loader=val_loader,
@@ -204,188 +238,233 @@ def run_benchmark(
             verbose=verbose,
         )
 
-        # Extract branch products in parallel
-        def extract_student(student):
-            student["Ms"] = extract_branch_products(student["model"])
-            student["mean_diag_score"] = float(np.mean([
-                abs(np.trace(M)) / np.linalg.norm(M, 'fro') for M in student["Ms"]
+        def extract_student(s):
+            s["Ms"] = extract_branch_products(s["model"])
+            s["mean_diag_score"] = float(np.mean([
+                abs(np.trace(M)) / np.linalg.norm(M, 'fro') for M in s["Ms"]
             ]))
-            return student
+            del s["model"]
+            return s
 
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             students = list(executor.map(extract_student, students))
+        all_students.extend(students)
 
-        for student in students:
-            student_info = {
-                k: v for k, v in student.items() if k not in ["model", "Ms"]
-            }
-            results["distilled_students"].append(student_info)
-            del student["model"]
-            all_students.append(student)
-
-        root["model"].cpu()
+        model.cpu()
+        del model
         torch.cuda.empty_cache()
 
-    # Phase 4: Score all pairs (parallelized)
+    # Save phase 2 results
+    phase2_data = {
+        "descendants": all_descendants,
+        "students": all_students,
+    }
+    phase2_path = output_dir / "phase2_descendants.pkl"
+    with open(phase2_path, "wb") as f:
+        pickle.dump(phase2_data, f)
+
     if verbose:
-        print("\n" + "="*60)
-        print("Scoring all pairs (parallel)...")
+        print(f"\nPhase 2 completed in {(time.time()-t0)/60:.1f} min")
+        print(f"  {len(all_descendants)} descendants, {len(all_students)} students")
+        print(f"Saved to {phase2_path}")
 
-    # Build list of scoring tasks
+    return phase2_data
+
+
+def run_phase_evaluate(
+    config: BenchmarkConfig,
+    verbose: bool = True,
+    num_workers: int = 4,
+) -> Dict[str, Any]:
+    """Phase 3: Score all pairs and compute metrics (~15 min)."""
+    output_dir = Path(config.output_dir)
+
+    # Load phase 1 and 2 data
+    phase1_path = output_dir / "phase1_roots.pkl"
+    phase2_path = output_dir / "phase2_descendants.pkl"
+
+    if not phase1_path.exists():
+        raise RuntimeError("Phase 1 not complete. Run --phase roots first.")
+    if not phase2_path.exists():
+        raise RuntimeError("Phase 2 not complete. Run --phase descendants first.")
+
+    with open(phase1_path, "rb") as f:
+        phase1_data = pickle.load(f)
+    with open(phase2_path, "rb") as f:
+        phase2_data = pickle.load(f)
+
+    roots_info = phase1_data["roots_info"]
+    root_signatures = phase1_data["root_signatures"]
+    tau_s = phase1_data["tau_s"]
+    all_descendants = phase2_data["descendants"]
+    all_students = phase2_data["students"]
+
+    t0 = time.time()
+
+    if verbose:
+        print("=" * 60)
+        print("PHASE 3: Scoring and evaluation")
+        print("=" * 60)
+        print(f"tau_s = {tau_s:.4f}")
+
+    # Build scoring tasks
     scoring_tasks = []
-    for root_idx, root in enumerate(roots):
-        ref_Ms = root["Ms"]
-        split = root["info"]["split"]
+    for root_idx, root_info in enumerate(roots_info):
+        ref_Ms = root_signatures[root_idx]
+        split = root_info["split"]
 
-        # Score descendants of this root
+        # Descendants
         for desc in all_descendants:
             if desc["root_idx"] == root_idx:
                 scoring_tasks.append({
-                    "ref_Ms": ref_Ms,
-                    "sus_Ms": desc["Ms"],
-                    "reference": f"root_{root_idx}",
-                    "suspect": desc["id"],
-                    "label": "descendant",
-                    "attack_type": desc["type"],
+                    "ref_Ms": ref_Ms, "sus_Ms": desc["Ms"],
+                    "reference": f"root_{root_idx}", "suspect": desc["id"],
+                    "label": "descendant", "attack_type": desc["type"],
                     "split": split,
                 })
 
-        # Score distilled students
+        # Distilled students
         for student in all_students:
             if student["teacher_root_idx"] == root_idx:
                 scoring_tasks.append({
-                    "ref_Ms": ref_Ms,
-                    "sus_Ms": student["Ms"],
-                    "reference": f"root_{root_idx}",
-                    "suspect": student["id"],
-                    "label": "non_descendant",
-                    "attack_type": "distilled_student",
+                    "ref_Ms": ref_Ms, "sus_Ms": student["Ms"],
+                    "reference": f"root_{root_idx}", "suspect": student["id"],
+                    "label": "non_descendant", "attack_type": "distilled_student",
                     "split": split,
                     "quality_metrics": student.get("quality_metrics", {}),
                 })
 
-        # Score other roots as non-descendants
-        for other_idx, other_root in enumerate(roots):
+        # Cross-root pairs
+        for other_idx in range(len(roots_info)):
             if other_idx != root_idx:
                 scoring_tasks.append({
-                    "ref_Ms": ref_Ms,
-                    "sus_Ms": other_root["Ms"],
-                    "reference": f"root_{root_idx}",
-                    "suspect": f"root_{other_idx}",
-                    "label": "non_descendant",
-                    "attack_type": "independent",
+                    "ref_Ms": ref_Ms, "sus_Ms": root_signatures[other_idx],
+                    "reference": f"root_{root_idx}", "suspect": f"root_{other_idx}",
+                    "label": "non_descendant", "attack_type": "independent",
                     "split": split,
                 })
 
-    # Score in parallel using threads (CPU-bound numpy ops)
-    def score_task(task: Dict) -> Dict:
-        L_score, _, _ = compute_lineage_score(
-            task["ref_Ms"], task["sus_Ms"], tau_s
-        )
+    if verbose:
+        print(f"Scoring {len(scoring_tasks)} pairs...")
+
+    def score_task(task):
+        L_score, _, _ = compute_lineage_score(task["ref_Ms"], task["sus_Ms"], tau_s)
         result = {k: v for k, v in task.items() if k not in ["ref_Ms", "sus_Ms"]}
         result["lineage"] = L_score
         return result
 
-    pairs = []
-    n_score_workers = min(num_workers * 2, len(scoring_tasks))
-    with ThreadPoolExecutor(max_workers=n_score_workers) as executor:
+    with ThreadPoolExecutor(max_workers=num_workers * 2) as executor:
         pairs = list(executor.map(score_task, scoring_tasks))
 
-    if verbose:
-        print(f"  Scored {len(pairs)} pairs using {n_score_workers} workers")
-
-    results["pairs"] = pairs
-
-    # Phase 5: Evaluate by split
-    if verbose:
-        print("\nEvaluating metrics...")
+    # Compute metrics
+    results = {
+        "config": phase1_data["config"],
+        "tau_s": tau_s,
+        "roots": roots_info,
+        "descendants": [{k: v for k, v in d.items() if k != "Ms"}
+                        for d in all_descendants],
+        "distilled_students": [{k: v for k, v in s.items() if k != "Ms"}
+                               for s in all_students],
+        "pairs": pairs,
+        "metrics": {},
+    }
 
     for split_name in ["calibration", "development", "test"]:
         split_pairs = [p for p in pairs if p["split"] == split_name]
         if split_pairs:
             metrics = evaluate_lineage_benchmark(split_pairs)
             results["metrics"][split_name] = metrics
-
             if verbose:
+                ci = metrics['auroc_ci']
                 print(f"\n[{split_name.upper()}] AUROC={metrics['auroc']:.4f} "
-                      f"({metrics['auroc_ci']['ci_lower']:.4f}, {metrics['auroc_ci']['ci_upper']:.4f})")
-                print(f"  TPR@1%FPR={metrics['tpr_at_1pct_fpr']:.2%}, "
-                      f"TPR@10%FPR={metrics['tpr_at_10pct_fpr']:.2%}")
-                print(f"  Pos mean={metrics['pos_mean']:.4f}, Neg mean={metrics['neg_mean']:.4f}")
+                      f"({ci['ci_lower']:.4f}, {ci['ci_upper']:.4f})")
 
-    # Overall metrics
     all_metrics = evaluate_lineage_benchmark(pairs)
     results["metrics"]["overall"] = all_metrics
 
-    # Gap-Z for distillation
-    related_scores = [p["lineage"] for p in pairs if p["label"] == "descendant"]
-    distilled_scores = [p["lineage"] for p in pairs if p["attack_type"] == "distilled_student"]
-    if related_scores and distilled_scores:
-        gap_z = compute_gap_z(related_scores, distilled_scores)
+    # Gap-Z
+    related = [p["lineage"] for p in pairs if p["label"] == "descendant"]
+    distilled = [p["lineage"] for p in pairs if p["attack_type"] == "distilled_student"]
+    gap_z = compute_gap_z(related, distilled) if related and distilled else None
+    if gap_z:
         results["metrics"]["gap_z_distilled"] = gap_z
-        if verbose:
-            print(f"\nGap-Z (related vs distilled): {gap_z:.1f}")
 
-    # Timing
     results["total_seconds"] = time.time() - t0
-    if verbose:
-        print(f"\nTotal time: {results['total_seconds']/3600:.1f} hours")
 
-    # Save results
-    output_path = output_dir / "benchmark_results.json"
-
-    # Remove numpy arrays for JSON serialization
-    def clean_for_json(obj):
+    # Save final results
+    def clean_json(obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.integer):
-            return int(obj)
+        elif isinstance(obj, (np.floating, np.integer)):
+            return float(obj) if isinstance(obj, np.floating) else int(obj)
         elif isinstance(obj, dict):
-            return {k: clean_for_json(v) for k, v in obj.items()}
+            return {k: clean_json(v) for k, v in obj.items()}
         elif isinstance(obj, list):
-            return [clean_for_json(v) for v in obj]
+            return [clean_json(v) for v in obj]
         return obj
 
+    output_path = output_dir / "benchmark_results.json"
     with open(output_path, "w") as f:
-        json.dump(clean_for_json(results), f, indent=2)
+        json.dump(clean_json(results), f, indent=2)
 
     if verbose:
-        print(f"\nSaved results to {output_path}")
-        print("\n" + "="*60)
-        print("HEADLINE RESULTS")
-        print("="*60)
+        print(f"\nPhase 3 completed in {(time.time()-t0)/60:.1f} min")
+        print("\n" + "=" * 60)
+        print("FINAL RESULTS")
+        print("=" * 60)
         print(f"Overall AUROC: {all_metrics['auroc']:.4f}")
-        print(f"Test AUROC: {results['metrics'].get('test', {}).get('auroc', 'N/A')}")
+        test_auroc = results['metrics'].get('test', {}).get('auroc', 'N/A')
+        print(f"Test AUROC: {test_auroc}")
         if gap_z:
             print(f"Gap-Z (distillation): {gap_z:.1f}")
+        print(f"\nSaved to {output_path}")
 
     return results
+
+
+def run_benchmark(
+    config: Optional[BenchmarkConfig] = None,
+    device: str = "cuda",
+    verbose: bool = True,
+    num_workers: int = 4,
+    phase: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Run the GPT-2 lineage benchmark (all phases or specific phase)."""
+    if config is None:
+        config = BenchmarkConfig()
+
+    if phase == "roots":
+        return run_phase_roots(config, device, verbose)
+    elif phase == "descendants":
+        return run_phase_descendants(config, device, verbose, num_workers)
+    elif phase == "evaluate":
+        return run_phase_evaluate(config, verbose, num_workers)
+    else:
+        # Run all phases
+        run_phase_roots(config, device, verbose)
+        run_phase_descendants(config, device, verbose, num_workers)
+        return run_phase_evaluate(config, verbose, num_workers)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Run GPT-2 lineage benchmark")
     parser.add_argument("--preset", choices=["smoke", "paper", "full"],
-                        help="Use preset config (smoke=2min, paper=6-8hr, full=15-20hr)")
+                        help="Preset config (smoke=2min, paper=3-4hr, full=15-20hr)")
+    parser.add_argument("--phase", choices=["roots", "descendants", "evaluate"],
+                        help="Run specific phase only")
     parser.add_argument("--n-calibration-roots", type=int, default=None)
     parser.add_argument("--n-development-roots", type=int, default=None)
     parser.add_argument("--n-test-roots", type=int, default=None)
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--output-dir", default=None)
-    parser.add_argument("--skip-training", action="store_true",
-                        help="Load roots from checkpoints if available")
-    parser.add_argument("--max-train-samples", type=int, default=None,
-                        help="Limit training samples (for debugging)")
+    parser.add_argument("--max-train-samples", type=int, default=None)
     parser.add_argument("--device", default="cuda")
-    parser.add_argument("--num-workers", type=int, default=4,
-                        help="Number of parallel workers for CPU tasks")
+    parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--quiet", action="store_true")
 
     args = parser.parse_args()
 
-    # Start from preset or default
     if args.preset:
         config = BenchmarkConfig.from_preset(args.preset)
         default_output = f"results/lineage_benchmark_gpt2_{args.preset}"
@@ -393,7 +472,6 @@ def main():
         config = BenchmarkConfig()
         default_output = "results/lineage_benchmark_gpt2"
 
-    # Override with CLI args if provided
     if args.n_calibration_roots is not None:
         config.n_calibration_roots = args.n_calibration_roots
     if args.n_development_roots is not None:
@@ -413,9 +491,9 @@ def main():
     run_benchmark(
         config=config,
         device=args.device,
-        skip_training=args.skip_training,
         verbose=not args.quiet,
         num_workers=args.num_workers,
+        phase=args.phase,
     )
 
 
