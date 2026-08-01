@@ -124,7 +124,12 @@ def main():
             continue
 
         model = create_model(config.model)
-        model.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
+        checkpoint = torch.load(ckpt_path, map_location="cpu")
+        # Handle both formats: full checkpoint dict or raw state_dict
+        if "model_state_dict" in checkpoint:
+            model.load_state_dict(checkpoint["model_state_dict"])
+        else:
+            model.load_state_dict(checkpoint)
         roots.append(model)
         print(f"  Root {i}: loaded from {ckpt_path.name}")
 
