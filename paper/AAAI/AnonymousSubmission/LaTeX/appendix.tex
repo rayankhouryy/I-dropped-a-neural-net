@@ -6,7 +6,9 @@
 
 \textbf{Lineage determination.} The lineage score is symmetric, so without external metadata we cannot tell which checkpoint is the ancestor. The score decays monotonically with genealogical distance, but the method compares single pairs and does not reconstruct multi-hop ancestry or family trees. Under partial inheritance (layer grafts, linear merges), the score reflects the fraction of shared blocks but not which blocks were inherited.
 
-\textbf{Signal degradation under transformation.} The fingerprint survives common post-training modifications, but weakens as transformations grow more aggressive. Heavy pruning drops the signal to $\mathcal{L}=0.58$ at 85\% sparsity, and extensive continued pretraining (CodeLlama) lowers it to $\mathcal{L}=0.336$, though both remain detectable above the null. A white-box adversary can push the score to chance, but only by sacrificing at least 12\% utility; no tested attack removes the signal while preserving model function.
+\textbf{Signal degradation under transformation.} The fingerprint survives common post-training modifications, but weakens as transformations grow more aggressive. Heavy pruning drops the signal to $\mathcal{L}=0.58$ at 85\% sparsity, and extensive continued pretraining (CodeLlama) lowers it to $\mathcal{L}=0.336$, though both remain detectable above the null.
+
+\textbf{Adversarial vulnerability.} On MLPs, a white-box adversary can push the score to the unrelated range ($\mathcal{L} = 0.083$) with only 1.4\% utility degradation (Table~\ref{tab:mlp-attack}). The MLP fingerprint is therefore \emph{not robust} to adaptive suppression. On LLMs, attacks that successfully erase the fingerprint overshoot into anti-correlation ($\mathcal{L} \approx -1$), enabling detection via $|\mathcal{L}|$ thresholding, but this defense has not been tested against an adaptive adversary who targets $\mathcal{L} \approx 0$ directly. The method should not be relied upon as a sole defense against motivated adversaries with white-box access.
 
 \textbf{Calibration and validation.} Verification requires calibrating a null distribution from independently trained models of the same architecture, and the threshold may need adjustment across architecture families. Our real-world validation covers a limited set of public checkpoints (four LLaMA-2 pairs plus four other model families), so broader ecosystem coverage is untested. SwiGLU architectures (Qwen2.5, DeepSeek-R1) also reach only 80\% block-pairing accuracy, and need joint factorization to recover sub-paths reliably. Broader checkpoint-level lineage evaluation across independently trained roots and additional architecture families remains necessary; the nine-family result in this paper establishes projection-pair recovery rather than lineage verification across all nine families.
 
@@ -226,12 +228,12 @@ An adversary optimizes perturbation $\Delta$ to minimize lineage score subject t
 $\lambda$ & Final $\mathcal{L}$ & Eval loss & Verdict \\
 \midrule
 $0$         & 0.053 & 39.5 & utility destroyed \\
-$10^{-2}$   & 0.054 & 0.77 & +12\% loss \\
-$10^{-1}$   & 0.083 & 0.70 & +1.5\% loss \\
+$10^{-2}$   & 0.053 & 0.77 & +12\% loss \\
+$10^{-1}$   & \textbf{0.083} & \textbf{0.70} & \textbf{+1.4\% loss} \\
 $\ge 1$     & 0.91+ & 0.69 & utility preserved \\
 \bottomrule
 \end{tabular}
-\caption{MLP Pareto frontier: suppressing $\mathcal{L}$ to chance level requires $\ge$12\% utility loss.}
+\caption{MLP Pareto frontier. At $\lambda = 0.1$, the attack reaches the unrelated range ($\mathcal{L} = 0.083$, matching the independent baseline of 0.084) with only 1.4\% utility degradation. Reference eval loss: 0.688.}
 \label{tab:mlp-attack}
 \end{table}
 
