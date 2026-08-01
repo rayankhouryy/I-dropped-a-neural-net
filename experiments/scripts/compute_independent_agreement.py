@@ -110,14 +110,23 @@ def main():
     print("\nLoading root models...")
     roots = []
     for i in range(8):
-        ckpt_path = checkpoint_dir / f"root_{i}" / "final_model.pt"
-        if not ckpt_path.exists():
-            print(f"  Root {i}: checkpoint not found at {ckpt_path}")
+        root_dir = checkpoint_dir / f"root_{i}"
+        # Find the latest epoch checkpoint
+        ckpt_path = None
+        for epoch in [3, 2, 1, 0]:  # Try latest first
+            candidate = root_dir / f"epoch_{epoch}.pt"
+            if candidate.exists():
+                ckpt_path = candidate
+                break
+
+        if ckpt_path is None:
+            print(f"  Root {i}: no checkpoint found in {root_dir}")
             continue
+
         model = create_model(config.model)
         model.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
         roots.append(model)
-        print(f"  Root {i}: loaded")
+        print(f"  Root {i}: loaded from {ckpt_path.name}")
 
     if len(roots) < 2:
         print("Not enough roots found. Trying to estimate from JSON results...")
