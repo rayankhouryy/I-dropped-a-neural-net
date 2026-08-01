@@ -6,11 +6,13 @@ import torch
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent / "gpt2_lineage_benchmark"))
+# Add parent directory to path for imports
+script_dir = Path(__file__).parent.resolve()
+sys.path.insert(0, str(script_dir))
 
-from data import get_tokenizer, create_dataloaders
-from model import create_gpt2_model
-from config import BenchmarkConfig
+from gpt2_lineage_benchmark.data import get_tokenizer, create_dataloaders
+from gpt2_lineage_benchmark.model import create_gpt2_model
+from gpt2_lineage_benchmark.config import BenchmarkConfig
 
 def compute_agreement(model_a, model_b, loader, device, max_batches=50):
     """Compute top-1 token agreement between two models."""
