@@ -11,7 +11,7 @@ script_dir = Path(__file__).parent.resolve()
 sys.path.insert(0, str(script_dir))
 
 from gpt2_lineage_benchmark.data import get_tokenizer, create_dataloaders
-from gpt2_lineage_benchmark.model import create_gpt2_model
+from gpt2_lineage_benchmark.model import create_model
 from gpt2_lineage_benchmark.config import BenchmarkConfig
 
 def compute_agreement(model_a, model_b, loader, device, max_batches=50):
@@ -114,7 +114,7 @@ def main():
         if not ckpt_path.exists():
             print(f"  Root {i}: checkpoint not found at {ckpt_path}")
             continue
-        model = create_gpt2_model(config.model)
+        model = create_model(config.model)
         model.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
         roots.append(model)
         print(f"  Root {i}: loaded")
