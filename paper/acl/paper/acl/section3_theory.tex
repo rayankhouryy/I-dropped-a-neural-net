@@ -1,0 +1,59 @@
+\section{Trace Concentration in Residual Branch Products}\label{sec:diagonal-dominance}
+
+A residual block computes $x_{\ell+1} = x_\ell + F_\ell(x_\ell)$, where $F_\ell$ is the residual branch. For a branch with $K$ linear layers $W_1, \ldots, W_K$ interleaved with nonlinearities, the \emph{residual branch product} composes the linear factors, dropping nonlinearities:
+\begin{equation}\label{eq:branch-product}
+M_\ell = W_K W_{K-1} \cdots W_1 \in \mathbb{R}^{d \times d}
+\end{equation}
+Individual factors $W_k$ are rectangular and do not share an input--output basis; their composed product maps the residual stream back into its own coordinate space, so its diagonal entries compare like with like. The exact factorization is architecture-dependent (Table~\ref{tab:factorization}).
+
+\subsection{Why Residual Training Induces Identity Alignment}\label{sec:mechanism}
+
+Under the Frobenius inner product $\langle A, B \rangle = \mathrm{tr}(A^\top B)$, the identity matrix and the traceless matrices span orthogonal subspaces of $\mathbb{R}^{d \times d}$. Any branch product therefore splits into a component along the identity, with coefficient $\langle M_\ell, I \rangle / \langle I, I \rangle = \mathrm{tr}(M_\ell)/d$, and an orthogonal traceless remainder:
+\begin{equation}\label{eq:decomp}
+M_\ell = -\varepsilon_\ell I + E_\ell
+\end{equation}
+where $\varepsilon_\ell = -\mathrm{tr}(M_\ell)/d$ and $\mathrm{tr}(E_\ell) = 0$.
+Traces are predominantly negative (Appendix~\ref{app:gpt2-details}), so $\varepsilon_\ell$ is typically positive; the score uses magnitude.
+
+The \emph{normalized trace concentration}~\citep{park2026idroppedneuralnet} measures this identity alignment:\footnote{Park uses ``diagonal-dominance ratio''; we prefer ``normalized trace concentration'' to avoid confusion with row/column diagonal dominance in matrix analysis.}
+\begin{equation}\label{eq:dd-score}
+s(M) = \frac{|\mathrm{tr}(M)|}{\|M\|_F},
+\end{equation}
+the fraction of the matrix's energy along the identity direction, up to $\sqrt{d}$. Training moves energy into the identity component: correctly paired branch products score far above unpaired or untrained ones (Figure~\ref{fig:hero}b).
+
+The skip connection changes what the branch must learn. A plain layer must transmit the entire representation; a residual branch learns only a correction around an identity path that already transmits everything. This has a gradient consequence: $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$ are the two ends of one correction, and the loss reaches both through the same branch. $\nabla W_{\mathrm{out}}$ depends on the branch input, a function of $W_{\mathrm{in}}$; $\nabla W_{\mathrm{in}}$ depends on the upstream gradient, which flows through $W_{\mathrm{out}}$. Their updates are therefore correlated at every step by construction. In a plain network no such pairing is privileged, every adjacent pair of layers is coupled equally so no per-block signature can form.
+
+The correlation accumulates along the identity direction because the skip means the branch learns a correction, not the full map. Small coordinated corrections to an identity baseline accumulate along the diagonal. Section~\ref{sec:exp-exists} shows that injecting this component directly, without backpropagation, suffices to build the fingerprint.
+
+A natural alternative account is dynamical isometry~\citep{pennington2017resurrecting}: if training enforced near-orthogonal block Jacobians $J = I + J_F$, identity alignment would follow as a byproduct of pressure toward $J \approx I$. This means trained Jacobians should be more orthogonal than at initialization, which we do not observe in Section~\ref{sec:exp-exists}.
+
+\subsection{Margin Analysis}\label{sec:margin}
+
+By orthogonality of decomposition~\eqref{eq:decomp}, $\|M_\ell\|_F^2 = \varepsilon_\ell^2 d + \|E_\ell\|_F^2$: the score depends on $M$ only through the ratio of identity to traceless components. For completeness, we restate the resulting correct-pair margin in the notation used by our lineage formulation.
+
+\begin{proposition}[Correct-pair score]\label{prop:margin}
+Let $M = -\varepsilon I + E$ with $\mathrm{tr}(E) = 0$ and $\varepsilon \neq 0$. Then:
+\begin{equation}\label{eq:margin-formula}
+s(M) = \frac{\sqrt{d}}{\sqrt{1 + \|E\|_F^2 / (\varepsilon^2 d)}} \leq \sqrt{d}
+\end{equation}
+with equality if and only if $E = 0$.
+\end{proposition}
+
+\begin{proof}
+$|\mathrm{tr}(M)| = |\varepsilon| d$ and $\|M\|_F^2 = \varepsilon^2 d + \|E\|_F^2$ by orthogonality. Substitute into (3).
+\end{proof}
+
+Geometrically, $s(M)/\sqrt{d}$ is the cosine of the angle between $M$ and the identity. Under the independent-factor null considered for mismatched projections, this yields the corresponding baseline:
+
+\begin{corollary}[Mismatched baseline]\label{cor:baseline}
+For products of projections from independent blocks, $\mathbb{E}[s] \approx 1/\sqrt{d}$.
+\end{corollary}
+
+The margin scales as $d$: wider networks separate correct from incorrect pairings more cleanly. Empirically the correct-pair score grows as $d^{0.87}$ (Section~\ref{sec:exp-arch}).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_rq1_gradient_coupling.pdf}
+\caption{(a) Gradient diagonality $g_{\mathrm{diag}}$ (blue) stays flat at ${\sim}0.15$ while the weight score $s$ (orange) rises to ${\sim}4.0$: individual gradient updates are not diagonal, but their accumulation is. (b) Shuffling $\nabla W_{\mathrm{out}}$ across blocks (orange) drops the final score by 68\% compared to control (blue), showing that within-block coupling is necessary. (c) Injecting synthetic diagonal updates $\Delta W = -\varepsilon \cdot e_i^\top$ directly into weights builds the fingerprint from scratch without any backpropagation, showing that coupling is sufficient.}
+\label{fig:mechanism-triad}
+\end{figure*}

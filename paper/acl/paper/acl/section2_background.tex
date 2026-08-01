@@ -1,0 +1,61 @@
+\section{Problem Setting and Related Work}\label{sec:background}
+
+\begin{table*}[t]
+\centering
+\begin{minipage}[t]{0.34\textwidth}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Method & Retro. & FT & Quant & Distill \\
+\midrule
+Crypto Hash & \cmark & \xmark & \xmark & \xmark \\
+Metadata/Logs & \xmark & \cmark & \cmark & \cmark \\
+Watermarking & \xmark & $\sim$ & $\sim$ & \xmark \\
+Behavioral Fingerprints & \cmark & \cmark & \cmark & \xmark \\
+\textbf{Ours} & \cmark & \cmark & \cmark & \cmark \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Comparison with prior provenance methods. Retro.: applicable retroactively. FT: survives fine-tuning. Quant: survives quantization. Distill: correctly classifies distilled copies as unrelated. $\sim$: partial or unreliable.}
+\label{tab:comparison}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.62\textwidth}
+\centering
+\small
+\begin{tabular}{@{}l@{\hspace{6pt}}p{3.8cm}@{\hspace{6pt}}l@{}}
+\toprule
+Architecture & Residual branch $F(x)$ & Product $M$ \\
+\midrule
+Transformer MLP / BasicBlock & $W_2 \sigma(W_1 x)$ & $W_2 W_1$ \\
+Attention V/O path & $W_O \mathrm{Attn}(x) W_V x$ & $W_O W_V$ \\
+Attention Q/K path & bilinear $x^\top W_Q W_K^\top x$ & $W_Q W_K^\top$ \\
+Bottleneck ResNet & $W_3 \sigma(W_2 \sigma(W_1 x))$ & $W_3 W_2 W_1$ \\
+SwiGLU MLP & $W_{\mathrm{down}} [\sigma(W_{\mathrm{gate}} x) \odot W_{\mathrm{up}} x]$ & $W_{\mathrm{down}} W_{\mathrm{up}}$ \\
+\bottomrule
+\end{tabular}
+\captionof{table}{Architecture-aware residual branch products. Each $M$ composes the linear maps of one branch (dropping nonlinearities) so it maps the residual stream to itself. Factorization must match the architecture; incomplete products destroy the signal (Appendix~\ref{app:resnet-factorization}).}
+\label{tab:factorization}
+\end{minipage}
+\end{table*}
+
+\subsection{White-Box Model Lineage Verification}
+
+A verifier receives two checkpoints $A$ and $B$ and determines whether they share weight-level lineage. We assume white-box access and compatible residual architectures (same $L$ and $d$); cross-architecture comparisons are out of scope. The verifier operates on weights alone: no training data, activations, or forward passes.
+
+Checkpoints are \emph{related} if they share a common weight ancestor through fine-tuning, RLHF, pruning, quantization, or LoRA merging. They are \emph{unrelated} if initialized independently, even when architecture, data, task, or outputs match; a distilled student trained from scratch is unrelated to its teacher, even if it mimics the outputs perfectly. Linear merges induce partial lineage (Appendix~\ref{app:harder-bench}).\footnote{All appendix references refer to Technical Supplement.} The verifier returns \textsc{Related} or \textsc{Unrelated}. The score is symmetric, $\mathcal{L}(A,B) = \mathcal{L}(B,A)$; directional attribution requires metadata (Appendix~\ref{app:verification}). The method complements cryptographic signing and watermarking where those were never applied.
+
+\subsection{Related Work}
+
+Table~\ref{tab:comparison} summarizes the comparison.
+
+Cryptographic hashes break after any weight modification. Model cards~\citep{mitchell2019model} require honest distributors and can be falsified when checkpoints are redistributed. Proof-of-learning~\citep{jia2021proofoflearning} requires retained training transcripts that already-released checkpoints lack.
+
+Parameter watermarks~\citep{uchida2017embedding} and backdoor watermarks~\citep{adi2018turning} embed deliberate signals during training. \citet{lukas2022sok} found no surveyed scheme that reliably survived fine-tuning and pruning, and all require proactive insertion: unwatermarked legacy checkpoints cannot be verified.
+
+IPGuard~\citep{cao2021ipguard} extracts inputs near classification boundaries; adversarial frontier stitching~\citep{lemerrer2020adversarial} marks decision surfaces with adversarial examples. CKA~\citep{kornblith2019similarity} and SVCCA~\citep{raghu2017svcca} compare representations on a probe dataset. All four measure functional similarity and cannot distinguish inheritance from imitation: a distilled student may share decision surfaces while having independent weights. They also require data and forward passes.
+
+Weight cosine, Frobenius distance, and permutation matching~\citep{ainsworth2023git} detect derived checkpoints when the suspect remains close in parameter space, but these are uncalibrated global scalars with no structural account of lineage. HuRef~\citep{zeng2025huref} relies on LLM parameter convergence after pretraining. REEF~\citep{zhang2024reef} needs probe data or activations. MoTHer~\citep{horwitz2025mother} recovers model trees but requires a checkpoint collection rather than a single pair. Our fingerprint is data-free, operates on a single pair against a calibrated null, and localizes inheritance to specific blocks.
+
+\citet{park2026idroppedneuralnet} observed that correctly paired projections in trained residual blocks produce trace-concentrated products and used this to recover projection correspondences. We build on that observation: rather than treating trace concentration as evidence of ancestry, we remove the identity-aligned component and compare checkpoint-specific signatures. This enables a model-level test of weight inheritance under post-training transformations, reparameterizations, partial inheritance, and distillation.

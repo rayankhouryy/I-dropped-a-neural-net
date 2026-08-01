@@ -1,0 +1,238 @@
+\section{Reproducibility Statement}\label{app:reproducibility}
+
+All results in this paper are produced by deterministic scripts with fixed seeds. The 52-pair MLP lineage benchmark (Tables~\ref{tab:survival}, \ref{tab:baselines}) uses depth-16 MLPs (in\_dim=16, hidden=48) and is constructed from $2$ trained reference checkpoints, each paired with $5$ related-checkpoint kinds $\times 3$ derivative seeds $=30$ truly-related pairs (fine-tune, fine-tune to a new target, $\sigma_{\text{rel}} \in [0.01,0.15]$ Gaussian noise, $10$--$85\%$ magnitude pruning, and $16$--$256$-level uniform quantization), plus $16$ different-seed same-task pairs and $6$ distilled-student pairs as unrelated checkpoints. The expanded 159-pair set (Figure~\ref{fig:hero}c) uses $3$ depth-24 MLP reference models: each reference is paired with $25$ related checkpoints ($5$ transformation types $\times$ $5$ variations) and $28$ unrelated checkpoints ($15$ independent same-task $+$ $5$ independent different-task $+$ $5$ random-init $+$ $3$ distilled), yielding $3 \times 25 = 75$ related pairs and $3 \times 28 = 84$ unrelated pairs ($75 + 84 = 159$ total). Note that these 84 unrelated pairs share only 3 reference model roots; the effective sample size for null calibration is limited by the number of independent roots, not the number of pairs.
+
+The GPT-2-Small-Lite benchmark (Tables~\ref{tab:gpt2-survival}, \ref{tab:distill-quality}) uses 8 transformer roots with GPT-2 architecture ($L{=}6$ layers, $d{=}384$, $d_{\mathrm{ff}}{=}1536$, 6 heads, ${\sim}$35M parameters), trained on TinyStories~\citep{eldan2023tinystories} (50K samples, 3 epochs, batch size 8, lr$=$3e-4, cosine schedule, fp16, gradient checkpointing). Roots are allocated to calibration ($n{=}2$), development ($n{=}3$), and test ($n{=}3$) splits; Table~\ref{tab:gpt2-survival} reports results only on the 3 held-out test roots (21 descendant pairs, 3 distilled pairs, 21 cross-root pairs $=$ 45 total). Each root generates 7 descendants: 1 fine-tuned (1 epoch continued pretraining, lr$=$1e-4), 1 LoRA-merged (rank-8, $\alpha{=}16$, 1 epoch, effective lr$=$1.25e-5), 3 pruned (magnitude pruning at 30/50/70\% sparsity), and 2 quantized (uniform quantization at 256/64 levels, i.e., INT8/INT6). Additionally, 8 distilled students (one per root) are trained from scratch using knowledge distillation ($T{=}2.0$, $\alpha_{\mathrm{CE}}{=}0.5$, $\alpha_{\mathrm{KL}}{=}0.5$, 2 epochs). Quality metrics for distilled students include top-1 agreement, KL divergence, and perplexity ratio, computed on a held-out validation set.
+
+Exact parameters are listed in Appendix~\ref{app:benchmarks}. Real-architecture pairing (Table~\ref{tab:transformer-family}) loads public HuggingFace checkpoints. Code, configuration files, baseline implementations (aligned Frobenius, singular-value distance, weight cosine, CKA, SVCCA, IPGuard regression analogue), the per-pair score JSONs, and the plotting scripts will be released upon acceptance.
+
+\section{Use of AI Assistants}\label{app:ai-assistants}
+
+The authors bear full responsibility for all scientific claims, experimental results, and analysis in this work. During manuscript preparation, we used Claude to support literature searches, experimental design, code development, and the drafting and editing of text. All AI-assisted material was reviewed, verified, and revised by the authors.
+
+\section{Extended Theoretical Results}\label{app:proofs}
+
+\subsection{Null Model (Corollary)}
+
+\begin{corollary}[Null Model]
+For randomly initialized weights with no training, all pairs satisfy $\mathbb{E}[s(i,j)] = 1/\sqrt{d} + o(1)$ uniformly in $(i,j)$. Hungarian matching recovers correct pairs at the chance rate $1/L$.
+\end{corollary}
+
+The null model rules out three alternative explanations:
+\begin{enumerate}[nosep]
+\item Identity alignment is not an artifact of compatible matrix shapes
+\item The residual connection itself does not create the signal without training
+\item Any nontrivial loss level does not suffice---training must actively couple the projections
+\end{enumerate}
+
+The identity-aligned fingerprint is a \emph{learned} property induced by gradient descent under the residual constraint.
+
+\section{Verification Protocol Details}\label{app:verification}
+
+\subsection{Gated Branch Score}
+
+Branch similarity is reliable only when both branches exhibit strong trace concentration. We gate the cosine similarity:
+\begin{equation}
+G(\phi^A_\ell, \phi^B_m) = \langle \phi^A_\ell, \phi^B_m \rangle \cdot \min\!\left(\tfrac{s(M^A_\ell)}{\tau_s}, \tfrac{s(M^B_m)}{\tau_s}, 1\right)
+\end{equation}
+where $\tau_s$ is the minimum trace concentration across reference branches.
+
+\subsection{Statistical Calibration}
+
+We calibrate against a null distribution $\mathcal{N}_A = \{\mathcal{L}(A, U_j) : U_j \notin \mathcal{D}(A)\}$ of scores between reference $A$ and independently trained models. Given $n$ null scores, the empirical threshold $\tau = \max_j \mathcal{L}(A, U_j)$ yields a conformal p-value:
+\begin{equation}
+p(A,B) = \frac{|\{j : \mathcal{L}(A, U_j) \geq \mathcal{L}(A,B)\}| + 1}{n + 1}
+\end{equation}
+With $n$ null models, the minimum achievable p-value is $1/(n+1)$---roughly 20\% with $n{=}4$ (LLaMA case study) or 1.2\% with $n{=}84$ (MLP benchmark). We therefore report AUROC as the primary metric, which aggregates discrimination across all thresholds without requiring specific FPR claims. For the LLaMA-2 case study, we use leave-one-out calibration: when evaluating each independent model, its score is excluded from the null.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Transformation & Mean $\mathcal{L}$ & Min $\mathcal{L}$ & $> \max(\text{null})$ \\
+\midrule
+Fine-tune / Quant / Noise & 0.99 & 0.97 & 45/45 \\
+Fine-tune (diff.\ target) & 0.94 & 0.84 & 15/15 \\
+Pruning (10--85\%) & 0.81 & 0.58 & 15/15 \\
+\midrule
+Independent / Distilled & 0.08 & 0.01 & - \\
+\bottomrule
+\end{tabular}
+\caption{Lineage score survival under post-training modification ($n{=}75$ related, $n{=}84$ unrelated). All related checkpoints exceed the maximum null score ($\max \mathcal{L}_{\text{null}} = 0.20$); AUROC$=$1.000.}
+\label{tab:survival}
+\end{table}
+
+\section{Mechanism Validation}\label{app:mechanism}
+
+\subsection{Initialization Ablation}\label{app:init-ablation}
+
+Table~\ref{tab:init-ablation} shows pair accuracy before and after training across seven initialization schemes on depth-24 residual MLPs (3 seeds, 200 epochs). All schemes show chance-level accuracy (${\leq}2.1\%$) at initialization, rising to $93$--$100\%$ after training. Orthogonal initialization provides dynamical isometry at init yet shows zero correct pairs before training.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Init scheme & Untrained & Trained & AUROC \\
+\midrule
+Orthogonal       & $0.0\%$  & $100\%$ & $0.947$ \\
+Kaiming-normal   & $2.1\%$  & $97\%$  & $0.981$ \\
+Kaiming-uniform  & $2.1\%$  & $98.6\%$ & $0.98$ \\
+Xavier-normal    & $2.1\%$  & $100\%$ & $0.990$ \\
+Xavier-uniform   & $2.1\%$  & $100\%$ & $0.99$ \\
+Uniform          & $2.1\%$  & $93.8\%$ & --- \\
+Gaussian $\sigma{=}0.02$ & $2.1\%$ & $13\%$ & $0.671$ \\
+\bottomrule
+\end{tabular}
+\caption{Initialization ablation on depth-24 residual MLPs. All schemes show chance-level accuracy before training. The Gaussian $\sigma{=}0.02$ case fails because blocks collapse to near-zero contribution.}
+\label{tab:init-ablation}
+\end{table}
+
+\subsection{GPT-2 Scaling, Trace, and Jacobian Analysis}\label{app:gpt2-details}
+
+Table~\ref{tab:jacobian-orthogonality} reports the normalized Jacobian deviation $\delta_J^{\mathrm{norm}} = \|J^\top J/\|J\|_F^2 - I/d\|_F$ across GPT-2 scales. This metric is scale-invariant: any scaled orthogonal matrix scores 0, and larger values indicate non-uniform singular values.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Model & $d$ & \makecell{Pretrained \\ $\delta_J^{\mathrm{norm}}$} & \makecell{Random-init \\ $\delta_J^{\mathrm{norm}}$} & Ratio \\
+\midrule
+GPT-2-small  & 768  & 0.297 & 0.025 & $11.7\times$ \\
+GPT-2-medium & 1024 & 0.242 & 0.026 & $9.4\times$ \\
+GPT-2-large  & 1280 & 0.155 & 0.025 & $6.2\times$ \\
+GPT-2-XL     & 1600 & 0.122 & 0.024 & $5.1\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Jacobian orthogonality across GPT-2 scales. Pretrained models are $5$--$12\times$ less orthogonal than at random initialization, falsifying the dynamical isometry hypothesis. Random-init $\delta_J^{\mathrm{norm}}$ is nearly constant across scales (${\approx}0.025$); pretrained values decrease with model size but never approach the random-init floor.}
+\label{tab:jacobian-orthogonality}
+\end{table}
+
+Figure~\ref{fig:gpt2-pairing} shows block pairing score matrices $s(i,j)$ for GPT-2 models from 124M to 1.5B parameters.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_gpt2_mlp_pairing.pdf}
+\caption{Block pairing score matrices $s(i,j)$ for GPT-2 models from 124M to 1.5B parameters. Diagonal entries dominate, yielding 100\% pairing accuracy across all scales.}
+\label{fig:gpt2-pairing}
+\end{figure*}
+
+Figure~\ref{fig:gpt2-trace} shows the trace values $\mathrm{tr}(W_{\mathrm{out}} W_{\mathrm{in}})$ per block across all four GPT-2 variants.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{fig_gpt2_trace_lollipop.pdf}
+\caption{Distribution of trace values $\mathrm{tr}(W_{\mathrm{out}} W_{\mathrm{in}})$ across GPT-2 scales. Blue: negative trace (86\% average); orange: positive trace (14\% average). The strong skew toward negative values confirms the identity-alignment mechanistic prediction.}
+\label{fig:gpt2-trace}
+\end{figure*}
+
+\subsection{Alternative Methods Comparison}
+
+Figure~\ref{fig:gpt2-methods} compares block pairing accuracy across GPT-2 scales.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\columnwidth]{fig_gpt2_methods_slope.pdf}
+\caption{Block pairing accuracy as model size increases. Normalized trace pairing (blue) maintains 100\% projection-pair accuracy; Frobenius matching (orange) degrades from 67\% to 52\%; random baseline (gray) drops from 8\% to 2\% as the number of blocks increases.}
+\label{fig:gpt2-methods}
+\end{figure}
+
+\section{Extended Benchmarks}\label{app:benchmarks}
+
+\subsection{Harder Regime: Layer Grafts and Linear Merges}\label{app:harder-bench}
+
+We construct 40 harder pairs from depth-16 MLPs (same setup as Table~\ref{tab:baselines}): (i) \textbf{layer grafts} copy $K \in \{0,4,8,12,16\}$ of 16 blocks from reference into an independent donor (related if $K \ge 8$); (ii) \textbf{linear merges} compute $w \cdot \mathrm{ref} + (1-w) \cdot \mathrm{donor}$ with $w \in \{0, 0.25, 0.5, 0.75, 1.0\}$ (related if $w \ge 0.5$). We use 2 references and 2 donors per reference. AUROC measures binary related-vs-unrelated detection; Spearman correlation measures whether a method tracks partial overlap monotonically ($K/L$ or $w$) rather than just clearing a threshold. Table~\ref{tab:harder-bench} summarizes the 40-pair benchmark.
+
+\begin{table}[h]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{AUROC} & \multicolumn{2}{c}{Spearman $\rho$} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Method & Graft & Merge & Graft & Merge \\
+\midrule
+Centered Residual Signature (ours)  & 0.979 & 1.000 & +0.96 & +0.96 \\
+Aligned Frobenius          & 1.000 & 1.000 & +0.99 & +0.99 \\
+Weight cosine              & 1.000 & 1.000 & +0.98 & +0.96 \\
+Singular-value distance    & 1.000 & 0.448 & +0.99 & +0.23 \\
+SVCCA                      & 1.000 & 1.000 & +0.97 & +0.99 \\
+CKA                        & 0.813 & 0.781 & +0.73 & +0.75 \\
+IPGuard (regr.\ analogue)  & 0.052 & 0.448 & $-$0.83 & +0.22 \\
+\bottomrule
+\end{tabular}
+\caption{Harder-regime benchmark on layer grafts and linear merges ($40$ pairs). Related: $K \ge L/2$ for grafts, $w \ge 0.5$ for merges. Weight-space methods (ours, aligned Frobenius, weight cosine) and SVCCA maintain AUROC${\approx}$1.000 with $\rho \ge 0.96$. CKA degrades to AUROC${\approx}$0.80; IPGuard collapses on grafts (AUROC$=$0.05, negative $\rho$); singular-value distance fails merges ($\rho = 0.23$). Our method tracks partial overlap monotonically ($\rho \ge 0.96$), not just binary detection.}
+\label{tab:harder-bench}
+\end{table}
+
+\subsection{ResNet Factorization}\label{app:resnet-factorization}
+
+On ImageNet-pretrained ResNet-50/101/152 (torchvision), we compare naive two-layer factorization ($W_3 W_1$, skipping the middle conv) against the correct three-layer product ($W_3 W_2 W_1$) on layer3 bottleneck blocks ($n{=}5/22/35$ blocks respectively). Naive $W_3 W_1$ achieves chance-level accuracy; the correct triple product recovers:
+\begin{itemize}[nosep]
+\item ResNet-50/layer3 ($n{=}5$): 100\%, AUC 1.000
+\item ResNet-101/layer3 ($n{=}22$): 100\%, AUC 0.995
+\item ResNet-152/layer3 ($n{=}35$): 91\%, AUC 0.964
+\end{itemize}
+
+\subsection{CIFAR-10 ResNet-18 Benchmark}\label{app:cifar-resnet}
+
+We train two CIFAR-10 ResNet-18 references and three independents. Each reference yields 11 related checkpoints (noise $1{-}10\%$, pruning $20{-}80\%$, quantization $16{-}256$ levels). Results: AUROC$=$1.000; all related checkpoints exceed the maximum null score. Related checkpoint scores: $\mathcal{L} \in [0.695, 1.000]$; unrelated baseline: $\mathcal{L}_{\max} = 0.004$.
+
+\subsection{GPT-2-Small-Lite Benchmark}\label{app:gpt2-benchmark}
+
+Figure~\ref{fig:gpt2-benchmark} visualizes the GPT-2-Small-Lite benchmark results from Section~\ref{sec:exp-verify}. Panel (a) shows lineage score distributions by transformation type: descendants (quantized, LoRA, fine-tuned, pruned) score high while non-descendants (distilled students, independent roots) score near zero. The minimum descendant score (0.855) exceeds the maximum non-descendant score (0.004) by $200\times$. Panel (b) shows that distilled students achieve 79\% top-1 agreement with their teachers yet score $\mathcal{L} \approx 0.002$, far below any descendant. This validates the paper's central claim: behavioral imitation does not imply weight ancestry.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{fig_gpt2_lineage_benchmark.pdf}
+\caption{GPT-2-Small-Lite lineage benchmark (8 roots, 120 pairs). (a) Lineage scores by transformation type. Descendants (green) score high; non-descendants (red) score near zero. (b) Distilled students achieve high behavioral agreement (79\% top-1) yet score far below the minimum descendant threshold, confirming that imitation $\neq$ inheritance.}
+\label{fig:gpt2-benchmark}
+\end{figure}
+
+\subsection{ROC for Lineage Verification}
+
+Figure~\ref{fig:lineage-roc} shows that trace concentration alone cannot distinguish related from unrelated trained models.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\columnwidth]{fig_lineage_three_panel.pdf}
+\caption{ROC for lineage verification on depth-24 residual MLPs. The residual-signature score achieves AUROC$=$1.000; trace concentration alone fails (AUROC$=$0.417) because it cannot distinguish two trained residual models.}
+\label{fig:lineage-roc}
+\end{figure}
+
+\subsection{Branching Ancestry Recovery}
+
+From the MLP benchmark (Table~\ref{tab:survival} setup), we construct a family tree: root $C_1$ (trained from scratch), siblings $C_2$ and $C_3$ (both fine-tuned from $C_1$), grandchildren $C_4$ (from $C_2$) and $C_5$ (from $C_3$). We then measure $\mathcal{L}(C_4, \cdot)$ against all candidates. The lineage score ranks candidates correctly:
+\begin{align*}
+\mathcal{L}(C_4, C_2) &= 0.961 \;>\; \mathcal{L}(C_4, C_1) = 0.910 \\
+&>\; \mathcal{L}(C_4, C_3) = 0.867 \;>\; \mathcal{L}(C_4, C_5) = 0.850 \\
+&\gg\; \mathcal{L}(C_4, I_k) \approx 0.08.
+\end{align*}
+The score decays monotonically with genealogical distance while maintaining ${\approx}10\times$ family/strangers separation.
+
+\section{Attack and Robustness Details}\label{app:attacks}
+
+\subsection{Gradient-Based Suppression Attack}
+
+An adversary optimizes perturbation $\Delta$ to minimize lineage score subject to utility:
+\begin{equation}
+\min_{\Delta} \;\mathcal{L}_{\mathrm{cos}}(A, A + \Delta) \;+\; \lambda \cdot \|f_{A+\Delta}(X) - f_A(X)\|_2^2
+\end{equation}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}rccc@{}}
+\toprule
+$\lambda$ & Final $\mathcal{L}$ & Eval loss & Verdict \\
+\midrule
+$0$         & 0.053 & 39.5 & utility destroyed \\
+$10^{-2}$   & 0.054 & 0.77 & +12\% loss \\
+$10^{-1}$   & 0.083 & 0.70 & +1.5\% loss \\
+$\ge 1$     & 0.91+ & 0.69 & utility preserved \\
+\bottomrule
+\end{tabular}
+\caption{Pareto frontier: suppressing $\mathcal{L}$ to chance level requires $\ge$12\% utility loss.}
+\end{table}
