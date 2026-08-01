@@ -71,23 +71,20 @@ Independent & 21 & 0.003 & 0.000 \\
 \label{tab:gpt2-survival}
 \end{table}
 
-Table~\ref{tab:gpt2-survival} reports lineage scores on the held-out test split (3 roots). Quantization and LoRA preserve the signal almost perfectly ($\mathcal{L}{\geq}0.996$); fine-tuning and pruning degrade it but remain well above the null ($\mathcal{L}{\geq}0.855$). The minimum descendant score (0.855 at 70\% sparsity) exceeds the maximum non-descendant score (0.004) by $200\times$, yielding test AUROC$=$1.000 (95\% CI: 1.0, 1.0). Critically, distilled students score $\mathcal{L}{=}0.002$ despite achieving 79\% top-1 agreement and perplexity ratio 0.99 with their teachers (Table~\ref{tab:distill-quality}). The Gap-$Z$ between the lowest descendant and distilled students is 1514, confirming that behavioral imitation does not imply weight ancestry.
+Table~\ref{tab:gpt2-survival} reports lineage scores on the held-out test split (3 roots). Quantization and LoRA preserve the signal almost perfectly ($\mathcal{L}{\geq}0.996$); fine-tuning and pruning degrade it but remain well above the null ($\mathcal{L}{\geq}0.855$). The minimum descendant score (0.855 at 70\% sparsity) exceeds the maximum non-descendant score (0.004) by $200\times$, yielding test AUROC$=$1.000 (95\% CI: 1.0, 1.0). Table~\ref{tab:distill-quality} compares behavioral similarity against lineage scores: independent models already achieve 77.6\% top-1 agreement simply from shared corpus and architecture, while distilled students reach only 79.0\%---yet both score $\mathcal{L}{\approx}0.002$. This confirms that behavioral similarity, whether from shared training setup or explicit distillation, does not imply weight ancestry.
 
 \begin{table}[t]
 \centering\small
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lccc@{}}
 \toprule
-Metric & Mean & Range \\
+Comparison & Top-1 (\%) & KL & $\mathcal{L}$ \\
 \midrule
-Top-1 agreement (\%) & 79.0 & 78.8--79.2 \\
-KL divergence & 0.164 & 0.162--0.167 \\
-PPL ratio (student/teacher) & 0.99 & 0.99--1.00 \\
-\midrule
-Lineage score $\mathcal{L}$ & 0.002 & 0.001--0.003 \\
+Teacher--Distilled & 79.0 & 0.16 & 0.002 \\
+Teacher--Independent & 77.6 & 0.25 & 0.003 \\
 \bottomrule
 \end{tabular}
-\caption{Distillation quality metrics for the 3 test-split students. High behavioral agreement (79\% top-1, PPL ratio ${\approx}$1) combined with near-zero lineage scores validates that behavioral imitation does not imply weight ancestry.}
+\caption{Behavioral similarity vs.\ lineage score. Independent models trained on the same corpus already achieve 77.6\% top-1 agreement; distillation adds only 1.4\%. Yet both score near zero in lineage, confirming that behavioral similarity---whether from shared training setup or explicit imitation---does not imply weight ancestry.}
 \label{tab:distill-quality}
 \end{table}
 
