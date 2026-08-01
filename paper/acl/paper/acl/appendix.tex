@@ -43,7 +43,9 @@ We calibrate against a null distribution $\mathcal{N}_A = \{\mathcal{L}(A, U_j) 
 \begin{equation}
 p(A,B) = \frac{|\{j : \mathcal{L}(A, U_j) \geq \mathcal{L}(A,B)\}| + 1}{n + 1}
 \end{equation}
-With $n$ null models, the minimum achievable p-value is $1/(n+1)$---roughly 20\% with $n{=}4$ (LLaMA case study) or 1.2\% with $n{=}84$ (MLP benchmark). We therefore report AUROC as the primary metric, which aggregates discrimination across all thresholds without requiring specific FPR claims. For the LLaMA-2 case study, we use leave-one-out calibration: when evaluating each independent model, its score is excluded from the null.
+With $n$ null models, the minimum achievable p-value is $1/(n+1)$. We therefore report AUROC as the primary metric, which aggregates discrimination across all thresholds without requiring specific FPR claims.
+
+\paragraph{Calibration power by benchmark.} The MLP benchmark has 84 unrelated pairs from 3 independent roots, supporting p-values as low as $1/85 \approx 1.2\%$. The GPT-2-Small-Lite benchmark uses all 8 roots for cross-root null comparisons (each test root is compared against 7 independent roots), but the effective sample size for formal hypothesis testing remains limited; we report AUROC rather than threshold-based verification claims. The LLaMA-2 case study has only one confirmed independent model (OpenLLaMA-7B), so we report the ${\sim}1000\times$ score gap descriptively rather than as a calibrated p-value. Practical deployment would require collecting additional null models of matched architecture.
 
 \begin{table}[h]
 \centering
