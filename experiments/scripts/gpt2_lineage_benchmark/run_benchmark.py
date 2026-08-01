@@ -141,11 +141,13 @@ def run_phase_descendants(
     verbose: bool = True,
     num_workers: int = 4,
     fast_descendants: bool = False,
+    save_models: bool = False,
 ) -> Dict[str, Any]:
     """Phase 2: Generate descendants + distilled students.
 
     Args:
         fast_descendants: Use 5K samples for descendants (not distillation)
+        save_models: Save full model state_dicts for baseline comparisons
     """
     output_dir = Path(config.output_dir)
     checkpoint_dir = Path(config.checkpoint_dir)
@@ -231,17 +233,27 @@ def run_phase_descendants(
             parallel_cpu=True,
         )
 
-        # Extract signatures
+        # Extract signatures and optionally save models
+        models_dir = Path(config.output_dir) / "models"
+        if save_models:
+            models_dir.mkdir(parents=True, exist_ok=True)
+
         def extract_desc(desc):
             desc["Ms"] = extract_branch_products(desc["model"])
             desc["mean_diag_score"] = float(np.mean([
                 abs(np.trace(M)) / np.linalg.norm(M, 'fro') for M in desc["Ms"]
             ]))
+            if save_models:
+                # Save model state dict
+                model_path = models_dir / f"{desc['id']}.pt"
+                torch.save(desc["model"].state_dict(), model_path)
             del desc["model"]
             return desc
 
         if verbose:
             print(f"  Extracting {len(descendants)} descendant signatures...")
+            if save_models:
+                print(f"  Saving models to {models_dir}")
 
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             descendants = list(executor.map(extract_desc, descendants))
@@ -268,6 +280,9 @@ def run_phase_descendants(
             s["mean_diag_score"] = float(np.mean([
                 abs(np.trace(M)) / np.linalg.norm(M, 'fro') for M in s["Ms"]
             ]))
+            if save_models:
+                model_path = models_dir / f"{s['id']}.pt"
+                torch.save(s["model"].state_dict(), model_path)
             del s["model"]
             return s
 
@@ -454,6 +469,7 @@ def run_benchmark(
     num_workers: int = 4,
     phase: Optional[str] = None,
     fast_descendants: bool = False,
+    save_models: bool = False,
 ) -> Dict[str, Any]:
     """Run the GPT-2 lineage benchmark (all phases or specific phase)."""
     if config is None:
@@ -463,7 +479,7 @@ def run_benchmark(
         return run_phase_roots(config, device, verbose)
     elif phase == "descendants":
         return run_phase_descendants(
-            config, device, verbose, num_workers, fast_descendants
+            config, device, verbose, num_workers, fast_descendants, save_models
         )
     elif phase == "evaluate":
         return run_phase_evaluate(config, verbose, num_workers)
@@ -471,7 +487,7 @@ def run_benchmark(
         # Run all phases
         run_phase_roots(config, device, verbose)
         run_phase_descendants(
-            config, device, verbose, num_workers, fast_descendants
+            config, device, verbose, num_workers, fast_descendants, save_models
         )
         return run_phase_evaluate(config, verbose, num_workers)
 
@@ -493,6 +509,8 @@ def main():
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--fast-descendants", action="store_true",
                         help="Use 5K samples for descendants (not distillation)")
+    parser.add_argument("--save-models", action="store_true",
+                        help="Save descendant/student model weights for baseline comparisons")
     parser.add_argument("--quiet", action="store_true")
 
     args = parser.parse_args()
@@ -527,6 +545,7 @@ def main():
         num_workers=args.num_workers,
         phase=args.phase,
         fast_descendants=args.fast_descendants,
+        save_models=args.save_models,
     )
 
 

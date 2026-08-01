@@ -237,47 +237,48 @@ def main():
         else:
             print(f"  Root {i}: not found")
 
-    # Load descendants and students from phase2 pickle
-    print("\nLoading descendants and students from phase2_descendants.pkl...")
+    # Load descendants and students from saved models directory
+    print("\nLoading descendants and students...")
     import pickle
 
     descendants = {}
     students = {}
 
-    phase2_path = results_dir / "phase2_descendants.pkl"
-    if phase2_path.exists():
-        with open(phase2_path, "rb") as f:
-            phase2 = pickle.load(f)
+    models_dir = results_dir / "models"
 
-        # Load descendants
-        if "descendants" in phase2:
-            for desc_data in phase2["descendants"]:
-                desc_id = desc_data["id"]
-                root_idx = desc_data["root_idx"]
-                desc_type = desc_data["type"]
+    # Get descendant/student info from benchmark results
+    with open(results_dir / "benchmark_results.json") as f:
+        benchmark = json.load(f)
 
-                if "model" in desc_data:
-                    descendants[desc_id] = {
-                        "model": desc_data["model"],
-                        "root_idx": root_idx,
-                        "type": desc_type,
-                    }
-                    print(f"  Descendant {desc_id}: loaded")
+    if models_dir.exists():
+        # Load from saved model files
+        for desc_info in benchmark["descendants"]:
+            desc_id = desc_info["id"]
+            model_path = models_dir / f"{desc_id}.pt"
+            if model_path.exists():
+                model = create_model(config.model)
+                model.load_state_dict(torch.load(model_path, map_location="cpu"))
+                descendants[desc_id] = {
+                    "model": model,
+                    "root_idx": desc_info["root_idx"],
+                    "type": desc_info["type"],
+                }
+                print(f"  Descendant {desc_id}: loaded")
 
-        # Load students
-        if "students" in phase2:
-            for student_data in phase2["students"]:
-                student_id = student_data["id"]
-                root_idx = student_data["root_idx"]
-
-                if "model" in student_data:
-                    students[student_id] = {
-                        "model": student_data["model"],
-                        "root_idx": root_idx,
-                    }
-                    print(f"  Student {student_id}: loaded")
+        for student_info in benchmark["distilled_students"]:
+            student_id = student_info["id"]
+            model_path = models_dir / f"{student_id}.pt"
+            if model_path.exists():
+                model = create_model(config.model)
+                model.load_state_dict(torch.load(model_path, map_location="cpu"))
+                students[student_id] = {
+                    "model": model,
+                    "root_idx": student_info["root_idx"],
+                }
+                print(f"  Student {student_id}: loaded")
     else:
-        print(f"  phase2_descendants.pkl not found at {phase2_path}")
+        print(f"  Models directory not found at {models_dir}")
+        print("  Run Phase 2 with --save-models flag to save model weights")
 
     print(f"\nLoaded: {len(roots)} roots, {len(descendants)} descendants, {len(students)} students")
 
