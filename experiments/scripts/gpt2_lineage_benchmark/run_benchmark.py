@@ -140,8 +140,13 @@ def run_phase_descendants(
     device: str = "cuda",
     verbose: bool = True,
     num_workers: int = 4,
+    fast_descendants: bool = False,
 ) -> Dict[str, Any]:
-    """Phase 2: Generate descendants + distilled students (~1-2 hours)."""
+    """Phase 2: Generate descendants + distilled students.
+
+    Args:
+        fast_descendants: Use 5K samples for descendants (not distillation)
+    """
     output_dir = Path(config.output_dir)
     checkpoint_dir = Path(config.checkpoint_dir)
 
@@ -162,18 +167,37 @@ def run_phase_descendants(
         print("=" * 60)
         print("PHASE 2: Generating descendants and distilled students")
         print("=" * 60)
+        if fast_descendants:
+            print("FAST MODE: Using 5K samples for descendants")
         print("Loading data...")
 
     tokenizer = get_tokenizer()
-    dataloaders = create_dataloaders(
+
+    # Full data for distillation (need good imitation)
+    full_dataloaders = create_dataloaders(
         dataset_name=config.dataset,
         tokenizer=tokenizer,
         max_length=config.model.max_seq_len,
         batch_size=config.training.batch_size,
         max_train_samples=config.max_train_samples,
     )
-    train_loader = dataloaders["train"]
-    val_loader = dataloaders["val"]
+
+    # Smaller data for descendants if fast mode
+    if fast_descendants:
+        desc_dataloaders = create_dataloaders(
+            dataset_name=config.dataset,
+            tokenizer=tokenizer,
+            max_length=config.model.max_seq_len,
+            batch_size=config.training.batch_size,
+            max_train_samples=5000,
+        )
+        train_loader = desc_dataloaders["train"]
+        if verbose:
+            print(f"Descendant batches: {len(train_loader)}")
+    else:
+        train_loader = full_dataloaders["train"]
+
+    val_loader = full_dataloaders["val"]
 
     domain_shift_loader = None
     if config.descendant.cont_pt_shift_epochs:
@@ -227,10 +251,11 @@ def run_phase_descendants(
         if verbose:
             print(f"  Generating distilled students...")
 
+        # Use full data for distillation to ensure good imitation
         students = generate_distilled_students(
             teacher=model,
             root_idx=root_idx,
-            train_loader=train_loader,
+            train_loader=full_dataloaders["train"],
             val_loader=val_loader,
             config=config.distillation,
             model_config=config.model,
@@ -428,6 +453,7 @@ def run_benchmark(
     verbose: bool = True,
     num_workers: int = 4,
     phase: Optional[str] = None,
+    fast_descendants: bool = False,
 ) -> Dict[str, Any]:
     """Run the GPT-2 lineage benchmark (all phases or specific phase)."""
     if config is None:
@@ -436,13 +462,17 @@ def run_benchmark(
     if phase == "roots":
         return run_phase_roots(config, device, verbose)
     elif phase == "descendants":
-        return run_phase_descendants(config, device, verbose, num_workers)
+        return run_phase_descendants(
+            config, device, verbose, num_workers, fast_descendants
+        )
     elif phase == "evaluate":
         return run_phase_evaluate(config, verbose, num_workers)
     else:
         # Run all phases
         run_phase_roots(config, device, verbose)
-        run_phase_descendants(config, device, verbose, num_workers)
+        run_phase_descendants(
+            config, device, verbose, num_workers, fast_descendants
+        )
         return run_phase_evaluate(config, verbose, num_workers)
 
 
@@ -461,6 +491,8 @@ def main():
     parser.add_argument("--max-train-samples", type=int, default=None)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--num-workers", type=int, default=4)
+    parser.add_argument("--fast-descendants", action="store_true",
+                        help="Use 5K samples for descendants (not distillation)")
     parser.add_argument("--quiet", action="store_true")
 
     args = parser.parse_args()
@@ -494,6 +526,7 @@ def main():
         verbose=not args.quiet,
         num_workers=args.num_workers,
         phase=args.phase,
+        fast_descendants=args.fast_descendants,
     )
 
 
