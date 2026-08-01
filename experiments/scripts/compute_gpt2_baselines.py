@@ -219,7 +219,7 @@ def main():
     )
     val_loader = loaders["val"]
 
-    # Load all root models
+    # Load all root models from checkpoints
     print("\nLoading root models...")
     roots = {}
     for i in range(8):
@@ -237,48 +237,47 @@ def main():
         else:
             print(f"  Root {i}: not found")
 
-    # Load descendants
-    print("\nLoading descendants...")
+    # Load descendants and students from phase2 pickle
+    print("\nLoading descendants and students from phase2_descendants.pkl...")
+    import pickle
+
     descendants = {}
-    for desc_info in benchmark["descendants"]:
-        desc_id = desc_info["id"]
-        root_idx = desc_info["root_idx"]
-        desc_type = desc_info["type"]
-
-        # Find checkpoint
-        desc_dir = checkpoint_dir / f"root_{root_idx}" / "descendants"
-        if not desc_dir.exists():
-            continue
-
-        # Try to find the checkpoint
-        for ckpt_file in desc_dir.glob("*.pt"):
-            if desc_id in ckpt_file.stem or desc_type in ckpt_file.stem:
-                descendants[desc_id] = {
-                    "model": load_model_from_checkpoint(ckpt_file, config),
-                    "root_idx": root_idx,
-                    "type": desc_type,
-                }
-                print(f"  {desc_id}: loaded")
-                break
-
-    # Load distilled students
-    print("\nLoading distilled students...")
     students = {}
-    for student_info in benchmark["distilled_students"]:
-        student_id = student_info["id"]
-        root_idx = student_info["root_idx"]
 
-        student_dir = checkpoint_dir / f"root_{root_idx}" / "students"
-        if not student_dir.exists():
-            continue
+    phase2_path = results_dir / "phase2_descendants.pkl"
+    if phase2_path.exists():
+        with open(phase2_path, "rb") as f:
+            phase2 = pickle.load(f)
 
-        for ckpt_file in student_dir.glob("*.pt"):
-            students[student_id] = {
-                "model": load_model_from_checkpoint(ckpt_file, config),
-                "root_idx": root_idx,
-            }
-            print(f"  {student_id}: loaded")
-            break
+        # Load descendants
+        if "descendants" in phase2:
+            for desc_data in phase2["descendants"]:
+                desc_id = desc_data["id"]
+                root_idx = desc_data["root_idx"]
+                desc_type = desc_data["type"]
+
+                if "model" in desc_data:
+                    descendants[desc_id] = {
+                        "model": desc_data["model"],
+                        "root_idx": root_idx,
+                        "type": desc_type,
+                    }
+                    print(f"  Descendant {desc_id}: loaded")
+
+        # Load students
+        if "students" in phase2:
+            for student_data in phase2["students"]:
+                student_id = student_data["id"]
+                root_idx = student_data["root_idx"]
+
+                if "model" in student_data:
+                    students[student_id] = {
+                        "model": student_data["model"],
+                        "root_idx": root_idx,
+                    }
+                    print(f"  Student {student_id}: loaded")
+    else:
+        print(f"  phase2_descendants.pkl not found at {phase2_path}")
 
     print(f"\nLoaded: {len(roots)} roots, {len(descendants)} descendants, {len(students)} students")
 
