@@ -324,15 +324,13 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
                     if sus_ckpt.exists():
                         sus_model, _, _ = load_checkpoint(sus_ckpt, model_config, device)
                         sus_Ms = pair["sus_Ms"]
-                        print(f"      Loaded suspect checkpoint: {sus_ckpt}")
                     else:
                         # Fallback: no checkpoint available
-                        print(f"    WARNING: No checkpoint for {sus_id} at {sus_ckpt}")
+                        print(f"    WARNING: No checkpoint for {sus_id}")
                         sus_Ms = pair["sus_Ms"]
                         sus_model = None
 
                 # Apply permutation based on condition
-                print(f"      Condition={condition}, sus_model={'LOADED' if sus_model is not None else 'NONE'}")
                 if condition == "NONE":
                     # No permutation
                     sus_Ms_perm = sus_Ms
@@ -402,30 +400,15 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
 
                 elif condition == "P-BOTH":
                     # Permute both reference and suspect with different seeds
-                    print(f"      P-BOTH: permuting ref with seed={seed}, sus with seed={seed + 50000}")
-
-                    # Debug: get ref weights BEFORE permutation
-                    ref_raw_before = lops.raw_weights_gpt2(ref_model)
-
                     ref_model_perm, _ = lops.apply_permutation_gpt2(ref_model, seed)
                     ref_Ms = extract_branch_products(ref_model_perm)
                     ref_raw = lops.raw_weights_gpt2(ref_model_perm)
-
-                    # Debug: check if permutation changed the weights
-                    cos_before_after = lbase.raw_weight_cosine_gpt2(ref_raw_before, ref_raw)
-                    print(f"      DEBUG: ref cosine(before, after perm) = {cos_before_after:.6f}")
 
                     if sus_model is not None:
                         sus_model_perm, _ = lops.apply_permutation_gpt2(sus_model, seed + 50000)
                         sus_Ms_perm = extract_branch_products(sus_model_perm)
                         sus_raw = lops.raw_weights_gpt2(sus_model_perm)
-
-                        # Debug: check cosine between ref and sus after their respective permutations
-                        cos_ref_sus = lbase.raw_weight_cosine_gpt2(ref_raw, sus_raw)
-                        print(f"      DEBUG: cosine(ref_perm, sus_perm) = {cos_ref_sus:.6f}")
-                        print(f"      P-BOTH: extracted sus_raw from permuted sus_model")
                     else:
-                        print(f"      P-BOTH: WARNING - sus_model is None, using ref_raw as placeholder!")
                         sus_Ms_perm = sus_Ms
                         sus_raw = ref_raw
 
