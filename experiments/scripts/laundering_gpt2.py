@@ -324,9 +324,10 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
                     if sus_ckpt.exists():
                         sus_model, _, _ = load_checkpoint(sus_ckpt, model_config, device)
                         sus_Ms = pair["sus_Ms"]
+                        print(f"      Loaded suspect checkpoint: {sus_ckpt}")
                     else:
                         # Fallback: no checkpoint available
-                        print(f"    WARNING: No checkpoint for {sus_id}, using signatures only")
+                        print(f"    WARNING: No checkpoint for {sus_id} at {sus_ckpt}")
                         sus_Ms = pair["sus_Ms"]
                         sus_model = None
 
