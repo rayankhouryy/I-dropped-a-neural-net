@@ -332,6 +332,7 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
                         sus_model = None
 
                 # Apply permutation based on condition
+                print(f"      Condition={condition}, sus_model={'LOADED' if sus_model is not None else 'NONE'}")
                 if condition == "NONE":
                     # No permutation
                     sus_Ms_perm = sus_Ms
@@ -401,6 +402,7 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
 
                 elif condition == "P-BOTH":
                     # Permute both reference and suspect with different seeds
+                    print(f"      P-BOTH: permuting ref with seed={seed}, sus with seed={seed + 50000}")
                     ref_model_perm, _ = lops.apply_permutation_gpt2(ref_model, seed)
                     ref_Ms = extract_branch_products(ref_model_perm)
                     ref_raw = lops.raw_weights_gpt2(ref_model_perm)
@@ -409,7 +411,9 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
                         sus_model_perm, _ = lops.apply_permutation_gpt2(sus_model, seed + 50000)
                         sus_Ms_perm = extract_branch_products(sus_model_perm)
                         sus_raw = lops.raw_weights_gpt2(sus_model_perm)
+                        print(f"      P-BOTH: extracted sus_raw from permuted sus_model")
                     else:
+                        print(f"      P-BOTH: WARNING - sus_model is None, using ref_raw as placeholder!")
                         sus_Ms_perm = sus_Ms
                         sus_raw = ref_raw
 
