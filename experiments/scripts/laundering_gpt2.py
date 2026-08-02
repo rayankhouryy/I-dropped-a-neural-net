@@ -658,8 +658,22 @@ def main():
                         help="Quick smoke test (2 pairs, limited conditions)")
     parser.add_argument("--seed-base", type=int, default=8000,
                         help="Base random seed")
+    parser.add_argument("--test-roots", type=int, nargs="+", default=None,
+                        help="Root indices to use for test (default: auto-detect from data)")
 
     args = parser.parse_args()
+
+    # Auto-detect test roots from data if not specified
+    test_roots = args.test_roots
+    if test_roots is None:
+        phase1_path = Path(args.benchmark_dir) / "phase1_roots.pkl"
+        if phase1_path.exists():
+            import pickle
+            with open(phase1_path, "rb") as f:
+                phase1 = pickle.load(f)
+            n_roots = len(phase1["root_signatures"])
+            test_roots = list(range(n_roots))
+            print(f"Auto-detected {n_roots} roots: {test_roots}")
 
     config = LaunderingConfig(
         benchmark_dir=args.benchmark_dir,
@@ -670,6 +684,7 @@ def main():
         pft_lr=args.pft_lr,
         smoke=args.smoke,
         seed_base=args.seed_base,
+        test_root_indices=test_roots if test_roots else [0, 1, 2],
     )
 
     run_experiment(config)
