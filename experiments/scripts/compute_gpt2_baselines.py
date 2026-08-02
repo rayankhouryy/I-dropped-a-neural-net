@@ -194,11 +194,18 @@ def load_model_from_checkpoint(ckpt_path: Path, config) -> torch.nn.Module:
 
 
 def main():
-    results_dir = Path("experiments/scripts/results/lineage_benchmark_gpt2_paper")
+    import argparse
+    parser = argparse.ArgumentParser(description="Compute baseline methods on GPT-2 benchmark")
+    parser.add_argument("--results-dir", default="experiments/scripts/results/lineage_benchmark_gpt2_paper",
+                        help="Path to benchmark results directory")
+    args = parser.parse_args()
+
+    results_dir = Path(args.results_dir)
     checkpoint_dir = results_dir / "checkpoints"
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Device: {device}")
+    print(f"Results dir: {results_dir}")
 
     # Load config
     config = BenchmarkConfig.from_preset("paper")
