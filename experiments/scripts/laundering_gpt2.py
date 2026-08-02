@@ -306,18 +306,25 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
 
                 # Get suspect model/signatures
                 if "sus_idx" in pair:
-                    # Cross-root pair
+                    # Cross-root pair (root vs root)
                     sus_idx = pair["sus_idx"]
                     sus_ckpt = Path(config.checkpoint_dir) / f"root_{sus_idx}" / "epoch_3.pt"
                     sus_model, _, _ = load_checkpoint(sus_ckpt, model_config, device)
                     sus_Ms = pair["sus_Ms"]
                 else:
-                    # Need to reload model from checkpoint to apply permutation
-                    # For descendants/students, we use stored signatures for Ms
-                    # but need a model for raw weights under permutation
-                    # Since we don't have descendant checkpoints, use the signatures directly
-                    sus_Ms = pair["sus_Ms"]
-                    sus_model = None
+                    # Descendant/student - try to load from models/ directory
+                    sus_id = pair["sus_id"]
+                    models_dir = Path(config.benchmark_dir) / "models"
+                    sus_ckpt = models_dir / f"{sus_id}.pt"
+
+                    if sus_ckpt.exists():
+                        sus_model, _, _ = load_checkpoint(sus_ckpt, model_config, device)
+                        sus_Ms = pair["sus_Ms"]
+                    else:
+                        # Fallback: no checkpoint available
+                        print(f"    WARNING: No checkpoint for {sus_id}, using signatures only")
+                        sus_Ms = pair["sus_Ms"]
+                        sus_model = None
 
                 # Apply permutation based on condition
                 if condition == "NONE":
