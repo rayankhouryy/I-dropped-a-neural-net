@@ -51,6 +51,10 @@ import torch
 from sklearn.metrics import roc_auc_score, average_precision_score
 from transformers import GPT2Tokenizer
 
+# Force unbuffered output
+import functools
+print = functools.partial(print, flush=True)
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
@@ -434,8 +438,11 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
                     del sus_model
                 torch.cuda.empty_cache()
 
-                if (pair_idx + 1) % 10 == 0:
-                    print(f"    Processed {pair_idx + 1}/{len(pairs)} pairs")
+                elapsed = time.time() - t0
+                avg_per_pair = elapsed / (pair_idx + 1) if pair_idx > 0 else 0
+                eta = avg_per_pair * (len(pairs) - pair_idx - 1)
+                print(f"    [{pair_idx+1}/{len(pairs)}] {pair['ref_id']} vs {pair['sus_id']} "
+                      f"({pair['label'][:4]}) | {elapsed:.0f}s elapsed, ~{eta:.0f}s remaining")
 
     # Compute aggregate metrics
     print("\n" + "="*60)
