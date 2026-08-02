@@ -444,6 +444,18 @@ def run_experiment(config: LaunderingConfig) -> Dict[str, Any]:
                 print(f"    [{pair_idx+1}/{len(pairs)}] {pair['ref_id']} vs {pair['sus_id']} "
                       f"({pair['label'][:4]}) | {elapsed:.0f}s elapsed, ~{eta:.0f}s remaining")
 
+            # Print intermediate results after each seed
+            seed_results = [r for r in all_results if r.condition == condition and r.seed == seed]
+            if seed_results:
+                print(f"\n  --- Seed {seed} AUROC (n={len(seed_results)}) ---")
+                labels = [1 if r.label == "descendant" else 0 for r in seed_results]
+                for method in ["centered_residual_signature", "raw_weight_cosine", "rebasin_frobenius"]:
+                    scores = [r.scores[method] for r in seed_results]
+                    if len(set(labels)) >= 2:
+                        auroc = roc_auc_score(labels, scores)
+                        print(f"    {method}: {auroc:.4f}")
+                print()
+
     # Compute aggregate metrics
     print("\n" + "="*60)
     print("Computing aggregate metrics...")
