@@ -74,15 +74,27 @@ def load_checkpoint(
     device: str = "cuda",
     load_optimizer: bool = False,
 ) -> tuple:
-    """Load model from checkpoint."""
+    """Load model from checkpoint.
+
+    Handles both formats:
+    - Full checkpoint dict with "model_state_dict" key (root models)
+    - Raw state_dict (descendant/student models from --save-models)
+    """
     checkpoint = torch.load(path, map_location=device, weights_only=False)
 
     model = create_model(config, seed=None, device=device)
-    model.load_state_dict(checkpoint["model_state_dict"])
 
-    result = (model, checkpoint.get("epoch"), checkpoint.get("metrics"))
+    # Handle both checkpoint formats
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        # Full checkpoint format (roots)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        result = (model, checkpoint.get("epoch"), checkpoint.get("metrics"))
+    else:
+        # Raw state_dict format (descendants/students from --save-models)
+        model.load_state_dict(checkpoint)
+        result = (model, None, None)
 
-    if load_optimizer and "optimizer_state_dict" in checkpoint:
+    if load_optimizer and isinstance(checkpoint, dict) and "optimizer_state_dict" in checkpoint:
         result = (*result, checkpoint["optimizer_state_dict"])
 
     return result
