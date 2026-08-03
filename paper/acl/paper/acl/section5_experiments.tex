@@ -5,35 +5,37 @@ We evaluate four claims: (1) on clean benchmarks, multiple methods discriminate 
 \subsection{Baseline Comparison}\label{sec:exp-baselines}
 
 \paragraph{Setup.}
-We construct a controlled MLP benchmark (depth-16, hidden=48, input=16) with known ancestry. We train 2 root models independently from scratch on synthetic regression tasks. From each root, we derive 15 descendants via five transformation types (3 variants each): fine-tuning on the same task, fine-tuning on a shifted task, weight perturbation ($\sigma{=}0.02$), pruning (30\% sparsity), and quantization (8-bit). We also train 8 independent models per root (same architecture, different random seeds) and 3 distilled students per root (trained from scratch to mimic the root's outputs).
+We evaluate on two controlled benchmarks with known ancestry. The \textbf{MLP benchmark} (depth-16, hidden=48, input=16) trains 2 root models on synthetic regression tasks, deriving 15 descendants per root via fine-tuning, task-shift fine-tuning, weight perturbation, pruning, and quantization (3 variants each). Negatives include 8 independent models and 3 distilled students per root, yielding 52 pairs (30 positive, 22 negative). The \textbf{GPT-2 benchmark} trains 8 root language models (${\sim}$35M parameters, 6 layers) on TinyStories, deriving descendants via continued pretraining, LoRA merge, pruning, and quantization. We evaluate on test-split roots (3 roots), yielding 45 pairs (21 positive, 24 negative including 3 distilled students and 21 cross-root independents).
 
 \paragraph{Evaluation protocol.}
-Each (reference, suspect) pair receives a binary label: \emph{positive} if the suspect was derived from the reference's weights, \emph{negative} otherwise. This yields 30 positive pairs (root $\to$ descendant) and 22 negative pairs (11 independent models + 3 distilled students, per root $\times$ 2 roots), totaling 52 pairs. We report AUROC (threshold-free discrimination) and Gap-$Z$ (standardized margin between positive and negative score distributions).
+Each (reference, suspect) pair receives a binary label: \emph{positive} if the suspect was derived from the reference's weights, \emph{negative} otherwise. We report AUROC (threshold-free discrimination) and Gap-$Z$ (standardized margin between positive and negative score distributions).
 
 \paragraph{Results.}
-Table~\ref{tab:baselines} compares seven methods before any laundering. Activation-space methods (SVCCA, CKA) and decision-boundary methods (IPGuard) require probe samples and lack block-level interpretability. CKA achieves only AUROC$=$0.829, and IPGuard's negative Gap-$Z$ indicates it inverts the ranking on some pairs. SVCCA achieves AUROC$=$1.000 but requires forward passes through both models.
+Table~\ref{tab:baselines} compares seven methods on both benchmarks before any laundering. Weight-space methods operate directly on checkpoint weights without probe data. Activation-space methods (SVCCA, CKA) and decision-boundary methods (IPGuard) require forward passes through both models.
 
 \begin{table*}[!t]
 \centering
 \small
-\begin{tabular}{@{}llcccc@{}}
+\begin{tabular}{@{}llc cc cc@{}}
 \toprule
-Method & Type & Data-free & AUROC & Gap-$Z\uparrow$ & Block Corr.\ \\
+ & & & \multicolumn{2}{c}{MLP (52 pairs)} & \multicolumn{2}{c}{GPT-2 (45 pairs)} \\
+\cmidrule(lr){4-5} \cmidrule(lr){6-7}
+Method & Type & Data-free & AUROC & Gap-$Z$ & AUROC & Gap-$Z$ \\
 \midrule
-Centered Residual Signature (ours) & Weight-space     & \cmark & \textbf{1.000} & $+53.0$ & \cmark \\
-Aligned Frobenius         & Weight-space     & \cmark & \textbf{1.000} & $\mathbf{+72.0}$ & \cmark \\
-Singular Value Distance   & Weight-space     & \cmark & \textbf{1.000} & $\phantom{+}+7.9$ & \xmark \\
-Weight Cosine             & Weight-space     & \cmark & \textbf{1.000} & $\mathbf{+76.3}$ & \xmark \\
-SVCCA~\citep{raghu2017svcca}             & Activation-space & \xmark & \textbf{1.000} & $+45.4$ & \xmark \\
-CKA~\citep{kornblith2019similarity}      & Activation-space & \xmark & 0.829 & $\phantom{+}+8.6$ & \xmark \\
-IPGuard~\citep{cao2021ipguard} (regression analogue) & Decision-boundary & \xmark & 0.700 & $\phantom{+}-3.5$ & \xmark \\
+Centered Residual Signature (ours) & Weight & \cmark & \textbf{1.00} & $+53.0$ & \textbf{1.00} & $\mathbf{+31.0}$ \\
+Weight Cosine             & Weight & \cmark & \textbf{1.00} & $\mathbf{+76.3}$ & \textbf{1.00} & $+30.7$ \\
+Aligned Frobenius         & Weight & \cmark & \textbf{1.00} & $+72.0$ & \textbf{1.00} & $+3.9$ \\
+Singular Value Distance   & Weight & \cmark & \textbf{1.00} & $+7.9$ & 0.73 & $+0.4$ \\
+SVCCA~\citep{raghu2017svcca}             & Activation & \xmark & \textbf{1.00} & $+45.4$ & 0.99 & $+3.7$ \\
+CKA~\citep{kornblith2019similarity}               & Activation & \xmark & 0.83 & $+8.6$ & 0.86 & $+1.9$ \\
+IPGuard~\citep{cao2021ipguard}           & Decision & \xmark & 0.70 & $-3.5$ & 0.91 & $+2.1$ \\
 \bottomrule
 \end{tabular}
-\caption{Lineage detection baselines (52-pair MLP, no laundering). Data-free = no probe samples needed. Block Corr.\ = produces per-block similarity scores. Gap-$Z$ = standardized margin between related and unrelated scores.}
+\caption{Lineage detection baselines on MLP and GPT-2 benchmarks (no laundering). Data-free methods require no probe samples. On clean benchmarks, multiple weight-space methods achieve perfect discrimination; the proposed method's advantage emerges under reparameterization (Section~\ref{sec:exp-laundering}).}
 \label{tab:baselines}
 \end{table*}
 
-Weight-space methods---ours, aligned Frobenius, singular-value distance, and weight cosine---all achieve AUROC$=$1.000 on this clean benchmark. They require no probe data and operate directly on checkpoint weights. Weight cosine and aligned Frobenius show larger Gap-$Z$ margins ($+76.3$ and $+72.0$), but this advantage disappears under function-preserving reparameterization (Section~\ref{sec:exp-laundering}). Singular-value distance lacks block-level correspondence and fails on partial-inheritance scenarios (Appendix~\ref{app:harder-bench}).
+On both benchmarks, weight-space methods---ours, weight cosine, and aligned Frobenius---achieve AUROC$=$1.0. Weight cosine shows the largest Gap-$Z$ margin on MLP ($+76.3$), but this advantage disappears under function-preserving reparameterization (Section~\ref{sec:exp-laundering}). Singular-value distance degrades on GPT-2 (AUROC$=$0.73), likely due to the higher-dimensional weight matrices. Activation-space methods (CKA, SVCCA) and IPGuard show consistent but imperfect performance across both benchmarks.
 
 The key result: on unlaundered checkpoints, multiple weight-space methods achieve perfect discrimination. Simple baselines solve clean cases. The proposed method's advantage emerges under reparameterization invariance and partial-inheritance regimes.
 
