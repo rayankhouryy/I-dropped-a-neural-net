@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+Method & none & P & D$_\mathrm{m}$ & D$_\mathrm{s}$ & PD & PDFT & Lat. \\
+\midrule
+\textbf{Ours} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & 0.4 \\
+Re-Basin+scale & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & 0.8 \\
+Raw Frobenius & \textbf{1.0} & 0.50 & \textbf{1.0} & 0.0 & 0.0 & 0.0 & 1.3 \\
+Raw SVD dist & \textbf{1.0} & \textbf{1.0} & 0.0 & 0.0 & 0.0 & 0.0 & 2.6 \\
+Raw weight cos & \textbf{1.0} & 0.86 & \textbf{1.0} & \textbf{1.0} & 0.80 & 0.80 & 1.5 \\
+\bottomrule
+\end{tabular}
+\caption{AUROC under function-preserving laundering (MLP, 52 pairs). P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling, Lat.$=$latency in ms. Our method and Re-Basin+scale maintain AUROC$=$1.0 across all conditions; raw-weight baselines collapse. Our method is 2$\times$ faster than Re-Basin.}
+\label{tab:laundering-unified}
+\end{table}

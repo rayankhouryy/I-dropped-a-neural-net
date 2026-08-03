@@ -127,28 +127,59 @@ def score_pair_all_methods(
     ref_raw: Dict[str, List[np.ndarray]],
     sus_raw: Dict[str, List[np.ndarray]],
     tau_s: float,
+    measure_latency: bool = False,
 ) -> Dict[str, float]:
-    """Score a pair with all methods."""
+    """Score a pair with all methods. Optionally measure latency."""
     scores = {}
+    latencies = {} if measure_latency else None
 
     # Proposed method (full)
+    if measure_latency:
+        t0 = time.perf_counter()
     L_score, _, _ = ldet.lineage_score(ref_Ms, sus_Ms, tau_s)
     scores["centered_residual_signature"] = L_score
+    if measure_latency:
+        latencies["centered_residual_signature"] = (time.perf_counter() - t0) * 1000
 
     # Raw baselines
+    if measure_latency:
+        t0 = time.perf_counter()
     scores["raw_weight_cosine"] = lbase.raw_weight_cosine_gpt2(ref_raw, sus_raw)
+    if measure_latency:
+        latencies["raw_weight_cosine"] = (time.perf_counter() - t0) * 1000
+
+    if measure_latency:
+        t0 = time.perf_counter()
     scores["raw_aligned_frobenius"] = lbase.raw_aligned_frobenius_gpt2(ref_raw, sus_raw)
+    if measure_latency:
+        latencies["raw_aligned_frobenius"] = (time.perf_counter() - t0) * 1000
+
+    if measure_latency:
+        t0 = time.perf_counter()
     scores["singular_value_distance"] = lbase.singular_value_distance_gpt2(ref_raw, sus_raw)
+    if measure_latency:
+        latencies["singular_value_distance"] = (time.perf_counter() - t0) * 1000
 
     # Re-Basin
+    if measure_latency:
+        t0 = time.perf_counter()
     scores["rebasin_frobenius"] = lbase.rebasin_frobenius_gpt2(ref_raw, sus_raw)
+    if measure_latency:
+        latencies["rebasin_frobenius"] = (time.perf_counter() - t0) * 1000
+
+    if measure_latency:
+        t0 = time.perf_counter()
     scores["rebasin_scale_frobenius"] = lbase.rebasin_scale_frobenius_gpt2(ref_raw, sus_raw)
+    if measure_latency:
+        latencies["rebasin_scale_frobenius"] = (time.perf_counter() - t0) * 1000
 
     # Ablation methods
     scores["raw_branch_product_cosine"] = lbase.raw_branch_product_cosine(ref_Ms, sus_Ms)
     scores["centered_branch_product_cosine"] = lbase.centered_branch_product_cosine(ref_Ms, sus_Ms)
     scores["centered_with_gating"] = lbase.centered_with_gating(ref_Ms, sus_Ms, tau_s)
 
+    if measure_latency:
+        return scores, latencies
     return scores
 
 

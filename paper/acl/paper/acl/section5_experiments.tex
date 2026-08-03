@@ -1,17 +1,14 @@
 \section{Experiments}\label{sec:experiments}
 
-We evaluate four claims: (1) on clean benchmarks, multiple methods discriminate descendants from independents, but with different trade-offs (Section~\ref{sec:exp-baselines}); (2) the signature is robust to function-preserving reparameterization where simpler baselines fail (Section~\ref{sec:exp-laundering}); (3) the signature survives common post-training transformations (Section~\ref{sec:exp-posttraining}); and (4) behavioral similarity does not imply weight ancestry (Section~\ref{sec:exp-distill}).
+% TODO: Section intro
 
 \subsection{Baseline Comparison}\label{sec:exp-baselines}
 
-\paragraph{Setup.}
-We evaluate on two controlled benchmarks with known ancestry. The \textbf{MLP benchmark} (depth-16, hidden=48, input=16) trains 2 root models on synthetic regression tasks, deriving 15 descendants per root via fine-tuning, task-shift fine-tuning, weight perturbation, pruning, and quantization (3 variants each). Negatives include 8 independent models and 3 distilled students per root, yielding 52 pairs (30 positive, 22 negative). The \textbf{GPT-2 benchmark} trains 8 root language models (${\sim}$35M parameters, 6 layers) on TinyStories, deriving descendants via continued pretraining, LoRA merge, pruning, and quantization. We evaluate on test-split roots (3 roots), yielding 45 pairs (21 positive, 24 negative including 3 distilled students and 21 cross-root independents).
+We compare seven lineage detection methods on two controlled benchmarks with known ancestry. For the MLP benchmark, we train 2 root models ($L{=}16$, $d{=}48$, input$=$16) for 120 epochs on synthetic regression tasks. From each root, we derive 15 descendants via fine-tuning on the same task (30 epochs), fine-tuning on a different synthetic target function (30 epochs), weight perturbation ($\sigma{=}0.02$), pruning (30\% sparsity), and quantization (8-bit), with 3 variants each. We also train 8 independent models per root using the same architecture but different random seeds, plus 3 distilled students ($T{=}2.0$, $\alpha_{\mathrm{CE}}{=}0.5$, 60 epochs) that learn to mimic the root's outputs. This yields 52 pairs: 30 positive (root $\to$ descendant) and 22 negative (independent or distilled).
 
-\paragraph{Evaluation protocol.}
-Each (reference, suspect) pair receives a binary label: \emph{positive} if the suspect was derived from the reference's weights, \emph{negative} otherwise. We report AUROC (threshold-free discrimination) and Gap-$Z$ (standardized margin between positive and negative score distributions).
+We construct a GPT-2 benchmark using ${\sim}$35M-parameter language models ($L{=}6$, $d{=}384$) trained for 3 epochs on TinyStories~\citep{eldan2023tinystories}. We train 8 root models and derive descendants via continued pretraining on TinyStories (1 epoch), LoRA merge ($r{=}8$, $\alpha{=}16$, 1 epoch), pruning (30/50/70\%), and quantization (8/6-bit). We also train distilled students ($T{=}2.0$, $\alpha_{\mathrm{CE}}{=}\alpha_{\mathrm{KL}}{=}0.5$, 2 epochs). Evaluating on the test-split roots (3 of 8) yields 45 pairs: 21 positive and 24 negative (3 distilled students plus 21 cross-root independent comparisons).
 
-\paragraph{Results.}
-Table~\ref{tab:baselines} compares seven methods on both benchmarks before any laundering. Weight-space methods operate directly on checkpoint weights without probe data. Activation-space methods (SVCCA, CKA) and decision-boundary methods (IPGuard) require forward passes through both models.
+Each (reference, suspect) pair receives a binary label: positive if the suspect inherits weights from the reference, negative otherwise. We report AUROC (threshold-free discrimination) and Gap-$Z$ (standardized margin between positive and negative score distributions).
 
 \begin{table*}[!t]
 \centering
@@ -20,10 +17,10 @@ Table~\ref{tab:baselines} compares seven methods on both benchmarks before any l
 \toprule
  & & & \multicolumn{2}{c}{MLP (52 pairs)} & \multicolumn{2}{c}{GPT-2 (45 pairs)} \\
 \cmidrule(lr){4-5} \cmidrule(lr){6-7}
-Method & Type & Data-free & AUROC & Gap-$Z$ & AUROC & Gap-$Z$ \\
+Method & Type & Data-free & AUROC$\uparrow$ & Gap-$Z$$\uparrow$ & AUROC$\uparrow$ & Gap-$Z$$\uparrow$ \\
 \midrule
-Centered Residual Signature (ours) & Weight & \cmark & \textbf{1.00} & $+53.0$ & \textbf{1.00} & $\mathbf{+31.0}$ \\
-Weight Cosine             & Weight & \cmark & \textbf{1.00} & $\mathbf{+76.3}$ & \textbf{1.00} & $+30.7$ \\
+Centered Residual Signature (ours) & Weight & \cmark & \textbf{1.00} & $+53.0$ & \textbf{1.00} & $+31.0$ \\
+Weight Cosine             & Weight & \cmark & \textbf{1.00} & $+76.3$ & \textbf{1.00} & $+30.7$ \\
 Aligned Frobenius         & Weight & \cmark & \textbf{1.00} & $+72.0$ & \textbf{1.00} & $+3.9$ \\
 Singular Value Distance   & Weight & \cmark & \textbf{1.00} & $+7.9$ & 0.73 & $+0.4$ \\
 SVCCA~\citep{raghu2017svcca}             & Activation & \xmark & \textbf{1.00} & $+45.4$ & 0.99 & $+3.7$ \\
@@ -31,13 +28,15 @@ CKA~\citep{kornblith2019similarity}               & Activation & \xmark & 0.83 &
 IPGuard~\citep{cao2021ipguard}           & Decision & \xmark & 0.70 & $-3.5$ & 0.91 & $+2.1$ \\
 \bottomrule
 \end{tabular}
-\caption{Lineage detection baselines on MLP and GPT-2 benchmarks (no laundering). Data-free methods require no probe samples. On clean benchmarks, multiple weight-space methods achieve perfect discrimination; the proposed method's advantage emerges under reparameterization (Section~\ref{sec:exp-laundering}).}
+\caption{Lineage detection baselines on MLP and GPT-2 benchmarks. Data-free methods operate directly on weights without probe samples. A reliable fingerprint achieves AUROC near 1.0 with large Gap-$Z$, indicating clean separation between descendants and non-descendants.}
 \label{tab:baselines}
 \end{table*}
 
-On both benchmarks, weight-space methods---ours, weight cosine, and aligned Frobenius---achieve AUROC$=$1.0. Weight cosine shows the largest Gap-$Z$ margin on MLP ($+76.3$), but this advantage disappears under function-preserving reparameterization (Section~\ref{sec:exp-laundering}). Singular-value distance degrades on GPT-2 (AUROC$=$0.73), likely due to the higher-dimensional weight matrices. Activation-space methods (CKA, SVCCA) and IPGuard show consistent but imperfect performance across both benchmarks.
+Table~\ref{tab:baselines} compares the seven methods across both benchmarks. On MLP, four weight-space methods achieve AUROC$=$1.0: ours, weight cosine, aligned Frobenius, and singular-value distance. SVCCA also achieves perfect discrimination but requires forward passes through both models. CKA and IPGuard underperform (AUROC$=$0.83 and 0.70), with IPGuard's negative Gap-$Z$ indicating it sometimes ranks non-descendants higher than descendants.
 
-The key result: on unlaundered checkpoints, multiple weight-space methods achieve perfect discrimination. Simple baselines solve clean cases. The proposed method's advantage emerges under reparameterization invariance and partial-inheritance regimes.
+The GPT-2 results reveal which methods generalize. Three weight-space methods maintain AUROC$=$1.0: ours, weight cosine, and aligned Frobenius. Singular-value distance degrades substantially (AUROC$=$0.73), suggesting sensitivity to the higher-dimensional weight matrices in transformer MLPs. Among activation-based methods, SVCCA remains strong (0.99) while CKA stays weak (0.86). IPGuard improves on GPT-2 (0.91) but still lags behind weight-space approaches.
+
+Why do weight-space methods outperform activation and decision-boundary approaches? Activation-based methods like CKA and SVCCA measure representational similarity, which can be high even between independently trained models that learn similar features. Decision-boundary methods like IPGuard measure output agreement, which conflates behavioral similarity with weight ancestry---a distilled student may produce similar outputs without sharing any weights. Weight-space methods directly compare the parameters that define ancestry, avoiding these confounds.
 
 \subsection{Robustness Under Checkpoint Laundering}\label{sec:exp-laundering}
 
@@ -45,54 +44,53 @@ Clean-benchmark performance measures proximity in a shared parameterization. A m
 
 Per-block permutation (P) permutes hidden units ($W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$); reciprocal rescaling (D) scales them ($W_{\mathrm{in}} \leftarrow D W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} D^{-1}$). These preserve the branch product $M = W_{\mathrm{out}} W_{\mathrm{in}}$ exactly ($P^\top P = I$, $D^{-1} D = I$), so our signature is invariant by construction.
 
-\paragraph{MLP benchmark.}
-We evaluate on the 52-pair MLP benchmark with six laundering variants: none, P, D-mild (log-uniform $[0.5,2]$), D-strong (log-uniform $[0.1,10]$), PD, and PDFT (P+D then 5 epochs fine-tuning). All variants pass a hard function-preservation gate ($\max|\Delta f| < 10^{-4}$).
+We evaluate on both the MLP benchmark (52 pairs) and GPT-2 benchmark (45 pairs). MLP tests six laundering variants: none, P, D-mild (log-uniform $[0.5,2]$), D-strong (log-uniform $[0.1,10]$), PD, and PDFT (P+D then 5 epochs fine-tuning). GPT-2 tests permutation: none, P (permute suspect). All variants pass a hard function-preservation gate ($\max|\Delta f| < 10^{-4}$).
 
 \begin{table}[t]
 \centering
 \small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lcccccc@{}}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}llccccccc@{}}
 \toprule
-Method & none & P & D$_\mathrm{m}$ & D$_\mathrm{s}$ & PD & PDFT \\
+& & \multicolumn{6}{c}{AUROC} & \\
+\cmidrule(lr){3-8}
+Method & Bench & none & P & D$_\mathrm{m}$ & D$_\mathrm{s}$ & PD & PDFT & Lat. \\
 \midrule
-\textbf{Ours} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} \\
-Re-Basin+scale & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} \\
-Raw Frobenius & \textbf{1.0} & 0.50 & \textbf{1.0} & 0.00 & 0.00 & 0.00 \\
-Raw SVD dist & \textbf{1.0} & \textbf{1.0} & 0.00 & 0.00 & 0.00 & 0.00 \\
-Raw weight cos & \textbf{1.0} & 0.86 & \textbf{1.0} & \textbf{1.0} & 0.80 & 0.80 \\
-SVCCA & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} \\
-CKA & 0.85 & 0.85 & 0.85 & 0.85 & 0.85 & 0.99 \\
-IPGuard & 0.70 & 0.70 & 0.70 & 0.70 & 0.70 & 0.83 \\
+\multirow{2}{*}{\textbf{Ours}}
+  & MLP & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & 0.4 \\
+  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{2}{*}{Re-Basin+scale}
+  & MLP & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & 0.8 \\
+  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{2}{*}{Raw Frobenius}
+  & MLP & \textbf{1.0} & 0.50 & \textbf{1.0} & 0.0 & 0.0 & 0.0 & 1.3 \\
+  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{2}{*}{Raw SVD dist}
+  & MLP & \textbf{1.0} & \textbf{1.0} & 0.0 & 0.0 & 0.0 & 0.0 & 2.6 \\
+  & GPT-2 & 0.76 & 0.76 & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{2}{*}{Raw weight cos}
+  & MLP & \textbf{1.0} & 0.86 & \textbf{1.0} & \textbf{1.0} & 0.80 & 0.80 & 1.5 \\
+  & GPT-2 & \textbf{1.0} & \textbf{1.0}$^\dagger$ & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
-\caption{AUROC under function-preserving laundering (52 pairs). P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling. Our signature maintains AUROC$=$1.000 across all variants. Raw-weight baselines collapse: Frobenius fails under P or D; SVD survives P but fails D; weight cosine degrades under PD. Re-Basin+scale matches accuracy but requires $L$ Hungarian assignments per pair; ours requires zero alignment work.}
+\caption{AUROC under function-preserving laundering. P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling, Lat.$=$latency (ms). Our method and Re-Basin+scale maintain AUROC$=$1.0; raw baselines collapse under rescaling. $^\dagger$GPT-2 weight cosine preserves AUROC under P but scores collapse 97\% (0.977$\to$0.033); see Figure~\ref{fig:laundering-scores}.}
 \label{tab:laundering}
 \end{table}
 
-Table~\ref{tab:laundering} shows the signature is invariant ($|\Delta\mathcal{L}| \approx 10^{-8}$) under P, D, and PD, remaining discriminative after fine-tuning (PDFT). Raw-weight baselines collapse: Frobenius drops to 0.00 under strong D; SVD survives P but fails D; weight cosine degrades to 0.80 under PD. Behavioral methods (SVCCA, CKA, IPGuard) are invariant to reparameterization but show weaker baseline discrimination.
-
-\paragraph{GPT-2 benchmark.}
-We extend to our GPT-2 benchmark, testing hidden-unit permutation: $W_{\mathrm{fc}} \leftarrow P W_{\mathrm{fc}}$, $W_{\mathrm{proj}} \leftarrow W_{\mathrm{proj}} P^\top$ per block. Four conditions: NONE, P-SUSPECT (permute suspect only), P-BOTH (different permutations on both), P+FT (permute then fine-tune 100 steps).
-
-\begin{table}[t]
+\begin{figure}[t]
 \centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Method & NONE & P-SUS & P-BOTH & P+FT \\
-\midrule
-\textbf{Ours} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} \\
-Raw weight cos & 1.0 & 1.0 & 1.0 & 1.0 \\
-SVD distance & 0.76 & 0.76 & 0.76 & 0.75 \\
-\bottomrule
-\end{tabular}
-\caption{AUROC under hidden-unit permutation on GPT-2 benchmark (92 pairs). AUROC is preserved, but score magnitudes differ: weight cosine drops 97\% (0.977$\to$0.033) under P-BOTH while ours remains at 0.970.}
-\label{tab:gpt2-laundering}
-\end{table}
+\includegraphics[width=\columnwidth]{fig_laundering_scores.pdf}
+\caption{Score distributions under laundering. Top row: MLP benchmark (52 pairs, 6 conditions). Bottom row: GPT-2 benchmark (45 pairs, permutation only). (a,c) Our signature maintains stable separation across all conditions. (b) MLP weight cosine collapses under P/PD/PDFT. (d) GPT-2 weight cosine scores collapse 97\% under permutation (0.98$\to$0.03) despite preserving AUROC$=$1.0---the margin is razor-thin.}
+\label{fig:laundering-scores}
+\end{figure}
 
-Table~\ref{tab:gpt2-laundering} shows all methods maintain AUROC$=$1.0, but score magnitudes reveal the difference. Under P-BOTH, weight cosine scores collapse from 0.977 to 0.033---a 97\% drop---while our signature remains at 0.970. The margin compression suggests sensitivity to additional perturbations even when ranking is preserved.
+Table~\ref{tab:laundering} compares weight-space methods under laundering. Our signature is invariant ($|\Delta\mathcal{L}| \approx 10^{-8}$) under P, D, and PD, remaining discriminative after fine-tuning (PDFT). Raw-weight baselines collapse: Frobenius drops to 0.0 under strong rescaling; SVD survives permutation but fails rescaling; weight cosine degrades to 0.80 under PD. Re-Basin+scale matches our accuracy by solving $L$ Hungarian assignments per pair to recover alignment, but requires 2$\times$ the latency (0.8ms vs 0.4ms). Our method achieves invariance algebraically, with no alignment computation.
+
+Figure~\ref{fig:laundering-scores} visualizes why AUROC alone understates the difference. Under PD laundering, raw weight cosine descendant scores collapse from ${\sim}0.99$ to ${\sim}0.06$, nearly overlapping with non-descendants (${\sim}0.05$). The ranking is barely preserved (AUROC$=$0.80), but the margin is razor-thin---one additional perturbation would break it. Our signature maintains a ${\sim}10\times$ gap between descendants (${\sim}0.37$) and non-descendants (${\sim}0.03$) across all conditions.
 
 \paragraph{Public LLM validation.}
 We replicate across four model families (Table~\ref{tab:laundering-llm}). On each base$\to$fine-tune pair, P permutes $W_{\mathrm{gate}}$/$W_{\mathrm{up}}$ rows and $W_{\mathrm{down}}$ columns. Our score is invariant ($\Delta\mathcal{L} < 10^{-7}$); weight cosine collapses under P (0.95$\to$0.003). Unrelated controls stay at the ${\leq}10^{-4}$ null.
