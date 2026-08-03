@@ -58,26 +58,26 @@ Method & Bench & none & P & D$_\mathrm{m}$ & D$_\mathrm{s}$ & PD & PDFT & Lat. \
 \midrule
 \multirow{2}{*}{\textbf{Ours}}
   & MLP & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & 0.4 \\
-  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & -- \\
+  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & 5.1 \\
 \midrule
 \multirow{2}{*}{Re-Basin+scale}
   & MLP & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & 0.8 \\
-  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & -- \\
+  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & 388 \\
 \midrule
 \multirow{2}{*}{Raw Frobenius}
   & MLP & \textbf{1.0} & 0.50 & \textbf{1.0} & 0.0 & 0.0 & 0.0 & 1.3 \\
-  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & -- \\
+  & GPT-2 & \textbf{1.0} & \textbf{1.0} & -- & -- & -- & -- & 25 \\
 \midrule
 \multirow{2}{*}{Raw SVD dist}
   & MLP & \textbf{1.0} & \textbf{1.0} & 0.0 & 0.0 & 0.0 & 0.0 & 2.6 \\
-  & GPT-2 & 0.76 & 0.76 & -- & -- & -- & -- & -- \\
+  & GPT-2 & 0.76 & 0.76 & -- & -- & -- & -- & 1438 \\
 \midrule
 \multirow{2}{*}{Raw weight cos}
   & MLP & \textbf{1.0} & 0.86 & \textbf{1.0} & \textbf{1.0} & 0.80 & 0.80 & 1.5 \\
-  & GPT-2 & \textbf{1.0} & \textbf{1.0}$^\dagger$ & -- & -- & -- & -- & -- \\
+  & GPT-2 & \textbf{1.0} & \textbf{1.0}$^\dagger$ & -- & -- & -- & -- & 50 \\
 \bottomrule
 \end{tabular}
-\caption{AUROC under function-preserving laundering. P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling, Lat.$=$latency (ms). Our method and Re-Basin+scale maintain AUROC$=$1.0; raw baselines collapse under rescaling. $^\dagger$GPT-2 weight cosine preserves AUROC under P but scores collapse 97\% (0.977$\to$0.033); see Figure~\ref{fig:laundering-scores}.}
+\caption{AUROC under function-preserving laundering. P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling, Lat.$=$latency (ms). Our method and Re-Basin+scale maintain AUROC$=$1.0; raw baselines collapse under rescaling. On GPT-2, ours is 76$\times$ faster than Re-Basin (5ms vs 388ms). $^\dagger$GPT-2 weight cosine preserves AUROC under P but scores collapse 97\% (0.977$\to$0.033); see Figure~\ref{fig:laundering-scores}.}
 \label{tab:laundering}
 \end{table}
 
@@ -88,7 +88,7 @@ Method & Bench & none & P & D$_\mathrm{m}$ & D$_\mathrm{s}$ & PD & PDFT & Lat. \
 \label{fig:laundering-scores}
 \end{figure}
 
-Table~\ref{tab:laundering} compares weight-space methods under laundering. Our signature is invariant ($|\Delta\mathcal{L}| \approx 10^{-8}$) under P, D, and PD, remaining discriminative after fine-tuning (PDFT). Raw-weight baselines collapse: Frobenius drops to 0.0 under strong rescaling; SVD survives permutation but fails rescaling; weight cosine degrades to 0.80 under PD. Re-Basin+scale matches our accuracy by solving $L$ Hungarian assignments per pair to recover alignment, but requires 2$\times$ the latency (0.8ms vs 0.4ms). Our method achieves invariance algebraically, with no alignment computation.
+Table~\ref{tab:laundering} compares weight-space methods under laundering. Our signature is invariant ($|\Delta\mathcal{L}| \approx 10^{-8}$) under P, D, and PD, remaining discriminative after fine-tuning (PDFT). Raw-weight baselines collapse: Frobenius drops to 0.0 under strong rescaling; SVD survives permutation but fails rescaling; weight cosine degrades to 0.80 under PD. Re-Basin+scale matches our accuracy by solving $L$ Hungarian assignments per pair to recover alignment, but the cost scales poorly: 2$\times$ slower on MLP (0.8ms vs 0.4ms) and 76$\times$ slower on GPT-2 (388ms vs 5ms). Our method achieves invariance algebraically, with no alignment computation.
 
 Figure~\ref{fig:laundering-scores} visualizes why AUROC alone understates the difference. Under PD laundering, raw weight cosine descendant scores collapse from ${\sim}0.99$ to ${\sim}0.06$, nearly overlapping with non-descendants (${\sim}0.05$). The ranking is barely preserved (AUROC$=$0.80), but the margin is razor-thin---one additional perturbation would break it. Our signature maintains a ${\sim}10\times$ gap between descendants (${\sim}0.37$) and non-descendants (${\sim}0.03$) across all conditions.
 
