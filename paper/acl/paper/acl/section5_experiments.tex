@@ -77,7 +77,7 @@ Method & Bench & none & P & D$_\mathrm{m}$ & D$_\mathrm{s}$ & PD & PDFT & Lat. \
   & GPT-2 & \textbf{1.0} & \textbf{1.0}$^\dagger$ & -- & -- & -- & -- & 50 \\
 \bottomrule
 \end{tabular}
-\caption{AUROC under function-preserving laundering. P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling, Lat.$=$latency (ms). Our method and Re-Basin+scale maintain AUROC$=$1.0; raw baselines collapse under rescaling. On GPT-2, ours is 76$\times$ faster than Re-Basin (5ms vs 388ms). $^\dagger$GPT-2 Weight Cosine preserves AUROC under P but scores collapse 97\% (0.977$\to$0.033); see Figure~\ref{fig:laundering-scores}.}
+\caption{AUROC under function-preserving laundering. P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling, Lat.$=$latency (ms). Our method and Re-Basin+scale maintain AUROC$=$1.0; raw baselines collapse under rescaling. GPT-2 uses GELU (not positively homogeneous), so rescaling is not function-preserving (--). On GPT-2, ours is 76$\times$ faster than Re-Basin (5ms vs 388ms). $^\dagger$Scores collapse 97\% (0.977$\to$0.033); see Figure~\ref{fig:laundering-scores}.}
 \label{tab:laundering}
 \end{table}
 
