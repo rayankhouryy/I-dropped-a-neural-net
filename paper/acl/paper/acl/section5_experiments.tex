@@ -1,109 +1,50 @@
 \section{Experiments}\label{sec:experiments}
 
-We validate the claims of Section~\ref{sec:method}: fingerprint existence (Section~\ref{sec:exp-exists}), lineage verification on language models (Section~\ref{sec:exp-verify}), the distinction between behavioral and weight ancestry (Section~\ref{sec:exp-distill}), robustness under reparameterization (Section~\ref{sec:exp-baselines}), and a public-checkpoint case study (Section~\ref{sec:exp-llm}).
+We evaluate four claims: (1) on clean benchmarks, multiple methods discriminate descendants from independents, but with different trade-offs (Section~\ref{sec:exp-baselines}); (2) the signature is robust to function-preserving reparameterization where simpler baselines fail (Section~\ref{sec:exp-laundering}); (3) the signature survives common post-training transformations (Section~\ref{sec:exp-posttraining}); and (4) behavioral similarity does not imply weight ancestry (Section~\ref{sec:exp-distill}).
 
-\subsection{The Fingerprint Exists and Is Learned}\label{sec:exp-exists}
+\subsection{Baseline Comparison}\label{sec:exp-baselines}
 
-Section~\ref{sec:mechanism} predicts that the fingerprint is learned, requires the skip connection, and arises from gradient coupling rather than isometry. We test all three.
+\paragraph{Setup.}
+We construct a controlled MLP benchmark (depth-16, hidden=48, input=16) with known ancestry. We train 2 root models independently from scratch on synthetic regression tasks. From each root, we derive 15 descendants via five transformation types (3 variants each): fine-tuning on the same task, fine-tuning on a shifted task, weight perturbation ($\sigma{=}0.02$), pruning (30\% sparsity), and quantization (8-bit). We also train 8 independent models per root (same architecture, different random seeds) and 3 distilled students per root (trained from scratch to mimic the root's outputs).
 
-We train depth-24 residual MLPs (in\_dim$=$24, hidden$=$64) on CIFAR-10~\citep{krizhevsky2009cifar} for 200 epochs (3 seeds) under seven initialization schemes: orthogonal, Kaiming-normal/uniform, Xavier-normal/uniform, uniform, and Gaussian $\sigma{=}0.02$. Input-output block pairing accuracy starts at chance (${\leq}2.1\%$) and reaches 93--100\% after training for every scheme that converges (Appendix~\ref{app:init-ablation}); the chance-level baseline follows from a null model in which all pairs score uniformly (Appendix~\ref{app:proofs}). Orthogonal initialization satisfies dynamical isometry exactly at initialization yet yields zero correct pairs, confirming that the fingerprint requires training.
+\paragraph{Evaluation protocol.}
+Each (reference, suspect) pair receives a binary label: \emph{positive} if the suspect was derived from the reference's weights, \emph{negative} otherwise. This yields 30 positive pairs (root $\to$ descendant) and 22 negative pairs (11 independent models + 3 distilled students, per root $\times$ 2 roots), totaling 52 pairs. We report AUROC (threshold-free discrimination) and Gap-$Z$ (standardized margin between positive and negative score distributions).
 
-Using the same architecture, we compare ResNet-24 against PlainNet-24, which removes only the skip connection. ResNet-24 reaches 100\% pair accuracy (AUROC 0.98); PlainNet-24, trained to similar loss (1.56 vs.\ 1.35), stays at chance (3\%, AUROC 0.51). Training alone does not produce the fingerprint; the skip connection is required.
+\paragraph{Results.}
+Table~\ref{tab:baselines} compares seven methods before any laundering. Activation-space methods (SVCCA, CKA) and decision-boundary methods (IPGuard) require probe samples and lack block-level interpretability. CKA achieves only AUROC$=$0.829, and IPGuard's negative Gap-$Z$ indicates it inverts the ranking on some pairs. SVCCA achieves AUROC$=$1.000 but requires forward passes through both models.
 
-Then, we measure the normalized Jacobian deviation $\delta_J^{\mathrm{norm}} = \|J^\top J/\|J\|_F^2 - I/d\|_F$ across the GPT-2 family (small/medium/large/XL), comparing pretrained weights against random initialization. Trained GPT-2 Jacobians are 5--12$\times$ less orthogonal than at initialization (GPT-2-small: 0.297 vs 0.025). The fingerprint grows while orthogonality decays, ruling out isometry (Appendix~\ref{app:gpt2-details}).
-
-To test whether gradient updates are themselves diagonal, we train 48-block residual MLPs (in\_dim$=$128, hidden$=$256, CIFAR-10, 50 epochs, 3 seeds) and measure gradient diagonality $g_{\mathrm{diag}} = |\mathrm{tr}(\nabla W_{\mathrm{out}} \nabla W_{\mathrm{in}})|/\|\cdot\|_F$ alongside the weight score $s(M)$. The gradient product stays flat (${\sim}0.15$), meaning individual updates are not diagonal. Yet the weight score climbs from 0.08 to ${\sim}4.0$ (Figure~\ref{fig:mechanism-triad}a). The diagonal structure emerges from many small correlated updates accumulating over training, not from any single diagonal gradient step.
-
-Two interventions provide evidence for a gradient-coupling account. \emph{Evidence for coupling:} shuffling $\nabla W_{\mathrm{out}}$ across blocks before each optimizer step (block $i$'s $W_{\mathrm{out}}$ receives gradients from a random block $j$) breaks only the within-block pairing while preserving valid gradients. This reduces the fingerprint by 68\% ($s$: 3.90 $\to$ 1.24) at comparable accuracy (47\% vs 54\%) (Figure~\ref{fig:mechanism-triad}b); however, the intervention also changes optimization dynamics, so the reduction supports but does not uniquely identify a coupling-based mechanism. \emph{Constructive demonstration:} injecting synthetic updates $\Delta W_{\mathrm{in}} = -\varepsilon \cdot e_i$, $\Delta W_{\mathrm{out}} = -\varepsilon \cdot e_i^\top$ ($\varepsilon{=}0.01$) directly into weights for 3000 steps, with no loss function or backpropagation, builds the fingerprint from scratch ($s$: 0.08 $\to$ 7.57) (Figure~\ref{fig:mechanism-triad}c). This shows that coordinated identity-aligned updates can generate the observed structure, not that gradient coupling is the only mechanism that produces it.
-
-\paragraph{Architecture-aware projection pairing.}
-We test whether the block alignment procedure of Section~\ref{sec:signatures} recovers correct block correspondences across diverse architectures.
-
-\begin{table}[t]
+\begin{table*}[!t]
 \centering
 \small
-\begin{tabular}{@{}llcc@{}}
+\begin{tabular}{@{}llcccc@{}}
 \toprule
-Model & Layers & Pair Acc & AUROC \\
+Method & Type & Data-free & AUROC & Gap-$Z\uparrow$ & Block Corr.\ \\
 \midrule
-GPT-2 (124M--1.5B) & 12--48 & $\mathbf{100\%}$ & 1.00 \\
-BERT-base / ViT-B/16 & 12 & $\mathbf{100\%}$ & 0.97--1.00 \\
-Mistral-7B / LLaMA-2-7B & 32 & $\mathbf{100\%}$ & 0.96--1.00 \\
-LLaMA-2-7B-chat (+RLHF) & 32 & $\mathbf{100\%}$ & 0.96--1.00 \\
-Qwen2.5-7B / DeepSeek-R1 & 28--32 & 80--$\mathbf{100\%}$ & 0.93--1.00 \\
-Whisper (tiny/base/small) & 4--12 & $\mathbf{100\%}$ & 0.85--1.00 \\
-ResNet-50/101/152 & 5--35 & $91$--$100\%$ & 0.96--1.00 \\
+Centered Residual Signature (ours) & Weight-space     & \cmark & \textbf{1.000} & $+53.0$ & \cmark \\
+Aligned Frobenius         & Weight-space     & \cmark & \textbf{1.000} & $\mathbf{+72.0}$ & \cmark \\
+Singular Value Distance   & Weight-space     & \cmark & \textbf{1.000} & $\phantom{+}+7.9$ & \xmark \\
+Weight Cosine             & Weight-space     & \cmark & \textbf{1.000} & $\mathbf{+76.3}$ & \xmark \\
+SVCCA~\citep{raghu2017svcca}             & Activation-space & \xmark & \textbf{1.000} & $+45.4$ & \xmark \\
+CKA~\citep{kornblith2019similarity}      & Activation-space & \xmark & 0.829 & $\phantom{+}+8.6$ & \xmark \\
+IPGuard~\citep{cao2021ipguard} (regression analogue) & Decision-boundary & \xmark & 0.700 & $\phantom{+}-3.5$ & \xmark \\
 \bottomrule
 \end{tabular}
-\caption{Projection-pair recovery across architecture families. Pair accuracy measures whether architecture-aware residual products recover the correct within-checkpoint projection correspondence. \textbf{Important}: this experiment validates the underlying structural signal within individual checkpoints, not cross-checkpoint lineage verification across all nine families. Checkpoint-level lineage verification is evaluated separately on controlled benchmarks (Section~\ref{sec:exp-verify}) and public case studies (Section~\ref{sec:exp-llm}). Ranges span model sizes within each family. Sub-100\% SwiGLU sub-paths are recovered by joint factorization. Random-init baselines: $\le 9\%$.}
-\label{tab:transformer-family}
-\end{table}
+\caption{Lineage detection baselines (52-pair MLP, no laundering). Data-free = no probe samples needed. Block Corr.\ = produces per-block similarity scores. Gap-$Z$ = standardized margin between related and unrelated scores.}
+\label{tab:baselines}
+\end{table*}
 
-We extract architecture-aware branch products (Table~\ref{tab:factorization}) from 9 model families on Hugging Face~\citep{huggingface2024,openai-community2024} (GPT-2~\citep{radford2019gpt2}, BERT~\citep{devlin2019bert}, LLaMA-2~\citep{touvron2023llama}, Mistral~\citep{jiang2023mistral}, Qwen~\citep{yang2024qwen2}, DeepSeek~\citep{deepseek2025r1} for language; ViT~\citep{dosovitskiy2021vit}, ResNet~\citep{he2016deep} for vision; Whisper~\citep{radford2023whisper} for speech) and apply Hungarian matching on the score matrix $s(i,j)$. Block-pairing accuracy reaches 80--100\% across all 9 families, against random-initialization baselines of at most 9\% (Table~\ref{tab:transformer-family}). The extraction transfers across GELU~\citep{hendrycks2016gelu} and SwiGLU~\citep{shazeer2020swiglu} activations with no per-family tuning; only the factorization changes.
+Weight-space methods---ours, aligned Frobenius, singular-value distance, and weight cosine---all achieve AUROC$=$1.000 on this clean benchmark. They require no probe data and operate directly on checkpoint weights. Weight cosine and aligned Frobenius show larger Gap-$Z$ margins ($+76.3$ and $+72.0$), but this advantage disappears under function-preserving reparameterization (Section~\ref{sec:exp-laundering}). Singular-value distance lacks block-level correspondence and fails on partial-inheritance scenarios (Appendix~\ref{app:harder-bench}).
 
-Extracting MLP branch products $M = W_{\mathrm{proj}} W_{\mathrm{fc}}$ from all four GPT-2 variants (hidden dim $d{=}768/1024/1280/1600$), we fit mean correct-pair score $\bar{s}(i,i)$ against dimension. The score grows as $d^{0.87}$ (4.18 $\to$ 5.46 $\to$ 6.98 $\to$ 7.77), reaching 15--19\% of the theoretical $\sqrt{d}$ bound; score matrices are in Appendix~\ref{app:gpt2-details}.
+The key result: on unlaundered checkpoints, multiple weight-space methods achieve perfect discrimination. Simple baselines solve clean cases. The proposed method's advantage emerges under reparameterization invariance and partial-inheritance regimes.
 
-\subsection{Lineage Verification on Language Models}\label{sec:exp-verify}
-
-To bridge the gap between synthetic MLPs and uncontrolled public checkpoints, we train 8 GPT-2-style transformers from scratch on TinyStories~\citep{eldan2023tinystories} with known ancestry. Each root (${\sim}$35M parameters: 6 layers, $d{=}384$, 50K samples, 3 epochs) is allocated to calibration ($n{=}2$), development ($n{=}3$), or test ($n{=}3$) splits. Per root we generate 7 descendants: 1 fine-tuned (1 epoch continued pretraining), 1 LoRA-merged (rank-8), 3 pruned (30/50/70\% sparsity), and 2 quantized (INT8/INT6). We also distill one student per root ($T{=}2.0$) from scratch.
-
-\begin{table}[t]
-\centering\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Transformation & $n$ & Mean $\mathcal{L}$ & Min $\mathcal{L}$ \\
-\midrule
-Quantized (INT8/6) & 6 & 0.999 & 0.999 \\
-LoRA merge (rank-8) & 3 & 0.998 & 0.996 \\
-Fine-tuned (1 epoch) & 3 & 0.980 & 0.980 \\
-Pruned (30--70\%) & 9 & 0.937 & 0.855 \\
-\midrule
-Distilled student & 3 & 0.002 & 0.001 \\
-Independent & 21 & 0.003 & 0.000 \\
-\bottomrule
-\end{tabular}
-\caption{Lineage scores on the held-out test split (3 roots, 45 pairs). Descendants from the 3 test roots are compared against each other and against all 8 roots as independent baselines. AUROC$=$1.000 with perfect separation. Note: multiple weight-space baselines also achieve AUROC$=$1.000 on these unlaundered checkpoints (Table~\ref{tab:baselines}); the method's differentiation emerges under function-preserving reparameterization (Table~\ref{tab:laundering}).}
-\label{tab:gpt2-survival}
-\end{table}
-
-Table~\ref{tab:gpt2-survival} reports lineage scores on the held-out test split (3 roots). All tested weight-space measures achieve perfect discrimination on these unlaundered checkpoints, showing that conventional post-training transformations preserve substantial raw parameter similarity. Quantization and LoRA preserve the signal almost perfectly ($\mathcal{L}{\geq}0.996$); fine-tuning and pruning degrade it but remain well above the null ($\mathcal{L}{\geq}0.855$). The minimum descendant score (0.855 at 70\% sparsity) exceeds the maximum non-descendant score (0.004) by $200\times$, yielding test AUROC$=$1.000 (95\% CI: 1.0, 1.0).
-
-Our method contributes here not through AUROC differentiation, but through: (i) transfer to an actual autoregressive transformer architecture; (ii) a benchmark with known, root-disjoint ancestry; (iii) robustness across transformation types; (iv) block-level interpretable scores; and (v) data-free operation requiring no probe samples.
-
-\subsection{Behavioral Similarity Does Not Imply Weight Ancestry}\label{sec:exp-distill}
-
-A key question is whether behavioral similarity---output agreement between models---implies weight-level ancestry. We test this using the distillation control from our GPT-2 benchmark.
-
-\begin{table}[t]
-\centering\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Comparison & Top-1 (\%) & KL & $\mathcal{L}$ \\
-\midrule
-Teacher--Distilled & 79.0 & 0.16 & 0.002 \\
-Teacher--Independent & 77.6 & 0.25 & 0.003 \\
-\bottomrule
-\end{tabular}
-\caption{Behavioral similarity vs.\ lineage score. Models trained on the same architecture and corpus already achieve 77.6\% top-1 agreement. Distillation increases agreement modestly (+1.4 points) and reduces KL divergence ($0.25 \to 0.16$), but neither independently trained nor distilled models exhibit weight ancestry---both score $\mathcal{L} \approx 0.002$.}
-\label{tab:distill-quality}
-\end{table}
-
-Table~\ref{tab:distill-quality} shows that models trained on the same architecture and corpus already exhibit substantial behavioral agreement: independent models achieve 77.6\% top-1 agreement. Distillation increases this modestly to 79.0\% (+1.4 points) and reduces KL divergence from 0.25 to 0.16. Yet both independently trained models and distilled students score near zero in lineage ($\mathcal{L} \approx 0.002$), correctly classified as unrelated.
-
-\textbf{Interpretation.} This experiment illustrates the conceptual distinction between behavioral similarity and weight-level lineage. A model trained from scratch is unrelated under our task definition, regardless of how closely it imitates another model's outputs. The result validates the task definition rather than differentiating our method from baselines: all evaluated lineage methods correctly reject these distilled students, because the current distillation procedure produces only modest behavioral agreement (+1.4 points over independent training).
-
-\textbf{Limitation.} Stronger distillation that achieves near-perfect imitation would be needed to test whether behavioral or activation-space baselines produce false lineage evidence under closer imitation. The current experiment establishes that output similarity is not equivalent to weight inheritance, but does not establish that our method outperforms behavioral baselines on challenging distillation scenarios.
-
-\subsection{Robustness Under Function-Preserving Reparameterization}\label{sec:exp-baselines}
+\subsection{Robustness Under Checkpoint Laundering}\label{sec:exp-laundering}
 
 Clean-benchmark performance measures proximity in a shared parameterization. A more stringent test asks whether the verifier captures ancestry independently of nuisance coordinate choices. We introduce \emph{function-preserving laundering}: transformations that leave the network's input--output map exactly unchanged while altering parameter coordinates.
 
-Specifically, per-block permutation (P) permutes hidden units ($W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$), and reciprocal rescaling (D) scales them ($W_{\mathrm{in}} \leftarrow D W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} D^{-1}$). These transformations preserve the branch product $M = W_{\mathrm{out}} W_{\mathrm{in}}$ exactly ($P^\top P = I$, $D^{-1} D = I$), so our signature is invariant by construction. Raw-weight baselines have no such guarantee.
+Per-block permutation (P) permutes hidden units ($W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$); reciprocal rescaling (D) scales them ($W_{\mathrm{in}} \leftarrow D W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} D^{-1}$). These preserve the branch product $M = W_{\mathrm{out}} W_{\mathrm{in}}$ exactly ($P^\top P = I$, $D^{-1} D = I$), so our signature is invariant by construction.
 
-\paragraph{MLP laundering benchmark.}
-We evaluate on a 52-pair MLP benchmark (depth-16, in\_dim=16, hidden=48) with six laundering variants: none, P, D-mild (log-uniform $[0.5,2]$), D-strong (log-uniform $[0.1,10]$), PD, and PDFT (P+D then 5 epochs fine-tuning). All variants pass a hard function-preservation gate ($\max|\Delta f| < 10^{-4}$).
+\paragraph{MLP benchmark.}
+We evaluate on the 52-pair MLP benchmark with six laundering variants: none, P, D-mild (log-uniform $[0.5,2]$), D-strong (log-uniform $[0.1,10]$), PD, and PDFT (P+D then 5 epochs fine-tuning). All variants pass a hard function-preservation gate ($\max|\Delta f| < 10^{-4}$).
 
 \begin{table}[t]
 \centering
@@ -123,16 +64,36 @@ CKA & 0.85 & 0.85 & 0.85 & 0.85 & 0.85 & 0.99 \\
 IPGuard & 0.70 & 0.70 & 0.70 & 0.70 & 0.70 & 0.83 \\
 \bottomrule
 \end{tabular}
-\caption{AUROC under function-preserving laundering (52 pairs). P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling. Our centered residual signature maintains AUROC$=$1.000 across all variants---the branch product $M = W_{\mathrm{out}} W_{\mathrm{in}}$ is algebraically invariant under these transformations. Raw-weight baselines degrade: Frobenius fails under P or D; SVD distance survives P but fails D; weight cosine partially survives but degrades under PD. Re-Basin+scale matches our accuracy but requires $L$ Hungarian assignments $+$ $L$ least-squares fits per pair; ours requires zero alignment work. Note: function-preserving laundering is a nuisance-coordinate stress test; we do not claim it represents naturally occurring redistribution pipelines.}
+\caption{AUROC under function-preserving laundering (52 pairs). P$=$permutation, D$_\mathrm{m/s}$$=$mild/strong rescaling. Our signature maintains AUROC$=$1.000 across all variants. Raw-weight baselines collapse: Frobenius fails under P or D; SVD survives P but fails D; weight cosine degrades under PD. Re-Basin+scale matches accuracy but requires $L$ Hungarian assignments per pair; ours requires zero alignment work.}
 \label{tab:laundering}
 \end{table}
 
-Table~\ref{tab:laundering} shows the results. Our method maintains AUROC$=$1.000 across all variants---the measured signature deviation is $|\Delta\mathcal{L}| \approx 10^{-8}$, confirming algebraic invariance. Raw-weight baselines collapse: aligned Frobenius drops to 0.50 under P alone and to 0.00 under strong D; singular-value distance survives P (spectrum is permutation-invariant) but fails D; weight cosine partially survives both but degrades to 0.80 under PD. Behavioral methods (SVCCA, CKA, IPGuard) are invariant to weight reparameterization since they operate on activations, but CKA and IPGuard show weaker baseline discrimination even before laundering.
+Table~\ref{tab:laundering} shows the signature is invariant ($|\Delta\mathcal{L}| \approx 10^{-8}$) under P, D, and PD, remaining discriminative after fine-tuning (PDFT). Raw-weight baselines collapse: Frobenius drops to 0.00 under strong D; SVD survives P but fails D; weight cosine degrades to 0.80 under PD. Behavioral methods (SVCCA, CKA, IPGuard) are invariant to reparameterization but show weaker baseline discrimination.
 
-A scale-aware Re-Basin baseline~\citep{ainsworth2023git}, which explicitly solves a per-block permutation and scale optimization to undo the laundering, also achieves 1.000 on all variants. The distinction is cost: our signature is invariant with zero alignment work, while Re-Basin must solve $L$ Hungarian assignments plus $L$ least-squares fits for every pair.
+\paragraph{GPT-2 benchmark.}
+We extend to our GPT-2 benchmark, testing hidden-unit permutation: $W_{\mathrm{fc}} \leftarrow P W_{\mathrm{fc}}$, $W_{\mathrm{proj}} \leftarrow W_{\mathrm{proj}} P^\top$ per block. Four conditions: NONE, P-SUSPECT (permute suspect only), P-BOTH (different permutations on both), P+FT (permute then fine-tune 100 steps).
 
-\paragraph{LLM laundering validation.}
-We replicate the laundering experiment across four model families to confirm the invariance is not architecture-specific (Table~\ref{tab:laundering-llm}). On each base$\to$fine-tune pair, P permutes $W_{\mathrm{gate}}$/$W_{\mathrm{up}}$ rows and $W_{\mathrm{down}}$ columns; D$_{\mathrm{m}}$ (mild rescaling, log-uniform $[0.5, 2]$) scales $W_{\mathrm{up}}$ rows against $W_{\mathrm{down}}$ columns. Our score is invariant: $\Delta\mathcal{L} < 10^{-7}$ across all families. Weight cosine collapses under P (0.95$\to$0.003) but survives D$_{\mathrm{m}}$. Unrelated controls (OpenLLaMA for LLaMA-2, Mistral for LLaMA-3) stay at the ${\leq}10^{-4}$ null regardless of laundering, confirming no false positives.
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Method & NONE & P-SUS & P-BOTH & P+FT \\
+\midrule
+\textbf{Ours} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} \\
+Raw weight cos & 1.0 & 1.0 & 1.0 & 1.0 \\
+SVD distance & 0.76 & 0.76 & 0.76 & 0.75 \\
+\bottomrule
+\end{tabular}
+\caption{AUROC under hidden-unit permutation on GPT-2 benchmark (92 pairs). AUROC is preserved, but score magnitudes differ: weight cosine drops 97\% (0.977$\to$0.033) under P-BOTH while ours remains at 0.970.}
+\label{tab:gpt2-laundering}
+\end{table}
+
+Table~\ref{tab:gpt2-laundering} shows all methods maintain AUROC$=$1.0, but score magnitudes reveal the difference. Under P-BOTH, weight cosine scores collapse from 0.977 to 0.033---a 97\% drop---while our signature remains at 0.970. The margin compression suggests sensitivity to additional perturbations even when ranking is preserved.
+
+\paragraph{Public LLM validation.}
+We replicate across four model families (Table~\ref{tab:laundering-llm}). On each base$\to$fine-tune pair, P permutes $W_{\mathrm{gate}}$/$W_{\mathrm{up}}$ rows and $W_{\mathrm{down}}$ columns. Our score is invariant ($\Delta\mathcal{L} < 10^{-7}$); weight cosine collapses under P (0.95$\to$0.003). Unrelated controls stay at the ${\leq}10^{-4}$ null.
 
 \begin{table}[t]
 \centering
@@ -162,39 +123,15 @@ Base & Pair & Var & $\mathcal{L}$ & W.cos \\
   & Inst & D$_{\mathrm{m}}$ & .999 & \textbf{.951} \\
 \bottomrule
 \end{tabular*}
-\caption{Function-preserving laundering on public checkpoints. P$=$permutation, D$_{\mathrm{m}}$$=$mild rescaling (log-uniform $[0.5, 2]$). $\mathcal{L}$ is invariant ($\Delta\mathcal{L} < 10^{-7}$); weight cosine collapses under P but survives D$_{\mathrm{m}}$. $^\dagger$Unrelated controls stay at ${\leq}10^{-4}$ null.}
+\caption{Function-preserving laundering on public checkpoints. $\mathcal{L}$ is invariant ($\Delta < 10^{-7}$); weight cosine collapses under P. $^\dagger$Unrelated controls.}
 \label{tab:laundering-llm}
 \end{table}
 
-The conceptual result: clean-benchmark performance measures proximity under a shared parameterization; laundering measures whether the verifier captures ancestry independently of nuisance reparameterization. Our method passes this test by construction.
+\paragraph{Layer grafts and partial inheritance.}
+On layer grafts and linear merges (Appendix~\ref{app:harder-bench}), $\mathcal{L}$ tracks the fraction of inherited blocks with Spearman $\rho \approx 0.96$, measuring partial overlap rather than merely crossing a threshold. Singular-value distance fails the merge regime (AUROC$=$0.448), and IPGuard inverts on grafts (AUROC$=$0.05), ranking higher-overlap suspects as \emph{less} similar.
 
-\paragraph{GPT-2 hidden-unit permutation.}
-We extend the laundering analysis to our GPT-2-style language model benchmark (Section~\ref{sec:exp-verify}) to test permutation invariance at scale. Hidden-unit permutation applies $W_{\mathrm{fc}} \leftarrow P W_{\mathrm{fc}}$, $b_{\mathrm{fc}} \leftarrow P b_{\mathrm{fc}}$, $W_{\mathrm{proj}} \leftarrow W_{\mathrm{proj}} P^\top$ per block, which is exact for GELU (unlike rescaling, which requires positive homogeneity). We test four conditions: NONE (no permutation), P-SUSPECT (permute suspect only), P-BOTH (different random permutations on both reference and suspect), and P+FT (permute suspect then fine-tune for 100 steps).
-
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Method & NONE & P-SUS & P-BOTH & P+FT \\
-\midrule
-\textbf{Ours} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} & \textbf{1.0} \\
-Raw weight cos & 1.0 & 1.0 & 1.0 & 1.0 \\
-SVD distance & 0.76 & 0.76 & 0.76 & 0.75 \\
-\bottomrule
-\end{tabular}
-\caption{AUROC under hidden-unit permutation on GPT-2 benchmark (92 pairs). All methods maintain AUROC but with different robustness profiles. See text for score-level analysis.}
-\label{tab:gpt2-laundering}
-\end{table}
-
-Table~\ref{tab:gpt2-laundering} reports AUROC across conditions. All methods maintain AUROC$=$1.0 (except SVD at 0.75--0.76), but the \emph{score magnitudes} reveal the key difference. Under NONE, raw weight cosine scores descendants at 0.977; under P-BOTH, this drops to 0.033---a \textbf{97\% collapse}. Our centered residual signature remains unchanged at 0.970 across all conditions (0.958 under P+FT), confirming exact algebraic invariance.
-
-Why does AUROC remain 1.0 despite the score collapse? Permutation affects descendants and non-descendants similarly, preserving ranking while shrinking the margin by ${\sim}30\times$ (from 0.976 to 0.033). In noisy real-world settings, such thin margins would fail. Our method maintains the original wide margin throughout.
-
-Git-Re-Basin~\citep{ainsworth2023git} can also recover permutation alignment by solving $L$ Hungarian assignments per pair, achieving comparable AUROC. However, it requires $O(L \cdot d_{\mathrm{ff}}^3)$ computation per comparison, whereas our branch-product signature is algebraically invariant with $O(L \cdot d^2)$ extraction cost---a difference of ${\sim}1000\times$ for typical transformer hidden dimensions.
-
-\subsection{Public-Checkpoint Case Study}\label{sec:exp-llm}
+\paragraph{Public checkpoint case study.}
+On unlaundered public checkpoints (Table~\ref{tab:real-llm}), we compare LLaMA-2-7B-base against 3 documented derivatives and 1 independently trained model (OpenLLaMA-7B). The three derivatives produce high scores ($\mathcal{L}$: 0.995, 0.996, 0.336); the independent model scores $4 \times 10^{-4}$, a ${\sim}1000\times$ gap.
 
 \begin{table}[t]
 \centering\footnotesize
@@ -210,38 +147,59 @@ CodeLlama-7B      & code PT       & $0.336$ & $\mathbf{0.414}$ & REL. \\
 OpenLLaMA-7B      & scratch$^\dagger$ & $\mathbf{4\mathrm{e}{-}4}$ & $0.089$ & UNR. \\
 \bottomrule
 \end{tabular}
-\caption{Public checkpoint case study on the LLaMA-2 family (4 pairs). Scores are consistent with documented relationships but do not independently confirm provenance. $^\dagger$OpenLLaMA shares LLaMA-2's exact architecture but is trained from scratch.}
+\caption{Public checkpoint case study (LLaMA-2 family). Scores are consistent with documented relationships. $^\dagger$OpenLLaMA shares architecture but is trained from scratch.}
 \label{tab:real-llm}
 \end{table}
 
-On public LLM checkpoints (Table~\ref{tab:real-llm}), we compare LLaMA-2-7B-base against 3 documented derivatives (chat/RLHF, Vicuna/instruct-tuned, CodeLlama/code-pretrained) and 1 independently trained model (OpenLLaMA-7B), extracting SwiGLU branch products $M = W_{\mathrm{down}} W_{\mathrm{up}}$ across all 32 layers (hidden dim $d{=}4096$). The three documented derivatives produce high scores ($\mathcal{L}$: 0.995, 0.996, 0.336); the independent model scores $\mathcal{L} = 4 \times 10^{-4}$, a ${\sim}1000\times$ gap. OpenLLaMA matches LLaMA-2's architecture exactly ($d{=}4096$, $L{=}32$, $d_{\mathrm{ff}}{=}11008$) yet was trained from scratch; the low score is consistent with the documented independent training.
+CodeLlama's lower score ($\mathcal{L}=0.336$) reflects extensive continued pretraining on code data. This case study provides real-world plausibility but has limited calibration power: only one confirmed independent model exists for this architecture.
 
-CodeLlama's lower score ($\mathcal{L}=0.336$) reflects extensive continued pretraining on code data, which shifts the signature more than simple fine-tuning. Weight cosine scores higher on CodeLlama ($0.414$ vs.\ $0.336$), likely because it measures global proximity rather than the branch-specific geometry that our method captures. Both methods produce scores consistent with the documented relationship.
+\subsection{Robustness to Post-Training Techniques}\label{sec:exp-posttraining}
 
-This case study provides real-world plausibility evidence but has limited calibration power: only one confirmed independent model (OpenLLaMA) exists for the LLaMA-2 architecture. We report the ${\sim}1000\times$ score gap descriptively rather than as a calibrated hypothesis test. The method produces scores consistent with documented provenance, but does not independently confirm historical ancestry in a legal or absolute sense. Practical deployment at specific confidence levels would require collecting additional null models of matched architecture.
+We test whether the signature survives common post-training transformations that modify weights while preserving (or approximately preserving) model behavior. We train 8 GPT-2-style transformers from scratch on TinyStories~\citep{eldan2023tinystories} with known ancestry. Each root (${\sim}$35M parameters: 6 layers, $d{=}384$, 50K samples, 3 epochs) is allocated to calibration ($n{=}2$), development ($n{=}3$), or test ($n{=}3$) splits. Per root we generate 7 descendants: 1 fine-tuned (1 epoch continued pretraining), 1 LoRA-merged (rank-8), 3 pruned (30/50/70\% sparsity), and 2 quantized (INT8/INT6).
 
-\subsection{Baseline Methods}\label{sec:exp-baseline-table}
-
-Table~\ref{tab:baselines} summarizes baseline comparisons on the 52-pair MLP benchmark before laundering. Four weight-space methods achieve AUROC$=$1.000 on unlaundered checkpoints: ours, aligned Frobenius, singular-value distance, and weight cosine. Gap-$Z$ (standardized margin between related and distilled scores) shows weight cosine and aligned Frobenius have larger separation, but this advantage disappears under laundering (Table~\ref{tab:laundering}).
-
-\begin{table*}[!t]
-\centering
-\small
-\begin{tabular}{@{}llcccc@{}}
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccc@{}}
 \toprule
-Method & Type & Data-free & AUROC & Gap-$Z\uparrow$ & Block Corr.\ \\
+Transformation & $n$ & Mean $\mathcal{L}$ & Min $\mathcal{L}$ \\
 \midrule
-Centered Residual Signature (ours) & Weight-space     & \cmark & \textbf{1.000} & $+53.0$ & \cmark \\
-Aligned Frobenius         & Weight-space     & \cmark & \textbf{1.000} & $\mathbf{+72.0}$ & \cmark \\
-Singular Value Distance   & Weight-space     & \cmark & \textbf{1.000} & $\phantom{+}+7.9$ & \xmark \\
-Weight Cosine             & Weight-space     & \cmark & \textbf{1.000} & $\mathbf{+76.3}$ & \xmark \\
-SVCCA~\citep{raghu2017svcca}             & Activation-space & \xmark & \textbf{1.000} & $+45.4$ & \xmark \\
-CKA~\citep{kornblith2019similarity}      & Activation-space & \xmark & 0.829 & $\phantom{+}+8.6$ & \xmark \\
-IPGuard~\citep{cao2021ipguard} (regression analogue) & Decision-boundary & \xmark & 0.700 & $\phantom{+}-3.5$ & \xmark \\
+Quantized (INT8/6) & 6 & 0.999 & 0.999 \\
+LoRA merge (rank-8) & 3 & 0.998 & 0.996 \\
+Fine-tuned (1 epoch) & 3 & 0.980 & 0.980 \\
+Pruned (30--70\%) & 9 & 0.937 & 0.855 \\
+\midrule
+Distilled student & 3 & 0.002 & 0.001 \\
+Independent & 21 & 0.003 & 0.000 \\
 \bottomrule
 \end{tabular}
-\caption{Lineage detection baselines (52-pair MLP, no laundering). Data-free = no probe samples needed. Block Corr.\ = can identify which blocks match. \textbf{Key result:} on unlaundered checkpoints, multiple weight-space methods achieve AUROC$=$1.000---simple baselines solve clean cases. The proposed method's advantage emerges under function-preserving reparameterization (Table~\ref{tab:laundering}): raw-weight baselines degrade while our algebraically invariant signature maintains separation.}
-\label{tab:baselines}
-\end{table*}
+\caption{Lineage scores under post-training transformations (GPT-2 benchmark, 3 test roots, 45 pairs). AUROC$=$1.000 with perfect separation. The minimum descendant score (0.855 at 70\% sparsity) exceeds the maximum non-descendant score (0.004) by $200\times$.}
+\label{tab:gpt2-survival}
+\end{table}
 
-On layer grafts and linear merges (Appendix~\ref{app:harder-bench}), $\mathcal{L}$ tracks the fraction of inherited blocks with Spearman $\rho \approx 0.96$, so the score measures partial overlap rather than merely crossing a threshold. Singular-value distance fails the merge regime (AUROC$=$0.448), and IPGuard inverts on grafts (AUROC$=$0.05), ranking higher-overlap suspects as \emph{less} similar.
+Table~\ref{tab:gpt2-survival} reports lineage scores on the held-out test split. Quantization and LoRA preserve the signal almost perfectly ($\mathcal{L}{\geq}0.996$); fine-tuning and pruning degrade it but remain well above the null ($\mathcal{L}{\geq}0.855$). Both distilled students and independently trained models score near zero, correctly classified as unrelated. The $200\times$ gap between minimum descendant and maximum non-descendant scores suggests robustness to these common transformations.
+
+\subsection{Behavioral Similarity Does Not Imply Weight Ancestry}\label{sec:exp-distill}
+
+A key question is whether behavioral similarity---output agreement between models---implies weight-level ancestry. We test this using the distillation control from our GPT-2 benchmark.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Comparison & Top-1 (\%) & KL & $\mathcal{L}$ \\
+\midrule
+Teacher--Distilled & 79.0 & 0.16 & 0.002 \\
+Teacher--Independent & 77.6 & 0.25 & 0.003 \\
+\bottomrule
+\end{tabular}
+\caption{Behavioral similarity vs.\ lineage score. Models trained on the same architecture and corpus already achieve 77.6\% top-1 agreement. Distillation increases agreement modestly (+1.4 points) and reduces KL divergence ($0.25 \to 0.16$), but neither independently trained nor distilled models exhibit weight ancestry---both score $\mathcal{L} \approx 0.002$.}
+\label{tab:distill-quality}
+\end{table}
+
+Table~\ref{tab:distill-quality} shows that models trained on the same architecture and corpus already exhibit substantial behavioral agreement: independent models achieve 77.6\% top-1 agreement. Distillation increases this modestly to 79.0\% (+1.4 points) and reduces KL divergence from 0.25 to 0.16. Yet both independently trained models and distilled students score near zero in lineage ($\mathcal{L} \approx 0.002$), correctly classified as unrelated.
+
+\textbf{Interpretation.} This experiment illustrates the conceptual distinction between behavioral similarity and weight-level lineage. A model trained from scratch is unrelated under our task definition, regardless of how closely it imitates another model's outputs. The result validates the task definition rather than differentiating our method from baselines: all evaluated lineage methods correctly reject these distilled students, because the current distillation procedure produces only modest behavioral agreement (+1.4 points over independent training).
+
+\textbf{Limitation.} Stronger distillation that achieves near-perfect imitation would be needed to test whether behavioral or activation-space baselines produce false lineage evidence under closer imitation. The current experiment establishes that output similarity is not equivalent to weight inheritance, but does not establish that our method outperforms behavioral baselines on challenging distillation scenarios.
