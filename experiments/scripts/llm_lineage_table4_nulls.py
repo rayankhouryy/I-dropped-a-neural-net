@@ -83,31 +83,62 @@ def get_weight_names(tag: str, layer: int) -> tuple[str, str]:
             f"model.layers.{layer}.mlp.down_proj.weight")
 
 
-def _shard_map(repo: str) -> tuple[Path, dict]:
-    """Return (local_dir, tensor_name -> shard_filename)."""
+def _shard_map(repo: str) -> tuple[Path, dict, str]:
+    """Return (local_dir, tensor_name -> shard_filename, format).
+
+    Supports both safetensors and pytorch .bin formats.
+    """
+    # Try safetensors first
     try:
         idx_path = hf_hub_download(repo, "model.safetensors.index.json")
         with open(idx_path) as f:
             index = json.load(f)["weight_map"]
-        local_dir = Path(idx_path).parent
-        return local_dir, index
+        return Path(idx_path).parent, index, "safetensors"
     except Exception:
+        pass
+
+    # Try single safetensors file
+    try:
         st_path = hf_hub_download(repo, "model.safetensors")
         local_dir = Path(st_path).parent
         with safe_open(st_path, framework="pt") as f:
             names = list(f.keys())
-        return local_dir, {n: "model.safetensors" for n in names}
+        return local_dir, {n: "model.safetensors" for n in names}, "safetensors"
+    except Exception:
+        pass
+
+    # Try pytorch .bin sharded
+    try:
+        idx_path = hf_hub_download(repo, "pytorch_model.bin.index.json")
+        with open(idx_path) as f:
+            index = json.load(f)["weight_map"]
+        return Path(idx_path).parent, index, "pytorch"
+    except Exception:
+        pass
+
+    # Try single pytorch file
+    pt_path = hf_hub_download(repo, "pytorch_model.bin")
+    local_dir = Path(pt_path).parent
+    state = torch.load(pt_path, map_location="cpu", weights_only=True)
+    return local_dir, {n: "pytorch_model.bin" for n in state.keys()}, "pytorch"
 
 
-def get_tensor(local_dir: Path, shard_of: dict, name: str) -> torch.Tensor:
+def get_tensor(local_dir: Path, shard_of: dict, name: str,
+               fmt: str = "safetensors") -> torch.Tensor:
     shard = local_dir / shard_of[name]
-    with safe_open(str(shard), framework="pt") as f:
-        return f.get_tensor(name)
+    if fmt == "safetensors":
+        with safe_open(str(shard), framework="pt") as f:
+            return f.get_tensor(name)
+    else:
+        state = torch.load(str(shard), map_location="cpu", weights_only=True)
+        return state[name]
 
 
 def predownload(repo: str):
-    """Pull all safetensors shards (resumable)."""
-    snapshot_download(repo, allow_patterns=["*.safetensors", "*.json"])
+    """Pull all model shards (resumable). Supports safetensors and pytorch."""
+    snapshot_download(repo, allow_patterns=[
+        "*.safetensors", "*.bin", "*.json"
+    ])
 
 
 def cleanup_cache(repo: str):
@@ -138,7 +169,8 @@ def extract(tag: str, repo: str, device: str = "cpu", cleanup: bool = True):
 
     print("Downloading weights...")
     predownload(repo)
-    local_dir, shard_of = _shard_map(repo)
+    local_dir, shard_of, fmt = _shard_map(repo)
+    print(f"  format: {fmt}")
 
     phis, scores = [], []
     eye = torch.eye(D_MODEL, device=device)
@@ -146,8 +178,8 @@ def extract(tag: str, repo: str, device: str = "cpu", cleanup: bool = True):
     print("\nExtracting signatures...")
     for i in range(N_LAYERS):
         up_name, down_name = get_weight_names(tag, i)
-        wu = get_tensor(local_dir, shard_of, up_name).float()
-        wd = get_tensor(local_dir, shard_of, down_name).float()
+        wu = get_tensor(local_dir, shard_of, up_name, fmt).float()
+        wd = get_tensor(local_dir, shard_of, down_name, fmt).float()
         wu, wd = wu.to(device), wd.to(device)
 
         m = wd @ wu  # (d, intermediate) @ (intermediate, d) -> (d, d)
