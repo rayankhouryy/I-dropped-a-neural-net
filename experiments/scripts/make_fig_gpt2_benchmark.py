@@ -82,7 +82,7 @@ ax2.set_ylabel("Lineage Score $\mathcal{L}$", fontsize=10)
 ax2.set_xlim(78, 80)
 ax2.set_ylim(-0.01, 0.01)
 ax2.legend(fontsize=8, loc='upper right')
-ax2.set_title("(b) Distillation: High Imitation,\nLow Lineage", fontsize=11)
+ax2.set_title("(b) Distillation: Modest Behavioral\nGain, Low Weight Lineage", fontsize=11)
 
 plt.tight_layout()
 

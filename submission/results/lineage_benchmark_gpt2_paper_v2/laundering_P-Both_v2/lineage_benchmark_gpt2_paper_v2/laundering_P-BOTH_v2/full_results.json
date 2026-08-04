@@ -1,0 +1,123 @@
+{
+  "config": {
+    "benchmark_dir": "results/lineage_benchmark_gpt2_paper_v2",
+    "checkpoint_dir": "results/lineage_benchmark_gpt2_paper_v2/checkpoints",
+    "output_dir": "results/lineage_benchmark_gpt2_paper_v2/laundering_P-BOTH_v2",
+    "conditions": [
+      "P-BOTH"
+    ],
+    "n_perm_seeds": 5,
+    "pft_steps": 1000,
+    "pft_lr": 2e-05,
+    "n_validation_seqs": 128,
+    "seed_base": 8000,
+    "test_root_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "smoke": false
+  },
+  "summary": {
+    "P-BOTH": {
+      "centered_residual_signature": {
+        "auroc": 1.0,
+        "auprc": 0.9999999999999999,
+        "mean_descendant": 0.9697686094224305,
+        "min_descendant": 0.8552961589095206,
+        "mean_non_descendant": 0.002597170421521154,
+        "max_non_descendant": 0.004326641633562748,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "raw_weight_cosine": {
+        "auroc": 1.0,
+        "auprc": 0.9999999999999999,
+        "mean_descendant": 0.03342220216043473,
+        "min_descendant": 0.029901919068153694,
+        "mean_non_descendant": 0.0008245020710522171,
+        "max_non_descendant": 0.003795125657641779,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "raw_aligned_frobenius": {
+        "auroc": 1.0,
+        "auprc": 0.9999999999999999,
+        "mean_descendant": -2.7392824351251432,
+        "min_descendant": -2.7780124290964734,
+        "mean_non_descendant": -3.012015061023072,
+        "max_non_descendant": -2.8170595587584972,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "singular_value_distance": {
+        "auroc": 0.7609126984126985,
+        "auprc": 0.8776873400479793,
+        "mean_descendant": -1.5344243029233913,
+        "min_descendant": -7.089171485264021,
+        "mean_non_descendant": -8.776335047790337,
+        "max_non_descendant": -0.4122671733729825,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "rebasin_frobenius": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": -0.14214049554193128,
+        "min_descendant": -0.4589269308961464,
+        "mean_non_descendant": -1.4219313724633893,
+        "max_non_descendant": -1.32737034351601,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "rebasin_scale_frobenius": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": -0.14218081692543147,
+        "min_descendant": -0.4589269308961464,
+        "mean_non_descendant": -4.806042448084929,
+        "max_non_descendant": -3.327899892181604,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "raw_branch_product_cosine": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": 0.9707112976009828,
+        "min_descendant": 0.8636497911593478,
+        "mean_non_descendant": 0.023045836066222333,
+        "max_non_descendant": 0.029155468642884864,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "centered_branch_product_cosine": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": 0.9700409377509538,
+        "min_descendant": 0.8609128542602903,
+        "mean_non_descendant": 0.00037961420676663226,
+        "max_non_descendant": 0.0025752692843406073,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "centered_with_gating": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": 0.9697686094224305,
+        "min_descendant": 0.8552961589095207,
+        "mean_non_descendant": 0.0003786972118269551,
+        "max_non_descendant": 0.0025752692843406073,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      }
+    }
+  },
+  "validation_log": [],
+  "invariance_checks": [],
+  "wall_seconds": 1951.7557954788208
+}

@@ -18,39 +18,38 @@ The \emph{normalized trace concentration}~\citep{park2026idroppedneuralnet} meas
 \begin{equation}\label{eq:dd-score}
 s(M) = \frac{|\mathrm{tr}(M)|}{\|M\|_F},
 \end{equation}
-the fraction of the matrix's energy along the identity direction, up to $\sqrt{d}$. Training moves energy into the identity component: correctly paired branch products score far above unpaired or untrained ones (Figure~\ref{fig:hero}b). \citet{park2026idroppedneuralnet} show that the correct-pair score approaches $\sqrt{d}$ as the traceless residual $E$ shrinks, while mismatched projections yield $\mathbb{E}[s] \approx 1/\sqrt{d}$---a margin that grows with dimension.
+the fraction of the matrix's energy along the identity direction, up to $\sqrt{d}$. Training moves energy into the identity component: correctly paired branch products score far above unpaired or untrained ones (Figure~\ref{fig:hero}b). The same study shows that the correct-pair score approaches $\sqrt{d}$ as the traceless residual $E$ shrinks, while mismatched projections yield $\mathbb{E}[s] \approx 1/\sqrt{d}$, a margin that grows with dimension.
 
 \begin{table}[t]
 \centering
 \footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}llcc@{}}
+\begin{tabular}{@{}l@{\hspace{6pt}}r@{\hspace{8pt}}c@{\hspace{8pt}}c@{}}
 \toprule
-Model & $L$ & Pair Acc & AUC \\
+Model & $L$ & Acc (\%) & AUC \\
 \midrule
-GPT-2 (124M--1.5B) & 12--48 & \textbf{100\%} & 1.00 \\
-BERT-base & 12 & \textbf{100\%} & 0.97 \\
-LLaMA-2-7B & 32 & \textbf{100\%} & 1.00 \\
-Mistral-7B & 32 & \textbf{100\%} & 0.96 \\
-Qwen2.5-7B & 28 & 80\% & 0.93 \\
-DeepSeek-R1 & 32 & 80\% & 0.93 \\
+GPT-2~\citep{radford2019gpt2} & 12--48 & \textbf{100} & 1.00 \\
+BERT~\citep{devlin2019bert} & 12 & \textbf{100} & 0.97 \\
+LLaMA-2~\citep{touvron2023llama} & 32 & \textbf{100} & 1.00 \\
+Mistral~\citep{jiang2023mistral} & 32 & \textbf{100} & 1.00 \\
+Qwen2.5~\citep{yang2024qwen2} & 28 & \textbf{100} & 1.00 \\
+DeepSeek-R1~\citep{deepseek2025r1} & 32 & \textbf{100} & 1.00 \\
 \bottomrule
 \end{tabular}
-\caption{Trace concentration across language model families. Pair accuracy measures correct within-block projection recovery via Hungarian matching on $s(i,j)$. Random-init baselines: $\le 9\%$. See Figure~\ref{fig:gpt2-methods} for accuracy vs.\ scale.}
+\caption{Trace concentration in MLP branch products across language model families. Pair accuracy measures correct within-block projection recovery via Hungarian matching. Random-init baselines: $\le 4\%$. See Appendix~\ref{app:path-breakdown} for per-path results and Appendix~\ref{app:gpt2-details} for GPT-2 scaling.}
 \label{tab:transformer-family}
 \end{table}
 
-This trace concentration is not specific to MLPs. Table~\ref{tab:transformer-family} shows that the phenomenon appears across six language model families. We extract architecture-aware branch products (Appendix~\ref{app:factorization}) from public checkpoints and apply Hungarian matching on the score matrix $s(i,j)$. Block-pairing accuracy reaches 80--100\% across all families, against random-initialization baselines of at most 9\%. The extraction transfers across GELU~\citep{hendrycks2016gelu} and SwiGLU~\citep{shazeer2020swiglu} activations with no per-family tuning; only the factorization changes. The phenomenon also transfers to vision (ViT, ResNet) and speech (Whisper) architectures (Appendix~\ref{app:beyond-lm}). This universality motivates building lineage signatures on the trace-concentrated structure.
+This trace concentration is not specific to MLPs. Table~\ref{tab:transformer-family} shows that the phenomenon appears across six language model families. We extract architecture-aware branch products (Appendix~\ref{app:factorization}) from public checkpoints and apply Hungarian matching on the score matrix $s(i,j)$. Block-pairing accuracy reaches 100\% on the canonical MLP path across all families, against random-initialization baselines of at most 4\%; alternative factorizations show more variation (Table~\ref{tab:path-breakdown}). The extraction transfers across GELU~\citep{hendrycks2016gelu} and SwiGLU~\citep{shazeer2020swiglu} activations with no per-family tuning; only the factorization changes. The phenomenon also transfers to vision (ViT, ResNet) and speech (Whisper) architectures (Appendix~\ref{app:beyond-lm}), so we build lineage signatures on the trace-concentrated structure.
 
 \subsection{A Coupling-Based Account of Identity Alignment}\label{sec:mechanism}
 
-We propose a gradient-coupling account for the observed identity alignment, though we note this is a plausible mechanism rather than a proven cause.
+We propose a gradient-coupling account for the observed identity alignment. This is a plausible mechanism, not a proven cause.
 
 The skip connection changes what the branch must learn. A plain layer must transmit the entire representation; a residual branch learns only a correction around an identity path that already transmits everything. This suggests a gradient consequence: $W_{\mathrm{in}}$ and $W_{\mathrm{out}}$ are the two ends of one correction, and the loss reaches both through the same branch. $\nabla W_{\mathrm{out}}$ depends on the branch input, a function of $W_{\mathrm{in}}$; $\nabla W_{\mathrm{in}}$ depends on the upstream gradient, which flows through $W_{\mathrm{out}}$. Their updates may therefore be correlated by construction. In a plain network no such pairing is privileged; every adjacent pair of layers is coupled equally, so no per-block signature can form.
 
 Under this account, the correlation accumulates along the identity direction because the skip means the branch learns a correction, not the full map. Small coordinated corrections to an identity baseline accumulate along the diagonal.
 
-A natural alternative account is dynamical isometry~\citep{pennington2017resurrecting}: if training enforced near-orthogonal block Jacobians $J = I + J_F$, identity alignment would follow as a byproduct of pressure toward $J \approx I$. This predicts trained Jacobians should be more orthogonal than at initialization.
+A natural alternative account is dynamical isometry~\citep{pennington2017resurrecting}: if training enforced near-orthogonal block Jacobians $J = I + J_F$, identity alignment would follow as a byproduct of pressure toward $J \approx I$. This predicts trained Jacobians should be more orthogonal than at initialization. We test these accounts with four experiments. First, we train depth-24 residual MLPs on CIFAR-10~\citep{krizhevsky2009cifar} under seven initialization schemes; block-pairing accuracy starts at chance (${\leq}2.1\%$) and reaches 93--100\% after training for every converging scheme (Appendix~\ref{app:mechanism}, Table~\ref{tab:init-ablation}). Orthogonal initialization satisfies dynamical isometry exactly yet yields zero correct pairs at init, confirming the fingerprint requires training.
 
 \begin{figure*}[t]
 \centering
@@ -59,18 +58,15 @@ A natural alternative account is dynamical isometry~\citep{pennington2017resurre
 \label{fig:mechanism-triad}
 \end{figure*}
 
-\paragraph{Empirical evidence.}
-We test this account with four experiments. First, we train depth-24 residual MLPs on CIFAR-10~\citep{krizhevsky2009cifar} under seven initialization schemes. Block-pairing accuracy starts at chance (${\leq}2.1\%$) and reaches 93--100\% after training for every converging scheme (Appendix~\ref{app:mechanism}, Table~\ref{tab:init-ablation}). Orthogonal initialization satisfies dynamical isometry exactly yet yields zero correct pairs at init, confirming the fingerprint requires training.
-
 Second, we compare ResNet-24 against PlainNet-24 (skip connection removed). ResNet-24 reaches 100\% pair accuracy; PlainNet-24, trained to similar loss, stays at chance (3\%). The skip connection is required.
 
 Third, we measure Jacobian orthogonality across the GPT-2 family. Trained Jacobians are 5--12$\times$ \emph{less} orthogonal than at initialization (GPT-2-small: 0.297 vs 0.025), inconsistent with the isometry hypothesis (Appendix~\ref{app:gpt2-details}).
 
-Fourth, we track gradient diagonality during training (Figure~\ref{fig:mechanism-triad}a). The gradient product $g_{\mathrm{diag}}$ stays flat (${\sim}0.15$)---individual updates are not diagonal---yet the weight score climbs to ${\sim}4.0$. The diagonal structure emerges from accumulated correlated updates. Shuffling gradients across blocks reduces the fingerprint by 68\% (Figure~\ref{fig:mechanism-triad}b); injecting synthetic identity-aligned updates without backpropagation builds it from scratch (Figure~\ref{fig:mechanism-triad}c).
+Fourth, we track gradient diagonality during training (Figure~\ref{fig:mechanism-triad}a). The gradient product $g_{\mathrm{diag}}$ stays flat (${\sim}0.15$), so individual updates are not diagonal, yet the weight score climbs to ${\sim}4.0$. The diagonal structure emerges from accumulated correlated updates. Shuffling gradients across blocks reduces the fingerprint by 68\% (Figure~\ref{fig:mechanism-triad}b); injecting synthetic identity-aligned updates without backpropagation builds it from scratch (Figure~\ref{fig:mechanism-triad}c).
 
 \subsection{Centered Residual Signatures}\label{sec:signatures}
 
-Trace concentration identifies valid trained pairings, not ancestry: independently trained models exhibit the same identity-aligned component. The verifier operates on the centered traceless remainder $E_\ell$, using trace concentration only to gate unreliable branches. The identity component is generic; $E_\ell$ is checkpoint-specific, surviving weight-preserving transformations but not reinitialization. A direct ablation confirms centering's value: on the GPT-2 benchmark, uncentered branch-product cosine similarity shows 0.027 spurious similarity between independent models, while centering reduces this to 0.0015---an $18\times$ improvement (Appendix~\ref{app:centering-ablation}).
+Trace concentration identifies valid trained pairings, not ancestry: independently trained models exhibit the same identity-aligned component. The verifier operates on the centered traceless remainder $E_\ell$, using trace concentration only to gate unreliable branches. The identity component is generic; $E_\ell$ is checkpoint-specific, surviving weight-preserving transformations but not reinitialization. On the GPT-2 benchmark, uncentered branch-product cosine similarity shows 0.027 spurious similarity between independent models; centering reduces this to 0.0015, an $18\times$ improvement (Appendix~\ref{app:centering-ablation}).
 
 For each branch product $M_\ell$ we retain only the traceless remainder of decomposition~\eqref{eq:decomp}, normalized to a unit vector:
 \begin{equation}\label{eq:centered-fingerprint}
@@ -87,7 +83,7 @@ For derived checkpoints preserving block order, $\pi^*$ should be the identity; 
 
 \subsection{Lineage Score and Verification}\label{sec:lineage-score}
 
-Diagonal dominance certifies trained residual structure, not ancestry: a verifier built on the dominance score alone achieves AUROC$=$0.417 (Appendix~\ref{app:cifar-resnet}, Figure~\ref{fig:lineage-roc}). To distinguish lineage, we compare the centered signatures $\phi_\ell$. The lineage score averages signature similarity over aligned branches:
+Trace concentration certifies trained residual structure, not ancestry: a verifier built on the trace score alone achieves AUROC$=$0.417 (Appendix~\ref{app:cifar-resnet}, Figure~\ref{fig:lineage-roc}). To distinguish lineage, we compare the centered signatures $\phi_\ell$. The lineage score averages signature similarity over aligned branches:
 \begin{equation}\label{eq:lineage-score}
 \mathcal{L}(A, B) = \frac{1}{L} \sum_{\ell=1}^{L} \langle \phi^A_\ell, \phi^B_{\pi^*(\ell)} \rangle
 \end{equation}
@@ -97,4 +93,4 @@ We calibrate against an empirical null distribution $\mathcal{N}_A = \{\mathcal{
 \begin{equation}\label{eq:verdict}
 V(A,B) = \textsc{Related} \;\Leftrightarrow\; \mathcal{L}(A,B) > \tau
 \end{equation}
-With $n$ null models, this yields a conformal p-value $\leq 1/(n+1)$. The guarantee requires exchangeability: descendants from the same root are not independent samples for calibration purposes---the effective sample size is governed by the number of independent roots, not the number of pairwise comparisons. We report AUROC as the primary metric, which summarizes discrimination across thresholds without requiring specific false-positive rate claims. Compatibility (same $L$ and $d$) is checked before scoring; the protocol returns \textsc{Incompatible} otherwise. Memory: $O(L^2 + d^2)$ beyond the checkpoints.
+With $n$ null models, this yields a conformal p-value $\leq 1/(n+1)$. The guarantee requires exchangeability: descendants from the same root are not independent samples for calibration purposes, so the effective sample size is governed by the number of independent roots, not the number of pairwise comparisons. We report AUROC as the primary metric, which summarizes discrimination across thresholds without requiring specific false-positive rate claims. Compatibility (same $L$ and $d$) is checked before scoring; the protocol returns \textsc{Incompatible} otherwise. Memory: $O(L^2 + d^2)$ beyond the checkpoints.

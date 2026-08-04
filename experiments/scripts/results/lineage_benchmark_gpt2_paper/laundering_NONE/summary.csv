@@ -1,0 +1,10 @@
+method,condition,auroc,auprc,mean_desc,min_desc,mean_nondesc,max_nondesc
+centered_residual_signature,NONE,1.0000,1.0000,0.9698,0.8553,0.0026,0.0043
+raw_weight_cosine,NONE,0.8889,0.8750,1.0000,1.0000,0.2230,1.0000
+raw_aligned_frobenius,NONE,0.8889,0.8750,0.0000,-0.0000,-2.1973,-0.0000
+singular_value_distance,NONE,0.8889,0.8750,0.0000,-0.0000,-0.6287,-0.0000
+rebasin_frobenius,NONE,0.8889,0.8750,0.0000,-0.0000,-1.0356,-0.0000
+rebasin_scale_frobenius,NONE,0.8889,0.8750,-0.0000,-0.0000,-2.6833,-0.0000
+raw_branch_product_cosine,NONE,1.0000,1.0000,0.9707,0.8636,0.0230,0.0292
+centered_branch_product_cosine,NONE,1.0000,1.0000,0.9700,0.8609,0.0004,0.0026
+centered_with_gating,NONE,1.0000,1.0000,0.9698,0.8553,0.0004,0.0026

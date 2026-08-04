@@ -1,0 +1,253 @@
+{
+  "auroc_original": 1.0,
+  "auroc_rotated": 0.3650793650793651,
+  "desc_mean_orig": 0.9695862786132986,
+  "desc_mean_rot": 0.0018456401840728752,
+  "nondesc_mean_orig": 0.0026071840144646246,
+  "nondesc_mean_rot": 0.002407441076829509,
+  "per_pair_results": [
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root5_cont_pt_same_0",
+      "label": "descendant",
+      "score_orig": 0.9800978364047056,
+      "score_rot": 0.003194044554496862,
+      "score_change": -0.9769037918502087
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root5_lora_0",
+      "label": "descendant",
+      "score_orig": 0.9964793590910168,
+      "score_rot": 0.003318457361067497,
+      "score_change": -0.9931609017299493
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root5_prune_0",
+      "label": "descendant",
+      "score_orig": 0.9919689399456564,
+      "score_rot": 0.0034220830794763307,
+      "score_change": -0.98854685686618
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root5_prune_1",
+      "label": "descendant",
+      "score_orig": 0.958033887075389,
+      "score_rot": 0.003261127426959221,
+      "score_change": -0.9547727596484297
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root5_prune_2",
+      "label": "descendant",
+      "score_orig": 0.8552961589095212,
+      "score_rot": 0.00347284222431786,
+      "score_change": -0.8518233166852033
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root5_quant_0",
+      "label": "descendant",
+      "score_orig": 0.9998553539236398,
+      "score_rot": 0.0033868821999586004,
+      "score_change": -0.9964684717236811
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root5_quant_1",
+      "label": "descendant",
+      "score_orig": 0.9985672983364179,
+      "score_rot": 0.0034630810011782973,
+      "score_change": -0.9951042173352396
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root6_cont_pt_same_0",
+      "label": "descendant",
+      "score_orig": 0.9804609581515003,
+      "score_rot": 0.0015500697337110538,
+      "score_change": -0.9789108884177892
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root6_lora_0",
+      "label": "descendant",
+      "score_orig": 0.9981134638026695,
+      "score_rot": 0.001608282814960208,
+      "score_change": -0.9965051809877093
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root6_prune_0",
+      "label": "descendant",
+      "score_orig": 0.9919496815446971,
+      "score_rot": 0.0017204647827203394,
+      "score_change": -0.9902292167619767
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root6_prune_1",
+      "label": "descendant",
+      "score_orig": 0.9589250360666092,
+      "score_rot": 0.0019171801230379532,
+      "score_change": -0.9570078559435712
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root6_prune_2",
+      "label": "descendant",
+      "score_orig": 0.8623120975519488,
+      "score_rot": 0.0020336316301182225,
+      "score_change": -0.8602784659218305
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root6_quant_0",
+      "label": "descendant",
+      "score_orig": 0.9999143452265513,
+      "score_rot": 0.0014627294611516985,
+      "score_change": -0.9984516157653996
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root6_quant_1",
+      "label": "descendant",
+      "score_orig": 0.9986025576603904,
+      "score_rot": 0.001390350192954426,
+      "score_change": -0.997212207467436
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 7,
+      "sus_id": "root7_cont_pt_same_0",
+      "label": "descendant",
+      "score_orig": 0.9808475990780718,
+      "score_rot": 0.0004107040137439782,
+      "score_change": -0.9804368950643279
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 7,
+      "sus_id": "root7_lora_0",
+      "label": "descendant",
+      "score_orig": 0.9981580176606805,
+      "score_rot": 0.0002532531150692407,
+      "score_change": -0.9979047645456113
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 7,
+      "sus_id": "root7_prune_0",
+      "label": "descendant",
+      "score_orig": 0.9919271949622314,
+      "score_rot": 0.00038189835851461544,
+      "score_change": -0.9915452966037167
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 7,
+      "sus_id": "root7_prune_1",
+      "label": "descendant",
+      "score_orig": 0.9590391416804388,
+      "score_rot": 0.0006141285328789881,
+      "score_change": -0.9584250131475598
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 7,
+      "sus_id": "root7_prune_2",
+      "label": "descendant",
+      "score_orig": 0.8622708052354727,
+      "score_rot": 0.001339494601255387,
+      "score_change": -0.8609313106342174
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 7,
+      "sus_id": "root7_quant_0",
+      "label": "descendant",
+      "score_orig": 0.999913062383269,
+      "score_rot": 0.0003457606593199481,
+      "score_change": -0.9995673017239491
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 7,
+      "sus_id": "root7_quant_1",
+      "label": "descendant",
+      "score_orig": 0.9985790561883983,
+      "score_rot": 0.0002119779986396609,
+      "score_change": -0.9983670781897586
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root5_distilled_0",
+      "label": "non_descendant",
+      "score_orig": 0.0023427285473082487,
+      "score_rot": 0.0016956338534351275,
+      "score_change": -0.0006470946938731213
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root6_distilled_0",
+      "label": "non_descendant",
+      "score_orig": 0.0022471128373424613,
+      "score_rot": 0.0035139909504446477,
+      "score_change": 0.0012668781131021864
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 7,
+      "sus_id": "root7_distilled_0",
+      "label": "non_descendant",
+      "score_orig": 0.0008106142707306696,
+      "score_rot": 0.001164575363280371,
+      "score_change": 0.0003539610925497014
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root_6",
+      "label": "non_descendant",
+      "score_orig": 0.004326641633562753,
+      "score_rot": 0.002825428863770679,
+      "score_change": -0.0015012127697920734
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 5,
+      "sus_id": "root_7",
+      "label": "non_descendant",
+      "score_orig": 0.002713038770046781,
+      "score_rot": 0.0026064892832673154,
+      "score_change": -0.00010654948677946575
+    },
+    {
+      "seed": 9000,
+      "ref_idx": 6,
+      "sus_id": "root_7",
+      "label": "non_descendant",
+      "score_orig": 0.0032029680277968335,
+      "score_rot": 0.0026385281467789126,
+      "score_change": -0.0005644398810179209
+    }
+  ]
+}

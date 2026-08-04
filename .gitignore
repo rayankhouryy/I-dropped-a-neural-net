@@ -41,3 +41,7 @@ sigs/
 sigs_real_llm/
 sigs_minimal/
 
+# Large benchmark artifacts (reproducible from scripts)
+*.pkl
+*.tar.gz
+

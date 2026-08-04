@@ -27,6 +27,13 @@
 \usepackage{placeins}
 \usepackage{float}
 
+% Fix lineno overlap with floats (tables/figures)
+\usepackage{etoolbox}
+\AtBeginEnvironment{table}{\nolinenumbers}
+\AtBeginEnvironment{table*}{\nolinenumbers}
+\AtBeginEnvironment{figure}{\nolinenumbers}
+\AtBeginEnvironment{figure*}{\nolinenumbers}
+
 % Custom commands
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}

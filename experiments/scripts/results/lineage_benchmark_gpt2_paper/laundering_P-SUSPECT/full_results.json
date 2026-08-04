@@ -1,0 +1,5585 @@
+{
+  "config": {
+    "benchmark_dir": "results/lineage_benchmark_gpt2_paper_v2",
+    "checkpoint_dir": "results/lineage_benchmark_gpt2_paper_v2/checkpoints",
+    "output_dir": "results/lineage_benchmark_gpt2_paper_v2/laundering_P-SUSPECT",
+    "conditions": [
+      "P-SUSPECT"
+    ],
+    "n_perm_seeds": 5,
+    "pft_steps": 1000,
+    "pft_lr": 2e-05,
+    "n_validation_seqs": 128,
+    "seed_base": 8000,
+    "test_root_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "smoke": false
+  },
+  "summary": {
+    "P-SUSPECT": {
+      "centered_residual_signature": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": 0.9697686094224305,
+        "min_descendant": 0.8552961589095206,
+        "mean_non_descendant": 0.002597170421521154,
+        "max_non_descendant": 0.00432664163356275,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "raw_weight_cosine": {
+        "auroc": 0.8888888888888888,
+        "auprc": 0.875,
+        "mean_descendant": 0.9999999999998778,
+        "min_descendant": 0.9999999999998773,
+        "mean_non_descendant": 0.22291292867396498,
+        "max_non_descendant": 0.9999999999998788,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "raw_aligned_frobenius": {
+        "auroc": 0.8888888888888888,
+        "auprc": 0.875,
+        "mean_descendant": 0.0,
+        "min_descendant": -0.0,
+        "mean_non_descendant": -2.19738366893534,
+        "max_non_descendant": -0.0,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "singular_value_distance": {
+        "auroc": 0.888888888888889,
+        "auprc": 0.875,
+        "mean_descendant": 0.0,
+        "min_descendant": -0.0,
+        "mean_non_descendant": -0.6287177523362162,
+        "max_non_descendant": -0.0,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "rebasin_frobenius": {
+        "auroc": 0.8888888888888888,
+        "auprc": 0.875,
+        "mean_descendant": 0.0,
+        "min_descendant": -0.0,
+        "mean_non_descendant": -1.035554415922321,
+        "max_non_descendant": -0.0,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "rebasin_scale_frobenius": {
+        "auroc": 0.8888888888888888,
+        "auprc": 0.875,
+        "mean_descendant": -2.960967018812737e-12,
+        "min_descendant": -2.9760719440034254e-12,
+        "mean_non_descendant": -2.6832838164059893,
+        "max_non_descendant": -2.9492066118991157e-12,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "raw_branch_product_cosine": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": 0.9707112976009828,
+        "min_descendant": 0.8636497911593475,
+        "mean_non_descendant": 0.023045836066222333,
+        "max_non_descendant": 0.029155468642884857,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "centered_branch_product_cosine": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": 0.9700409377509536,
+        "min_descendant": 0.8609128542602904,
+        "mean_non_descendant": 0.0003796142067666325,
+        "max_non_descendant": 0.0025752692843406064,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      },
+      "centered_with_gating": {
+        "auroc": 1.0,
+        "auprc": 1.0,
+        "mean_descendant": 0.9697686094224305,
+        "min_descendant": 0.8552961589095208,
+        "mean_non_descendant": 0.00037869721182695544,
+        "max_non_descendant": 0.0025752692843406064,
+        "n_descendant": 280,
+        "n_non_descendant": 180
+      }
+    }
+  },
+  "validation_log": [
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_1",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.853561439536861e-07,
+      "max_relative_logit_diff": 0.9800992608070374,
+      "ppl_original": 38214.01953125,
+      "ppl_laundered": 38214.01953125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_2",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.383578915527323e-07,
+      "max_relative_logit_diff": 10.954365730285645,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_3",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.271414912996988e-07,
+      "max_relative_logit_diff": 1.0657764673233032,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_4",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.576804475524114e-07,
+      "max_relative_logit_diff": 1.3983912467956543,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "max_logit_diff": 1.0013580322265625e-05,
+      "mean_logit_diff": 8.636263828520896e-07,
+      "max_relative_logit_diff": 0.5647087693214417,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.204530104194419e-07,
+      "max_relative_logit_diff": 0.9141030311584473,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.840454827601206e-07,
+      "max_relative_logit_diff": 4.69227933883667,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_2",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.383578915527323e-07,
+      "max_relative_logit_diff": 10.954365730285645,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_3",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.271414912996988e-07,
+      "max_relative_logit_diff": 1.0657764673233032,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_4",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.576804475524114e-07,
+      "max_relative_logit_diff": 1.3983912467956543,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "max_logit_diff": 1.0013580322265625e-05,
+      "mean_logit_diff": 8.636263828520896e-07,
+      "max_relative_logit_diff": 0.5647087693214417,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.204530104194419e-07,
+      "max_relative_logit_diff": 0.9141030311584473,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.840454827601206e-07,
+      "max_relative_logit_diff": 4.69227933883667,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_3",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.271414912996988e-07,
+      "max_relative_logit_diff": 1.0657764673233032,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_4",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.576804475524114e-07,
+      "max_relative_logit_diff": 1.3983912467956543,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "max_logit_diff": 1.0013580322265625e-05,
+      "mean_logit_diff": 8.636263828520896e-07,
+      "max_relative_logit_diff": 0.5647087693214417,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.204530104194419e-07,
+      "max_relative_logit_diff": 0.9141030311584473,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.840454827601206e-07,
+      "max_relative_logit_diff": 4.69227933883667,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_4",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.576804475524114e-07,
+      "max_relative_logit_diff": 1.3983912467956543,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "max_logit_diff": 1.0013580322265625e-05,
+      "mean_logit_diff": 8.636263828520896e-07,
+      "max_relative_logit_diff": 0.5647087693214417,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.204530104194419e-07,
+      "max_relative_logit_diff": 0.9141030311584473,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.840454827601206e-07,
+      "max_relative_logit_diff": 4.69227933883667,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "max_logit_diff": 1.0013580322265625e-05,
+      "mean_logit_diff": 8.636263828520896e-07,
+      "max_relative_logit_diff": 0.5647087693214417,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.204530104194419e-07,
+      "max_relative_logit_diff": 0.9141030311584473,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.840454827601206e-07,
+      "max_relative_logit_diff": 4.69227933883667,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.204530104194419e-07,
+      "max_relative_logit_diff": 0.9141030311584473,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.840454827601206e-07,
+      "max_relative_logit_diff": 4.69227933883667,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.840454827601206e-07,
+      "max_relative_logit_diff": 4.69227933883667,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_1",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.808473808130657e-07,
+      "max_relative_logit_diff": 3.2072744369506836,
+      "ppl_original": 38214.01953125,
+      "ppl_laundered": 38214.01953125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_2",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.409959946220624e-07,
+      "max_relative_logit_diff": 7.044582366943359,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.293449127450003e-07,
+      "max_relative_logit_diff": 0.8344070911407471,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.623105713922996e-07,
+      "max_relative_logit_diff": 0.4828428030014038,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.41796875,
+      "relative_ppl_change": 9.229674922642647e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.581147312725079e-07,
+      "max_relative_logit_diff": 0.5104694366455078,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.29563134630007e-07,
+      "max_relative_logit_diff": 1.6261050701141357,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 7.830098525118956e-07,
+      "max_relative_logit_diff": 6.319720268249512,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_2",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.409959946220624e-07,
+      "max_relative_logit_diff": 7.044582366943359,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.293449127450003e-07,
+      "max_relative_logit_diff": 0.8344070911407471,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.623105713922996e-07,
+      "max_relative_logit_diff": 0.4828428030014038,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.41796875,
+      "relative_ppl_change": 9.229674922642647e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.581147312725079e-07,
+      "max_relative_logit_diff": 0.5104694366455078,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.29563134630007e-07,
+      "max_relative_logit_diff": 1.6261050701141357,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 7.830098525118956e-07,
+      "max_relative_logit_diff": 6.319720268249512,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.293449127450003e-07,
+      "max_relative_logit_diff": 0.8344070911407471,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.623105713922996e-07,
+      "max_relative_logit_diff": 0.4828428030014038,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.41796875,
+      "relative_ppl_change": 9.229674922642647e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.581147312725079e-07,
+      "max_relative_logit_diff": 0.5104694366455078,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.29563134630007e-07,
+      "max_relative_logit_diff": 1.6261050701141357,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 7.830098525118956e-07,
+      "max_relative_logit_diff": 6.319720268249512,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.623105713922996e-07,
+      "max_relative_logit_diff": 0.4828428030014038,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.41796875,
+      "relative_ppl_change": 9.229674922642647e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.581147312725079e-07,
+      "max_relative_logit_diff": 0.5104694366455078,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.29563134630007e-07,
+      "max_relative_logit_diff": 1.6261050701141357,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 7.830098525118956e-07,
+      "max_relative_logit_diff": 6.319720268249512,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.581147312725079e-07,
+      "max_relative_logit_diff": 0.5104694366455078,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.29563134630007e-07,
+      "max_relative_logit_diff": 1.6261050701141357,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 7.830098525118956e-07,
+      "max_relative_logit_diff": 6.319720268249512,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.29563134630007e-07,
+      "max_relative_logit_diff": 1.6261050701141357,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 7.830098525118956e-07,
+      "max_relative_logit_diff": 6.319720268249512,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 7.830098525118956e-07,
+      "max_relative_logit_diff": 6.319720268249512,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_1",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.921380754145503e-07,
+      "max_relative_logit_diff": 1.1747428178787231,
+      "ppl_original": 38214.01953125,
+      "ppl_laundered": 38214.01953125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_2",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 8.375191669074411e-07,
+      "max_relative_logit_diff": 9.775903701782227,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.330593459504598e-07,
+      "max_relative_logit_diff": 1.688454508781433,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.69921875,
+      "relative_ppl_change": 8.708546881413227e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.673064826325572e-07,
+      "max_relative_logit_diff": 0.50766521692276,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.644644822197733e-07,
+      "max_relative_logit_diff": 0.32321837544441223,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.254000363194791e-07,
+      "max_relative_logit_diff": 1.825924038887024,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.783706905684085e-07,
+      "max_relative_logit_diff": 53.77363967895508,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_2",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 8.375191669074411e-07,
+      "max_relative_logit_diff": 9.775903701782227,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.330593459504598e-07,
+      "max_relative_logit_diff": 1.688454508781433,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.69921875,
+      "relative_ppl_change": 8.708546881413227e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.673064826325572e-07,
+      "max_relative_logit_diff": 0.50766521692276,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.644644822197733e-07,
+      "max_relative_logit_diff": 0.32321837544441223,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.254000363194791e-07,
+      "max_relative_logit_diff": 1.825924038887024,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.783706905684085e-07,
+      "max_relative_logit_diff": 53.77363967895508,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.330593459504598e-07,
+      "max_relative_logit_diff": 1.688454508781433,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.69921875,
+      "relative_ppl_change": 8.708546881413227e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.673064826325572e-07,
+      "max_relative_logit_diff": 0.50766521692276,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.644644822197733e-07,
+      "max_relative_logit_diff": 0.32321837544441223,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.254000363194791e-07,
+      "max_relative_logit_diff": 1.825924038887024,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.783706905684085e-07,
+      "max_relative_logit_diff": 53.77363967895508,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.673064826325572e-07,
+      "max_relative_logit_diff": 0.50766521692276,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.644644822197733e-07,
+      "max_relative_logit_diff": 0.32321837544441223,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.254000363194791e-07,
+      "max_relative_logit_diff": 1.825924038887024,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.783706905684085e-07,
+      "max_relative_logit_diff": 53.77363967895508,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.644644822197733e-07,
+      "max_relative_logit_diff": 0.32321837544441223,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.254000363194791e-07,
+      "max_relative_logit_diff": 1.825924038887024,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.783706905684085e-07,
+      "max_relative_logit_diff": 53.77363967895508,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.254000363194791e-07,
+      "max_relative_logit_diff": 1.825924038887024,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.783706905684085e-07,
+      "max_relative_logit_diff": 53.77363967895508,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.783706905684085e-07,
+      "max_relative_logit_diff": 53.77363967895508,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_1",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.894899679035007e-07,
+      "max_relative_logit_diff": 2.3578097820281982,
+      "ppl_original": 38214.01953125,
+      "ppl_laundered": 38214.01953125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_2",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 8.361122922906361e-07,
+      "max_relative_logit_diff": 6.086942672729492,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_3",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.317551305481174e-07,
+      "max_relative_logit_diff": 0.7961912751197815,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_4",
+      "max_logit_diff": 9.059906005859375e-06,
+      "mean_logit_diff": 8.535230904271884e-07,
+      "max_relative_logit_diff": 0.8577572107315063,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.687027275300352e-07,
+      "max_relative_logit_diff": 0.4565463960170746,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.247640153058455e-07,
+      "max_relative_logit_diff": 1.4530515670776367,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.851199939068465e-07,
+      "max_relative_logit_diff": 42.869529724121094,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_2",
+      "max_logit_diff": 7.62939453125e-06,
+      "mean_logit_diff": 8.361122922906361e-07,
+      "max_relative_logit_diff": 6.086942672729492,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_3",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.317551305481174e-07,
+      "max_relative_logit_diff": 0.7961912751197815,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_4",
+      "max_logit_diff": 9.059906005859375e-06,
+      "mean_logit_diff": 8.535230904271884e-07,
+      "max_relative_logit_diff": 0.8577572107315063,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.687027275300352e-07,
+      "max_relative_logit_diff": 0.4565463960170746,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.247640153058455e-07,
+      "max_relative_logit_diff": 1.4530515670776367,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.851199939068465e-07,
+      "max_relative_logit_diff": 42.869529724121094,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_3",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.317551305481174e-07,
+      "max_relative_logit_diff": 0.7961912751197815,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_4",
+      "max_logit_diff": 9.059906005859375e-06,
+      "mean_logit_diff": 8.535230904271884e-07,
+      "max_relative_logit_diff": 0.8577572107315063,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.687027275300352e-07,
+      "max_relative_logit_diff": 0.4565463960170746,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.247640153058455e-07,
+      "max_relative_logit_diff": 1.4530515670776367,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.851199939068465e-07,
+      "max_relative_logit_diff": 42.869529724121094,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_4",
+      "max_logit_diff": 9.059906005859375e-06,
+      "mean_logit_diff": 8.535230904271884e-07,
+      "max_relative_logit_diff": 0.8577572107315063,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.687027275300352e-07,
+      "max_relative_logit_diff": 0.4565463960170746,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.247640153058455e-07,
+      "max_relative_logit_diff": 1.4530515670776367,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.851199939068465e-07,
+      "max_relative_logit_diff": 42.869529724121094,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.687027275300352e-07,
+      "max_relative_logit_diff": 0.4565463960170746,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.247640153058455e-07,
+      "max_relative_logit_diff": 1.4530515670776367,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.851199939068465e-07,
+      "max_relative_logit_diff": 42.869529724121094,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.247640153058455e-07,
+      "max_relative_logit_diff": 1.4530515670776367,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.5078125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.851199939068465e-07,
+      "max_relative_logit_diff": 42.869529724121094,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 7.851199939068465e-07,
+      "max_relative_logit_diff": 42.869529724121094,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.56640625,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_1",
+      "max_logit_diff": 9.059906005859375e-06,
+      "mean_logit_diff": 8.831996751723636e-07,
+      "max_relative_logit_diff": 2.345930814743042,
+      "ppl_original": 38214.01953125,
+      "ppl_laundered": 38214.01953125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_2",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.424164548159752e-07,
+      "max_relative_logit_diff": 2.6485443115234375,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.304280072479742e-07,
+      "max_relative_logit_diff": 1.0972516536712646,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.649303140373377e-07,
+      "max_relative_logit_diff": 1.1079952716827393,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.629110084257263e-07,
+      "max_relative_logit_diff": 0.6489346027374268,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.268688134194235e-07,
+      "max_relative_logit_diff": 1.7278587818145752,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 7.823668397577421e-07,
+      "max_relative_logit_diff": 22.023998260498047,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_2",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.424164548159752e-07,
+      "max_relative_logit_diff": 2.6485443115234375,
+      "ppl_original": 27969.14453125,
+      "ppl_laundered": 27969.14453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.304280072479742e-07,
+      "max_relative_logit_diff": 1.0972516536712646,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.649303140373377e-07,
+      "max_relative_logit_diff": 1.1079952716827393,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.629110084257263e-07,
+      "max_relative_logit_diff": 0.6489346027374268,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.268688134194235e-07,
+      "max_relative_logit_diff": 1.7278587818145752,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 7.823668397577421e-07,
+      "max_relative_logit_diff": 22.023998260498047,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_3",
+      "max_logit_diff": 8.58306884765625e-06,
+      "mean_logit_diff": 8.304280072479742e-07,
+      "max_relative_logit_diff": 1.0972516536712646,
+      "ppl_original": 22427.6796875,
+      "ppl_laundered": 22427.6796875,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.649303140373377e-07,
+      "max_relative_logit_diff": 1.1079952716827393,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.629110084257263e-07,
+      "max_relative_logit_diff": 0.6489346027374268,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.268688134194235e-07,
+      "max_relative_logit_diff": 1.7278587818145752,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 7.823668397577421e-07,
+      "max_relative_logit_diff": 22.023998260498047,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_4",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.649303140373377e-07,
+      "max_relative_logit_diff": 1.1079952716827393,
+      "ppl_original": 38090.453125,
+      "ppl_laundered": 38090.453125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.629110084257263e-07,
+      "max_relative_logit_diff": 0.6489346027374268,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.268688134194235e-07,
+      "max_relative_logit_diff": 1.7278587818145752,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 7.823668397577421e-07,
+      "max_relative_logit_diff": 22.023998260498047,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "max_logit_diff": 9.5367431640625e-06,
+      "mean_logit_diff": 8.629110084257263e-07,
+      "max_relative_logit_diff": 0.6489346027374268,
+      "ppl_original": 35988.28125,
+      "ppl_laundered": 35988.28125,
+      "relative_ppl_change": 0.0,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.268688134194235e-07,
+      "max_relative_logit_diff": 1.7278587818145752,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 7.823668397577421e-07,
+      "max_relative_logit_diff": 22.023998260498047,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 8.268688134194235e-07,
+      "max_relative_logit_diff": 1.7278587818145752,
+      "ppl_original": 36418.5078125,
+      "ppl_laundered": 36418.4765625,
+      "relative_ppl_change": 8.580801871642149e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 7.823668397577421e-07,
+      "max_relative_logit_diff": 22.023998260498047,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "max_logit_diff": 8.106231689453125e-06,
+      "mean_logit_diff": 7.823668397577421e-07,
+      "max_relative_logit_diff": 22.023998260498047,
+      "ppl_original": 41510.56640625,
+      "ppl_laundered": 41510.60546875,
+      "relative_ppl_change": 9.410254636783078e-07,
+      "top1_agreement": 1.0,
+      "gate_pass": true,
+      "gate_details": "PASS"
+    }
+  ],
+  "invariance_checks": [
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_1",
+      "per_block_cosine": [
+        0.999999999999312,
+        0.9999999999979514,
+        0.9999999999988666,
+        0.9999999999992175,
+        0.9999999999992808,
+        0.9999999999993633
+      ],
+      "min_cosine": 0.9999999999979514,
+      "max_cosine": 0.9999999999993633,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.498001805406602e-16,
+        4.440892098500626e-16,
+        5.273559366969494e-16,
+        8.326672684688674e-16,
+        4.440892098500626e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993174,
+        0.999999999998021,
+        0.9999999999987622,
+        0.9999999999992191,
+        0.9999999999992729,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.999999999998021,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        5.412337245047638e-16,
+        3.608224830031759e-16,
+        4.163336342344337e-16,
+        7.771561172376096e-16,
+        6.938893903907228e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.9999999999993031,
+        0.9999999999979994,
+        0.9999999999988102,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993713
+      ],
+      "min_cosine": 0.9999999999979994,
+      "max_cosine": 0.9999999999993713,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.440892098500626e-16,
+        6.938893903907228e-16,
+        6.106226635438361e-16,
+        7.494005416219807e-16
+      ],
+      "overall_max_diff": 7.494005416219807e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.9999999999979621,
+        0.9999999999988721,
+        0.9999999999992113,
+        0.9999999999992891,
+        0.999999999999353
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        2.914335439641036e-16,
+        4.718447854656915e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988959,
+        0.9999999999992111,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.273559366969494e-16,
+        6.938893903907228e-16,
+        5.551115123125783e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.999999999999232,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.996003610813204e-16,
+        3.7470027081099033e-16,
+        4.163336342344337e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993141,
+        0.9999999999980292,
+        0.999999999998883,
+        0.9999999999991863,
+        0.9999999999992596,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.3306690738754696e-16,
+        5.134781488891349e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993174,
+        0.999999999998021,
+        0.9999999999987622,
+        0.9999999999992191,
+        0.9999999999992729,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.999999999998021,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        5.412337245047638e-16,
+        3.608224830031759e-16,
+        4.163336342344337e-16,
+        7.771561172376096e-16,
+        6.938893903907228e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.9999999999993031,
+        0.9999999999979994,
+        0.9999999999988102,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993713
+      ],
+      "min_cosine": 0.9999999999979994,
+      "max_cosine": 0.9999999999993713,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.440892098500626e-16,
+        6.938893903907228e-16,
+        6.106226635438361e-16,
+        7.494005416219807e-16
+      ],
+      "overall_max_diff": 7.494005416219807e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.9999999999979621,
+        0.9999999999988721,
+        0.9999999999992113,
+        0.9999999999992891,
+        0.999999999999353
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        2.914335439641036e-16,
+        4.718447854656915e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988959,
+        0.9999999999992111,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.273559366969494e-16,
+        6.938893903907228e-16,
+        5.551115123125783e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.999999999999232,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.996003610813204e-16,
+        3.7470027081099033e-16,
+        4.163336342344337e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993141,
+        0.9999999999980292,
+        0.999999999998883,
+        0.9999999999991863,
+        0.9999999999992596,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.3306690738754696e-16,
+        5.134781488891349e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.9999999999993031,
+        0.9999999999979994,
+        0.9999999999988102,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993713
+      ],
+      "min_cosine": 0.9999999999979994,
+      "max_cosine": 0.9999999999993713,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.440892098500626e-16,
+        6.938893903907228e-16,
+        6.106226635438361e-16,
+        7.494005416219807e-16
+      ],
+      "overall_max_diff": 7.494005416219807e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.9999999999979621,
+        0.9999999999988721,
+        0.9999999999992113,
+        0.9999999999992891,
+        0.999999999999353
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        2.914335439641036e-16,
+        4.718447854656915e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988959,
+        0.9999999999992111,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.273559366969494e-16,
+        6.938893903907228e-16,
+        5.551115123125783e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.999999999999232,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.996003610813204e-16,
+        3.7470027081099033e-16,
+        4.163336342344337e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993141,
+        0.9999999999980292,
+        0.999999999998883,
+        0.9999999999991863,
+        0.9999999999992596,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.3306690738754696e-16,
+        5.134781488891349e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.9999999999979621,
+        0.9999999999988721,
+        0.9999999999992113,
+        0.9999999999992891,
+        0.999999999999353
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        2.914335439641036e-16,
+        4.718447854656915e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988959,
+        0.9999999999992111,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.273559366969494e-16,
+        6.938893903907228e-16,
+        5.551115123125783e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.999999999999232,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.996003610813204e-16,
+        3.7470027081099033e-16,
+        4.163336342344337e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993141,
+        0.9999999999980292,
+        0.999999999998883,
+        0.9999999999991863,
+        0.9999999999992596,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.3306690738754696e-16,
+        5.134781488891349e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988959,
+        0.9999999999992111,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.273559366969494e-16,
+        6.938893903907228e-16,
+        5.551115123125783e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.999999999999232,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.996003610813204e-16,
+        3.7470027081099033e-16,
+        4.163336342344337e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993141,
+        0.9999999999980292,
+        0.999999999998883,
+        0.9999999999991863,
+        0.9999999999992596,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.3306690738754696e-16,
+        5.134781488891349e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.999999999999232,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.996003610813204e-16,
+        3.7470027081099033e-16,
+        4.163336342344337e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993141,
+        0.9999999999980292,
+        0.999999999998883,
+        0.9999999999991863,
+        0.9999999999992596,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.3306690738754696e-16,
+        5.134781488891349e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8000,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993141,
+        0.9999999999980292,
+        0.999999999998883,
+        0.9999999999991863,
+        0.9999999999992596,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.3306690738754696e-16,
+        5.134781488891349e-16,
+        5.551115123125783e-16,
+        6.938893903907228e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_1",
+      "per_block_cosine": [
+        0.999999999999312,
+        0.9999999999979516,
+        0.9999999999988666,
+        0.9999999999992175,
+        0.9999999999992808,
+        0.9999999999993635
+      ],
+      "min_cosine": 0.9999999999979516,
+      "max_cosine": 0.9999999999993635,
+      "per_block_max_diff": [
+        5.412337245047638e-16,
+        3.608224830031759e-16,
+        4.163336342344337e-16,
+        6.38378239159465e-16,
+        6.38378239159465e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.38378239159465e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993177,
+        0.999999999998021,
+        0.9999999999987623,
+        0.9999999999992191,
+        0.9999999999992727,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.999999999998021,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        4.0245584642661925e-16,
+        3.885780586188048e-16,
+        6.38378239159465e-16,
+        5.828670879282072e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 6.38378239159465e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.9999999999993028,
+        0.9999999999979995,
+        0.9999999999988101,
+        0.9999999999992092,
+        0.9999999999992844,
+        0.9999999999993713
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993713,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.608224830031759e-16,
+        4.996003610813204e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.9999999999993172,
+        0.9999999999979621,
+        0.9999999999988719,
+        0.9999999999992114,
+        0.999999999999289,
+        0.999999999999353
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.122502256758253e-16,
+        4.440892098500626e-16,
+        6.106226635438361e-16,
+        4.996003610813204e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.106226635438361e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993291,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992111,
+        0.9999999999992896,
+        0.9999999999993721
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993721,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.3306690738754696e-16,
+        4.996003610813204e-16,
+        8.604228440844963e-16,
+        5.273559366969494e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.604228440844963e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.996003610813204e-16,
+        8.326672684688674e-16,
+        6.38378239159465e-16,
+        4.440892098500626e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.0245584642661925e-16,
+        3.608224830031759e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993177,
+        0.999999999998021,
+        0.9999999999987623,
+        0.9999999999992191,
+        0.9999999999992727,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.999999999998021,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        4.0245584642661925e-16,
+        3.885780586188048e-16,
+        6.38378239159465e-16,
+        5.828670879282072e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 6.38378239159465e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.9999999999993028,
+        0.9999999999979995,
+        0.9999999999988101,
+        0.9999999999992092,
+        0.9999999999992844,
+        0.9999999999993713
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993713,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.608224830031759e-16,
+        4.996003610813204e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.9999999999993172,
+        0.9999999999979621,
+        0.9999999999988719,
+        0.9999999999992114,
+        0.999999999999289,
+        0.999999999999353
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.122502256758253e-16,
+        4.440892098500626e-16,
+        6.106226635438361e-16,
+        4.996003610813204e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.106226635438361e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993291,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992111,
+        0.9999999999992896,
+        0.9999999999993721
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993721,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.3306690738754696e-16,
+        4.996003610813204e-16,
+        8.604228440844963e-16,
+        5.273559366969494e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.604228440844963e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.996003610813204e-16,
+        8.326672684688674e-16,
+        6.38378239159465e-16,
+        4.440892098500626e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.0245584642661925e-16,
+        3.608224830031759e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.9999999999993028,
+        0.9999999999979995,
+        0.9999999999988101,
+        0.9999999999992092,
+        0.9999999999992844,
+        0.9999999999993713
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993713,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.608224830031759e-16,
+        4.996003610813204e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.9999999999993172,
+        0.9999999999979621,
+        0.9999999999988719,
+        0.9999999999992114,
+        0.999999999999289,
+        0.999999999999353
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.122502256758253e-16,
+        4.440892098500626e-16,
+        6.106226635438361e-16,
+        4.996003610813204e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.106226635438361e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993291,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992111,
+        0.9999999999992896,
+        0.9999999999993721
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993721,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.3306690738754696e-16,
+        4.996003610813204e-16,
+        8.604228440844963e-16,
+        5.273559366969494e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.604228440844963e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.996003610813204e-16,
+        8.326672684688674e-16,
+        6.38378239159465e-16,
+        4.440892098500626e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.0245584642661925e-16,
+        3.608224830031759e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.9999999999993172,
+        0.9999999999979621,
+        0.9999999999988719,
+        0.9999999999992114,
+        0.999999999999289,
+        0.999999999999353
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.122502256758253e-16,
+        4.440892098500626e-16,
+        6.106226635438361e-16,
+        4.996003610813204e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.106226635438361e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993291,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992111,
+        0.9999999999992896,
+        0.9999999999993721
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993721,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.3306690738754696e-16,
+        4.996003610813204e-16,
+        8.604228440844963e-16,
+        5.273559366969494e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.604228440844963e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.996003610813204e-16,
+        8.326672684688674e-16,
+        6.38378239159465e-16,
+        4.440892098500626e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.0245584642661925e-16,
+        3.608224830031759e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993291,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992111,
+        0.9999999999992896,
+        0.9999999999993721
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993721,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.3306690738754696e-16,
+        4.996003610813204e-16,
+        8.604228440844963e-16,
+        5.273559366969494e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 8.604228440844963e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.996003610813204e-16,
+        8.326672684688674e-16,
+        6.38378239159465e-16,
+        4.440892098500626e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.0245584642661925e-16,
+        3.608224830031759e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.7755575615628914e-16,
+        4.996003610813204e-16,
+        8.326672684688674e-16,
+        6.38378239159465e-16,
+        4.440892098500626e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.0245584642661925e-16,
+        3.608224830031759e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8100,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        4.0245584642661925e-16,
+        3.608224830031759e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_1",
+      "per_block_cosine": [
+        0.999999999999312,
+        0.9999999999979514,
+        0.9999999999988666,
+        0.9999999999992174,
+        0.9999999999992808,
+        0.9999999999993635
+      ],
+      "min_cosine": 0.9999999999979514,
+      "max_cosine": 0.9999999999993635,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.191891195797325e-16,
+        4.996003610813204e-16,
+        6.106226635438361e-16,
+        6.938893903907228e-16,
+        4.3021142204224816e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993177,
+        0.999999999998021,
+        0.9999999999987622,
+        0.9999999999992191,
+        0.9999999999992727,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.999999999998021,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.7470027081099033e-16,
+        4.440892098500626e-16,
+        5.273559366969494e-16,
+        6.661338147750939e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.661338147750939e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979995,
+        0.9999999999988101,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.608224830031759e-16,
+        4.718447854656915e-16,
+        7.216449660063518e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.9999999999979621,
+        0.9999999999988721,
+        0.9999999999992114,
+        0.999999999999289,
+        0.9999999999993529
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.9999999999993529,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.551115123125783e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 5.828670879282072e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988963,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.636779683484747e-16,
+        4.440892098500626e-16,
+        9.71445146547012e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 9.71445146547012e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987012,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        6.661338147750939e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.661338147750939e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991861,
+        0.9999999999992594,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        4.996003610813204e-16,
+        4.718447854656915e-16,
+        6.661338147750939e-16,
+        7.216449660063518e-16,
+        5.134781488891349e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993177,
+        0.999999999998021,
+        0.9999999999987622,
+        0.9999999999992191,
+        0.9999999999992727,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.999999999998021,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.7470027081099033e-16,
+        4.440892098500626e-16,
+        5.273559366969494e-16,
+        6.661338147750939e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.661338147750939e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979995,
+        0.9999999999988101,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.608224830031759e-16,
+        4.718447854656915e-16,
+        7.216449660063518e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.9999999999979621,
+        0.9999999999988721,
+        0.9999999999992114,
+        0.999999999999289,
+        0.9999999999993529
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.9999999999993529,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.551115123125783e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 5.828670879282072e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988963,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.636779683484747e-16,
+        4.440892098500626e-16,
+        9.71445146547012e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 9.71445146547012e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987012,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        6.661338147750939e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.661338147750939e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991861,
+        0.9999999999992594,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        4.996003610813204e-16,
+        4.718447854656915e-16,
+        6.661338147750939e-16,
+        7.216449660063518e-16,
+        5.134781488891349e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979995,
+        0.9999999999988101,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.608224830031759e-16,
+        4.718447854656915e-16,
+        7.216449660063518e-16,
+        6.938893903907228e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.9999999999979621,
+        0.9999999999988721,
+        0.9999999999992114,
+        0.999999999999289,
+        0.9999999999993529
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.9999999999993529,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.551115123125783e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 5.828670879282072e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988963,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.636779683484747e-16,
+        4.440892098500626e-16,
+        9.71445146547012e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 9.71445146547012e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987012,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        6.661338147750939e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.661338147750939e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991861,
+        0.9999999999992594,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        4.996003610813204e-16,
+        4.718447854656915e-16,
+        6.661338147750939e-16,
+        7.216449660063518e-16,
+        5.134781488891349e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.9999999999979621,
+        0.9999999999988721,
+        0.9999999999992114,
+        0.999999999999289,
+        0.9999999999993529
+      ],
+      "min_cosine": 0.9999999999979621,
+      "max_cosine": 0.9999999999993529,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        3.7470027081099033e-16,
+        5.551115123125783e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 5.828670879282072e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988963,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.636779683484747e-16,
+        4.440892098500626e-16,
+        9.71445146547012e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 9.71445146547012e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987012,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        6.661338147750939e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.661338147750939e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991861,
+        0.9999999999992594,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        4.996003610813204e-16,
+        4.718447854656915e-16,
+        6.661338147750939e-16,
+        7.216449660063518e-16,
+        5.134781488891349e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988963,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        2.636779683484747e-16,
+        4.440892098500626e-16,
+        9.71445146547012e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 9.71445146547012e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987012,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        6.661338147750939e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.661338147750939e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991861,
+        0.9999999999992594,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        4.996003610813204e-16,
+        4.718447854656915e-16,
+        6.661338147750939e-16,
+        7.216449660063518e-16,
+        5.134781488891349e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987012,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        6.661338147750939e-16,
+        5.273559366969494e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 6.661338147750939e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991861,
+        0.9999999999992594,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        4.996003610813204e-16,
+        4.718447854656915e-16,
+        6.661338147750939e-16,
+        7.216449660063518e-16,
+        5.134781488891349e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8200,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991861,
+        0.9999999999992594,
+        0.9999999999994098
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994098,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        4.996003610813204e-16,
+        4.718447854656915e-16,
+        6.661338147750939e-16,
+        7.216449660063518e-16,
+        5.134781488891349e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_1",
+      "per_block_cosine": [
+        0.999999999999312,
+        0.9999999999979516,
+        0.9999999999988666,
+        0.9999999999992175,
+        0.9999999999992808,
+        0.9999999999993633
+      ],
+      "min_cosine": 0.9999999999979516,
+      "max_cosine": 0.9999999999993633,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        4.0245584642661925e-16,
+        6.661338147750939e-16,
+        6.661338147750939e-16,
+        6.938893903907228e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 6.938893903907228e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993177,
+        0.9999999999980211,
+        0.9999999999987623,
+        0.9999999999992191,
+        0.9999999999992727,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.9999999999980211,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.0531133177191805e-16,
+        3.885780586188048e-16,
+        8.326672684688674e-16,
+        6.38378239159465e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979996,
+        0.9999999999988098,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979996,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        9.992007221626409e-16,
+        6.661338147750939e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 9.992007221626409e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.999999999997962,
+        0.9999999999988721,
+        0.9999999999992113,
+        0.9999999999992891,
+        0.9999999999993532
+      ],
+      "min_cosine": 0.999999999997962,
+      "max_cosine": 0.9999999999993532,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.3306690738754696e-16,
+        5.828670879282072e-16,
+        6.38378239159465e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.38378239159465e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988965,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        2.7755575615628914e-16,
+        5.551115123125783e-16,
+        7.216449660063518e-16,
+        6.938893903907228e-16,
+        6.938893903907228e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.608224830031759e-16,
+        5.551115123125783e-16,
+        7.771561172376096e-16,
+        7.771561172376096e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993144,
+        0.9999999999980292,
+        0.9999999999988836,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.579669976578771e-16,
+        3.191891195797325e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        7.216449660063518e-16,
+        7.355227538141662e-16
+      ],
+      "overall_max_diff": 7.355227538141662e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993177,
+        0.9999999999980211,
+        0.9999999999987623,
+        0.9999999999992191,
+        0.9999999999992727,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.9999999999980211,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        4.3021142204224816e-16,
+        3.0531133177191805e-16,
+        3.885780586188048e-16,
+        8.326672684688674e-16,
+        6.38378239159465e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979996,
+        0.9999999999988098,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979996,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        9.992007221626409e-16,
+        6.661338147750939e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 9.992007221626409e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.999999999997962,
+        0.9999999999988721,
+        0.9999999999992113,
+        0.9999999999992891,
+        0.9999999999993532
+      ],
+      "min_cosine": 0.999999999997962,
+      "max_cosine": 0.9999999999993532,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.3306690738754696e-16,
+        5.828670879282072e-16,
+        6.38378239159465e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.38378239159465e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988965,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        2.7755575615628914e-16,
+        5.551115123125783e-16,
+        7.216449660063518e-16,
+        6.938893903907228e-16,
+        6.938893903907228e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.608224830031759e-16,
+        5.551115123125783e-16,
+        7.771561172376096e-16,
+        7.771561172376096e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993144,
+        0.9999999999980292,
+        0.9999999999988836,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.579669976578771e-16,
+        3.191891195797325e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        7.216449660063518e-16,
+        7.355227538141662e-16
+      ],
+      "overall_max_diff": 7.355227538141662e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979996,
+        0.9999999999988098,
+        0.9999999999992094,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979996,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.3306690738754696e-16,
+        3.885780586188048e-16,
+        9.992007221626409e-16,
+        6.661338147750939e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 9.992007221626409e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.999999999997962,
+        0.9999999999988721,
+        0.9999999999992113,
+        0.9999999999992891,
+        0.9999999999993532
+      ],
+      "min_cosine": 0.999999999997962,
+      "max_cosine": 0.9999999999993532,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.3306690738754696e-16,
+        5.828670879282072e-16,
+        6.38378239159465e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.38378239159465e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988965,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        2.7755575615628914e-16,
+        5.551115123125783e-16,
+        7.216449660063518e-16,
+        6.938893903907228e-16,
+        6.938893903907228e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.608224830031759e-16,
+        5.551115123125783e-16,
+        7.771561172376096e-16,
+        7.771561172376096e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993144,
+        0.9999999999980292,
+        0.9999999999988836,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.579669976578771e-16,
+        3.191891195797325e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        7.216449660063518e-16,
+        7.355227538141662e-16
+      ],
+      "overall_max_diff": 7.355227538141662e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.999999999999317,
+        0.999999999997962,
+        0.9999999999988721,
+        0.9999999999992113,
+        0.9999999999992891,
+        0.9999999999993532
+      ],
+      "min_cosine": 0.999999999997962,
+      "max_cosine": 0.9999999999993532,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.3306690738754696e-16,
+        5.828670879282072e-16,
+        6.38378239159465e-16,
+        5.828670879282072e-16,
+        4.718447854656915e-16
+      ],
+      "overall_max_diff": 6.38378239159465e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988965,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        2.7755575615628914e-16,
+        5.551115123125783e-16,
+        7.216449660063518e-16,
+        6.938893903907228e-16,
+        6.938893903907228e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.608224830031759e-16,
+        5.551115123125783e-16,
+        7.771561172376096e-16,
+        7.771561172376096e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993144,
+        0.9999999999980292,
+        0.9999999999988836,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.579669976578771e-16,
+        3.191891195797325e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        7.216449660063518e-16,
+        7.355227538141662e-16
+      ],
+      "overall_max_diff": 7.355227538141662e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993294,
+        0.9999999999978159,
+        0.9999999999988965,
+        0.9999999999992112,
+        0.9999999999992898,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        5.273559366969494e-16,
+        2.7755575615628914e-16,
+        5.551115123125783e-16,
+        7.216449660063518e-16,
+        6.938893903907228e-16,
+        6.938893903907228e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.608224830031759e-16,
+        5.551115123125783e-16,
+        7.771561172376096e-16,
+        7.771561172376096e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993144,
+        0.9999999999980292,
+        0.9999999999988836,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.579669976578771e-16,
+        3.191891195797325e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        7.216449660063518e-16,
+        7.355227538141662e-16
+      ],
+      "overall_max_diff": 7.355227538141662e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993263,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        5.134781488891349e-16,
+        3.608224830031759e-16,
+        5.551115123125783e-16,
+        7.771561172376096e-16,
+        7.771561172376096e-16,
+        5.273559366969494e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993144,
+        0.9999999999980292,
+        0.9999999999988836,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.579669976578771e-16,
+        3.191891195797325e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        7.216449660063518e-16,
+        7.355227538141662e-16
+      ],
+      "overall_max_diff": 7.355227538141662e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8300,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993144,
+        0.9999999999980292,
+        0.9999999999988836,
+        0.9999999999991863,
+        0.9999999999992591,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.579669976578771e-16,
+        3.191891195797325e-16,
+        4.3021142204224816e-16,
+        6.938893903907228e-16,
+        7.216449660063518e-16,
+        7.355227538141662e-16
+      ],
+      "overall_max_diff": 7.355227538141662e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_1",
+      "per_block_cosine": [
+        0.999999999999312,
+        0.9999999999979516,
+        0.9999999999988666,
+        0.9999999999992175,
+        0.9999999999992808,
+        0.9999999999993635
+      ],
+      "min_cosine": 0.9999999999979516,
+      "max_cosine": 0.9999999999993635,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        3.7470027081099033e-16,
+        7.216449660063518e-16,
+        6.661338147750939e-16,
+        6.106226635438361e-16,
+        5.134781488891349e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993177,
+        0.9999999999980209,
+        0.999999999998762,
+        0.9999999999992191,
+        0.9999999999992727,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.9999999999980209,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        3.7470027081099033e-16,
+        4.718447854656915e-16,
+        7.771561172376096e-16,
+        6.938893903907228e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979995,
+        0.9999999999988098,
+        0.9999999999992092,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.608224830031759e-16,
+        4.163336342344337e-16,
+        7.216449660063518e-16,
+        4.996003610813204e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.9999999999993172,
+        0.999999999997962,
+        0.9999999999988721,
+        0.9999999999992114,
+        0.999999999999289,
+        0.999999999999353
+      ],
+      "min_cosine": 0.999999999997962,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        5.828670879282072e-16,
+        3.3306690738754696e-16,
+        5.273559366969494e-16,
+        7.216449660063518e-16,
+        6.38378239159465e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992112,
+        0.9999999999992896,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        3.191891195797325e-16,
+        8.049116928532385e-16,
+        6.106226635438361e-16,
+        6.106226635438361e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 8.049116928532385e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.0531133177191805e-16,
+        3.885780586188048e-16,
+        8.326672684688674e-16,
+        6.661338147750939e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992594,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.608224830031759e-16,
+        4.440892098500626e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        6.522560269672795e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_2",
+      "per_block_cosine": [
+        0.9999999999993177,
+        0.9999999999980209,
+        0.999999999998762,
+        0.9999999999992191,
+        0.9999999999992727,
+        0.9999999999993908
+      ],
+      "min_cosine": 0.9999999999980209,
+      "max_cosine": 0.9999999999993908,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        3.7470027081099033e-16,
+        4.718447854656915e-16,
+        7.771561172376096e-16,
+        6.938893903907228e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 7.771561172376096e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979995,
+        0.9999999999988098,
+        0.9999999999992092,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.608224830031759e-16,
+        4.163336342344337e-16,
+        7.216449660063518e-16,
+        4.996003610813204e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.9999999999993172,
+        0.999999999997962,
+        0.9999999999988721,
+        0.9999999999992114,
+        0.999999999999289,
+        0.999999999999353
+      ],
+      "min_cosine": 0.999999999997962,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        5.828670879282072e-16,
+        3.3306690738754696e-16,
+        5.273559366969494e-16,
+        7.216449660063518e-16,
+        6.38378239159465e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992112,
+        0.9999999999992896,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        3.191891195797325e-16,
+        8.049116928532385e-16,
+        6.106226635438361e-16,
+        6.106226635438361e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 8.049116928532385e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.0531133177191805e-16,
+        3.885780586188048e-16,
+        8.326672684688674e-16,
+        6.661338147750939e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992594,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.608224830031759e-16,
+        4.440892098500626e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        6.522560269672795e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_3",
+      "per_block_cosine": [
+        0.999999999999303,
+        0.9999999999979995,
+        0.9999999999988098,
+        0.9999999999992092,
+        0.9999999999992844,
+        0.9999999999993712
+      ],
+      "min_cosine": 0.9999999999979995,
+      "max_cosine": 0.9999999999993712,
+      "per_block_max_diff": [
+        4.440892098500626e-16,
+        3.608224830031759e-16,
+        4.163336342344337e-16,
+        7.216449660063518e-16,
+        4.996003610813204e-16,
+        4.996003610813204e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.9999999999993172,
+        0.999999999997962,
+        0.9999999999988721,
+        0.9999999999992114,
+        0.999999999999289,
+        0.999999999999353
+      ],
+      "min_cosine": 0.999999999997962,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        5.828670879282072e-16,
+        3.3306690738754696e-16,
+        5.273559366969494e-16,
+        7.216449660063518e-16,
+        6.38378239159465e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992112,
+        0.9999999999992896,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        3.191891195797325e-16,
+        8.049116928532385e-16,
+        6.106226635438361e-16,
+        6.106226635438361e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 8.049116928532385e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.0531133177191805e-16,
+        3.885780586188048e-16,
+        8.326672684688674e-16,
+        6.661338147750939e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992594,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.608224830031759e-16,
+        4.440892098500626e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        6.522560269672795e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_4",
+      "per_block_cosine": [
+        0.9999999999993172,
+        0.999999999997962,
+        0.9999999999988721,
+        0.9999999999992114,
+        0.999999999999289,
+        0.999999999999353
+      ],
+      "min_cosine": 0.999999999997962,
+      "max_cosine": 0.999999999999353,
+      "per_block_max_diff": [
+        5.828670879282072e-16,
+        3.3306690738754696e-16,
+        5.273559366969494e-16,
+        7.216449660063518e-16,
+        6.38378239159465e-16,
+        5.551115123125783e-16
+      ],
+      "overall_max_diff": 7.216449660063518e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992112,
+        0.9999999999992896,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        3.191891195797325e-16,
+        8.049116928532385e-16,
+        6.106226635438361e-16,
+        6.106226635438361e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 8.049116928532385e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.0531133177191805e-16,
+        3.885780586188048e-16,
+        8.326672684688674e-16,
+        6.661338147750939e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992594,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.608224830031759e-16,
+        4.440892098500626e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        6.522560269672795e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_5",
+      "per_block_cosine": [
+        0.9999999999993293,
+        0.9999999999978159,
+        0.9999999999988962,
+        0.9999999999992112,
+        0.9999999999992896,
+        0.9999999999993718
+      ],
+      "min_cosine": 0.9999999999978159,
+      "max_cosine": 0.9999999999993718,
+      "per_block_max_diff": [
+        4.718447854656915e-16,
+        3.191891195797325e-16,
+        8.049116928532385e-16,
+        6.106226635438361e-16,
+        6.106226635438361e-16,
+        5.828670879282072e-16
+      ],
+      "overall_max_diff": 8.049116928532385e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.0531133177191805e-16,
+        3.885780586188048e-16,
+        8.326672684688674e-16,
+        6.661338147750939e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992594,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.608224830031759e-16,
+        4.440892098500626e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        6.522560269672795e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_6",
+      "per_block_cosine": [
+        0.9999999999993264,
+        0.999999999997952,
+        0.9999999999987014,
+        0.9999999999992317,
+        0.9999999999992732,
+        0.99999999999938
+      ],
+      "min_cosine": 0.999999999997952,
+      "max_cosine": 0.99999999999938,
+      "per_block_max_diff": [
+        4.163336342344337e-16,
+        3.0531133177191805e-16,
+        3.885780586188048e-16,
+        8.326672684688674e-16,
+        6.661338147750939e-16,
+        4.85722573273506e-16
+      ],
+      "overall_max_diff": 8.326672684688674e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992594,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.608224830031759e-16,
+        4.440892098500626e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        6.522560269672795e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    },
+    {
+      "condition": "P-SUSPECT",
+      "seed": 8400,
+      "pair": "root_7",
+      "per_block_cosine": [
+        0.9999999999993143,
+        0.9999999999980292,
+        0.9999999999988833,
+        0.9999999999991863,
+        0.9999999999992594,
+        0.9999999999994097
+      ],
+      "min_cosine": 0.9999999999980292,
+      "max_cosine": 0.9999999999994097,
+      "per_block_max_diff": [
+        4.85722573273506e-16,
+        3.608224830031759e-16,
+        4.440892098500626e-16,
+        8.881784197001252e-16,
+        6.106226635438361e-16,
+        6.522560269672795e-16
+      ],
+      "overall_max_diff": 8.881784197001252e-16,
+      "invariant": true
+    }
+  ],
+  "wall_seconds": 1685.0101935863495
+}

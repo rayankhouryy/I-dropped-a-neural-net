@@ -1,0 +1,94 @@
+{
+  "P-SUSPECT": {
+    "centered_residual_signature": {
+      "auroc": 1.0,
+      "auprc": 1.0,
+      "mean_descendant": 0.9697686094224305,
+      "min_descendant": 0.8552961589095206,
+      "mean_non_descendant": 0.002597170421521154,
+      "max_non_descendant": 0.00432664163356275,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    },
+    "raw_weight_cosine": {
+      "auroc": 0.8888888888888888,
+      "auprc": 0.875,
+      "mean_descendant": 0.9999999999998778,
+      "min_descendant": 0.9999999999998773,
+      "mean_non_descendant": 0.22291292867396498,
+      "max_non_descendant": 0.9999999999998788,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    },
+    "raw_aligned_frobenius": {
+      "auroc": 0.8888888888888888,
+      "auprc": 0.875,
+      "mean_descendant": 0.0,
+      "min_descendant": -0.0,
+      "mean_non_descendant": -2.19738366893534,
+      "max_non_descendant": -0.0,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    },
+    "singular_value_distance": {
+      "auroc": 0.888888888888889,
+      "auprc": 0.875,
+      "mean_descendant": 0.0,
+      "min_descendant": -0.0,
+      "mean_non_descendant": -0.6287177523362162,
+      "max_non_descendant": -0.0,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    },
+    "rebasin_frobenius": {
+      "auroc": 0.8888888888888888,
+      "auprc": 0.875,
+      "mean_descendant": 0.0,
+      "min_descendant": -0.0,
+      "mean_non_descendant": -1.035554415922321,
+      "max_non_descendant": -0.0,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    },
+    "rebasin_scale_frobenius": {
+      "auroc": 0.8888888888888888,
+      "auprc": 0.875,
+      "mean_descendant": -2.960967018812737e-12,
+      "min_descendant": -2.9760719440034254e-12,
+      "mean_non_descendant": -2.6832838164059893,
+      "max_non_descendant": -2.9492066118991157e-12,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    },
+    "raw_branch_product_cosine": {
+      "auroc": 1.0,
+      "auprc": 1.0,
+      "mean_descendant": 0.9707112976009828,
+      "min_descendant": 0.8636497911593475,
+      "mean_non_descendant": 0.023045836066222333,
+      "max_non_descendant": 0.029155468642884857,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    },
+    "centered_branch_product_cosine": {
+      "auroc": 1.0,
+      "auprc": 1.0,
+      "mean_descendant": 0.9700409377509536,
+      "min_descendant": 0.8609128542602904,
+      "mean_non_descendant": 0.0003796142067666325,
+      "max_non_descendant": 0.0025752692843406064,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    },
+    "centered_with_gating": {
+      "auroc": 1.0,
+      "auprc": 1.0,
+      "mean_descendant": 0.9697686094224305,
+      "min_descendant": 0.8552961589095208,
+      "mean_non_descendant": 0.00037869721182695544,
+      "max_non_descendant": 0.0025752692843406064,
+      "n_descendant": 280,
+      "n_non_descendant": 180
+    }
+  }
+}

@@ -4,9 +4,9 @@
 
 \subsection{Baseline Comparison}\label{sec:exp-baselines}
 
-We compare seven lineage detection methods on two controlled benchmarks with known ancestry. For the MLP benchmark, we train 2 root models ($L{=}16$, $d{=}48$, input$=$16) for 120 epochs on synthetic regression tasks. From each root, we derive 15 descendants via fine-tuning on the same task (30 epochs), fine-tuning on a different synthetic target function (30 epochs), weight perturbation ($\sigma{=}0.02$), pruning (30\% sparsity), and quantization (8-bit), with 3 variants each. We also train 8 independent models per root using the same architecture but different random seeds, plus 3 distilled students per root ($T{=}2.0$, $\alpha_{\mathrm{CE}}{=}0.5$, 60 epochs) that learn to mimic the root's outputs. This yields 52 pairs: 30 positive (root $\to$ descendant) and 22 negative (16 independent + 6 distilled).
+We compare seven lineage detection methods on two controlled benchmarks with known ancestry: our centered residual signature, weight cosine similarity, aligned Frobenius distance, singular value distance (SVD), SVCCA, CKA, and IPGuard. For the MLP benchmark, we train 2 root models ($L{=}16$, $d{=}48$, input$=$16) for 120 epochs on synthetic regression tasks. From each root, we derive 15 descendants via fine-tuning on the same task (30 epochs), fine-tuning on a different synthetic target function (30 epochs), weight perturbation ($\sigma{=}0.02$), pruning (30\% sparsity), and quantization (8-bit), with 3 variants each. We also train 8 independent models per root using the same architecture but different random seeds, plus 3 distilled students per root ($T{=}2.0$, $\alpha_{\mathrm{CE}}{=}0.5$, 60 epochs) that learn to mimic the root's outputs. This yields 52 pairs: 30 positive (root $\to$ descendant) and 22 negative (16 independent + 6 distilled).
 
-We construct a GPT-2 benchmark using ${\sim}$35M-parameter language models ($L{=}6$, $d{=}384$) trained for 3 epochs on TinyStories~\citep{eldan2023tinystories}. We train 8 root models and derive descendants via continued pretraining on TinyStories (1 epoch), LoRA merge ($r{=}8$, $\alpha{=}16$, 1 epoch), pruning (30/50/70\%), and quantization (8/6-bit). We also train distilled students ($T{=}2.0$, $\alpha_{\mathrm{CE}}{=}\alpha_{\mathrm{KL}}{=}0.5$, 2 epochs). Evaluating on the test-split roots (3 of 8) yields 45 pairs: 21 positive and 24 negative (3 distilled students plus 21 cross-root independent comparisons).
+We construct a GPT-2 benchmark using ${\sim}$30M-parameter language models ($L{=}6$, $d{=}384$) trained for 3 epochs on TinyStories~\citep{eldan2023tinystories}. We train 8 root models and derive descendants via continued pretraining on TinyStories (1 epoch), LoRA merge ($r{=}8$, $\alpha{=}16$, 1 epoch), pruning (30/50/70\%), and quantization (8/6-bit). We also train distilled students ($T{=}2.0$, $\alpha_{\mathrm{CE}}{=}\alpha_{\mathrm{KL}}{=}0.5$, 2 epochs). Evaluating on the test-split roots (3 of 8) yields 45 pairs: 21 positive and 24 negative (3 distilled students plus 21 cross-root independent comparisons).
 
 Each (reference, suspect) pair receives a binary label: positive if the suspect inherits weights from the reference, negative otherwise. We report AUROC (threshold-free discrimination) and Gap-$Z$, the standardized margin between positive and negative score distributions:
 \begin{equation}\label{eq:gap-z}
@@ -23,8 +23,8 @@ where $\mu_\pm$ and $\sigma_\pm$ are the means and standard deviations of the po
 \cmidrule(lr){4-5} \cmidrule(lr){6-7}
 Method & Type & Data-free & AUROC$\uparrow$ & Gap-$Z$$\uparrow$ & AUROC$\uparrow$ & Gap-$Z$$\uparrow$ \\
 \midrule
-Centered Residual Signature (ours) & Weight & \cmark & \textbf{1.00} & $+53.0$ & \textbf{1.00} & $+31.0$ \\
-Weight Cosine             & Weight & \cmark & \textbf{1.00} & $+76.3$ & \textbf{1.00} & $+30.7$ \\
+Centered Residual Signature (ours) & Weight & \cmark & \textbf{1.00} & $+53.0$ & \textbf{1.00} & $\mathbf{+31.0}$ \\
+Weight Cosine             & Weight & \cmark & \textbf{1.00} & $\mathbf{+76.3}$ & \textbf{1.00} & $+30.7$ \\
 Aligned Frobenius         & Weight & \cmark & \textbf{1.00} & $+72.0$ & \textbf{1.00} & $+3.9$ \\
 Singular Value Distance   & Weight & \cmark & \textbf{1.00} & $+7.9$ & 0.73 & $+0.4$ \\
 SVCCA~\citep{raghu2017svcca}             & Activation & \xmark & \textbf{1.00} & $+45.4$ & 0.99 & $+3.7$ \\
@@ -32,7 +32,7 @@ CKA~\citep{kornblith2019similarity}               & Activation & \xmark & 0.83 &
 IPGuard~\citep{cao2021ipguard}           & Decision & \xmark & 0.70 & $-3.5$ & 0.91 & $+2.1$ \\
 \bottomrule
 \end{tabular}
-\caption{Lineage detection baselines on MLP and GPT-2 benchmarks. Data-free methods operate directly on weights without probe samples. A reliable fingerprint achieves AUROC near 1.0 with large Gap-$Z$, indicating clean separation between descendants and non-descendants.}
+\caption{Lineage detection baselines on MLP and GPT-2 benchmarks. Data-free methods operate directly on weights without probe samples.}
 \label{tab:baselines}
 \end{table*}
 
@@ -40,40 +40,39 @@ Table~\ref{tab:baselines} compares the seven methods across both benchmarks. On 
 
 The GPT-2 results reveal which methods generalize. Three weight-space methods maintain AUROC$=$1.0: ours, weight cosine, and aligned Frobenius. Singular-value distance degrades substantially (AUROC$=$0.73), suggesting sensitivity to the higher-dimensional weight matrices in transformer MLPs. Among activation-based methods, SVCCA remains strong (0.99) while CKA stays weak (0.86). IPGuard improves on GPT-2 (0.91) but still lags behind weight-space approaches.
 
-We validate on public checkpoints (Table~\ref{tab:real-llm-baselines}): comparing LLaMA-2-7B-base against 3 documented derivatives and 7 independently trained models that share identical architecture (32 layers, $d{=}4096$, intermediate$=$11008, SwiGLU). The derivatives produce high scores ($\mathcal{L}$: 0.995, 0.996, 0.336) while all 7 independent models score $|\mathcal{L}| < 5 \times 10^{-5}$---a ${\sim}10{,}000\times$ gap. This expanded null set ($n{=}7$) provides stronger calibration than a single independent model and confirms that the method reliably distinguishes true descendants from architectural clones trained from scratch.
+We validate on public checkpoints (Table~\ref{tab:real-llm-baselines}): comparing LLaMA-2-7B-base against 3 documented derivatives and 7 independently trained models that share identical architecture (32 layers, $d{=}4096$, intermediate$=$11008, SwiGLU). The derivatives produce high scores ($\mathcal{L}$: 0.995, 0.996, 0.336) while all 7 independent models score $|\mathcal{L}| < 5 \times 10^{-5}$.
 
-\begin{table}[H]
-\centering\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.1}
-\begin{tabular}{@{}llrl@{}}
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lr@{}}
 \toprule
-Pair (base vs.) & Kind & $\mathcal{L}$ & Verdict \\
+Suspect & Score ($\mathcal{L}$) \\
 \midrule
-Llama-2-7B-chat   & RLHF          & $0.995$ & REL. \\
-Vicuna-7B         & instruct      & $0.996$ & REL. \\
-CodeLlama-7B      & code PT       & $0.336$ & REL. \\
+\multicolumn{2}{@{}l}{\textit{Descendants}} \\
+\quad Llama-2-7B-chat~\citep{touvron2023llama}   & $0.995$ \\
+\quad Vicuna-7B~\citep{chiang2023vicuna}         & $0.996$ \\
+\quad CodeLlama-7B~\citep{roziere2023code}      & $0.336$ \\
 \midrule
-OpenLLaMA-7B~\citep{geng2023openllama}      & scratch & $4\mathrm{e}{-}4$ & UNR. \\
-OpenLLaMA-7B-v2~\citep{geng2023openllama}   & scratch & $-2\mathrm{e}{-}5$ & UNR. \\
-Amber~\citep{liu2023llm360}                 & scratch & $-3\mathrm{e}{-}5$ & UNR. \\
-Baichuan-7B~\citep{yang2023baichuan}        & scratch & $-5\mathrm{e}{-}5$ & UNR. \\
-Baichuan2-7B~\citep{yang2023baichuan}       & scratch & $-5\mathrm{e}{-}6$ & UNR. \\
-InternLM-7B~\citep{cai2024internlm2}        & scratch & $2\mathrm{e}{-}5$ & UNR. \\
-Yi-6B~\citep{young2024yi}                   & scratch & $2\mathrm{e}{-}5$ & UNR. \\
+\multicolumn{2}{@{}l}{\textit{Non-descendants}} \\
+\quad OpenLLaMA-7B~\citep{geng2023openllama}      & $4\mathrm{e}{-}4$ \\
+\quad OpenLLaMA-7B-v2~\citep{geng2023openllama}   & $-2\mathrm{e}{-}5$ \\
+\quad Amber~\citep{liu2023llm360}                 & $-3\mathrm{e}{-}5$ \\
+\quad Baichuan-7B~\citep{yang2023baichuan}        & $-5\mathrm{e}{-}5$ \\
+\quad Baichuan2-7B~\citep{yang2023baichuan}       & $-5\mathrm{e}{-}6$ \\
+\quad InternLM-7B~\citep{cai2024internlm2}        & $2\mathrm{e}{-}5$ \\
+\quad Yi-6B~\citep{young2024yi}                   & $2\mathrm{e}{-}5$ \\
 \bottomrule
 \end{tabular}
-\caption{Public checkpoint case study (LLaMA-2 family). Descendants score $\mathcal{L} \geq 0.3$; all 7 independent models with identical architecture score $|\mathcal{L}| < 5 \times 10^{-5}$, confirming the method distinguishes weight ancestry from architectural similarity.}
+\caption{Public checkpoint case study (LLaMA-2 family). Descendants score $\mathcal{L} \geq 0.3$; all 7 independent models score $|\mathcal{L}| < 5 \times 10^{-5}$.}
 \label{tab:real-llm-baselines}
 \end{table}
 
-Why do weight-space methods outperform activation and decision-boundary approaches? Activation-based methods like CKA and SVCCA measure representational similarity, which can be high even between independently trained models that learn similar features. Decision-boundary methods like IPGuard measure output agreement, which conflates behavioral similarity with weight ancestry---a distilled student may produce similar outputs without sharing any weights. Weight-space methods directly compare the parameters that define ancestry, avoiding these confounds.
 
 \subsection{Robustness Under Function-Preserving Checkpoint Laundering}\label{sec:exp-laundering}
 
-Table~\ref{tab:baselines} shows that all weight-space baselines achieve strong results on clean benchmarks. We now test a more stringent condition: \emph{function-preserving laundering}, where an adversary disguises a stolen model by rearranging its internal structure---shuffling neurons or rescaling weights---without changing what the model computes. We evaluate all weight-space baselines plus Re-Basin+scale~\citep{ainsworth2023git}, which recovers alignment via $L$ Hungarian assignments per model pair.
+Table~\ref{tab:baselines} shows that all weight-space baselines achieve strong results on clean benchmarks. We now test a more stringent condition: \emph{function-preserving laundering}, where an adversary disguises a stolen model by rearranging its internal structure (shuffling neurons or rescaling weights) without changing what the model computes. We evaluate all weight-space baselines plus Re-Basin+scale~\citep{ainsworth2023git}, which recovers alignment via $L$ Hungarian assignments per model pair.
 
-To generate reliably laundered checkpoints, we leverage two function-preserving operations. Per-block permutation (P) reorders hidden units ($W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$); reciprocal rescaling (D) scales them ($W_{\mathrm{in}} \leftarrow D W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} D^{-1}$). These are the natural function-preserving symmetries of MLP blocks: P exploits neuron-ordering equivalence; D exploits positive homogeneity of ReLU-family activations. Orthogonal rotation $Q$ of the residual stream ($M \mapsto QMQ^\top$) would also cancel in the branch product, but is not function-preserving for models with learned LayerNorm or RMSNorm parameters (Limitations). Re-Basin+scale can recover alignment under P and D, but at higher computational cost: it solves $L$ Hungarian assignments per pair ($O(Ld^3)$), while our method computes branch products directly ($O(Ld^2 h)$). All laundered variants pass a function-preservation gate: the model's outputs change by at most $10^{-4}$.
+To generate reliably laundered checkpoints, we use two function-preserving operations. Per-block permutation (P) reorders hidden units ($W_{\mathrm{in}} \leftarrow P W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} P^\top$); reciprocal rescaling (D) scales them ($W_{\mathrm{in}} \leftarrow D W_{\mathrm{in}}$, $W_{\mathrm{out}} \leftarrow W_{\mathrm{out}} D^{-1}$). These are the natural function-preserving symmetries of MLP blocks: P exploits neuron-ordering equivalence; D exploits positive homogeneity of ReLU-family activations. Orthogonal rotation $Q$ of the residual stream ($M \mapsto QMQ^\top$) would also cancel in the branch product, but is not function-preserving for models with learned LayerNorm or RMSNorm parameters (Limitations). Re-Basin+scale can recover alignment under P and D, but at higher computational cost: it solves $L$ Hungarian assignments per pair ($O(Ld^3)$), while our method computes branch products directly ($O(Ld^2 h)$). All laundered variants pass a function-preservation gate: the model's outputs change by at most $10^{-4}$.
 
 We take the 52-pair MLP benchmark ($L{=}16$, $d{=}48$) and launder six variants: none (baseline), P (random permutation per block), D$_\mathrm{m}$ (mild rescaling, log-uniform $[0.5,2]$), D$_\mathrm{s}$ (strong rescaling, log-uniform $[0.1,10]$), PD (permutation then rescaling), and PDFT (PD followed by 5 epochs fine-tuning). We also run P on the GPT-2 benchmark but cannot run D variants because GPT-2 uses GELU activation, which is not positively homogeneous ($\mathrm{GELU}(\alpha x) \neq \alpha \cdot \mathrm{GELU}(x)$), so rescaling is not function-preserving.
 
@@ -107,7 +106,7 @@ PDFT & MLP & \textbf{1.0} & \textbf{1.0} & 0.0 & 0.0 & 0.80 \\
 
 Table~\ref{tab:laundering} compares methods under laundering. Our signature and Re-Basin+scale both maintain AUROC$=$1.0 across all conditions, while raw baselines collapse: aligned Frobenius drops to 0.50 under permutation on MLP and 0.0 under strong rescaling; SVD fails rescaling entirely; weight cosine degrades to 0.80 under PD. Aligned Frobenius retains AUROC$=$1.0 on GPT-2 under permutation, but this is an artifact of the block-level Hungarian assignment: with only 6 blocks (vs.\ 16 in MLP), per-block norm statistics remain distinctive enough to recover correct layer correspondence even when within-block similarity is destroyed. The Gap-$Z$ margin still collapses from $+72$ to $+3.9$ (Appendix~\ref{app:laundering-gapz}). The key differentiator is computational cost. Re-Basin+scale solves $L$ Hungarian assignments per pair ($O(Ld^3)$ complexity), while our method computes branch products directly ($O(Ld^2 h)$). This yields 2$\times$ speedup on MLP (0.4ms vs 0.8ms) and 76$\times$ speedup on GPT-2 (5ms vs 388ms; see Appendix~\ref{app:latency} for detailed statistics). Our method achieves invariance algebraically, with no alignment search.
 
-AUROC alone understates the difference between methods. Appendix~\ref{app:laundering-gapz} reports Gap-$Z$ scores showing that weight cosine's margin collapses catastrophically under permutation: descendant scores drop from ${\sim}0.99$ to ${\sim}0.03$, nearly overlapping with non-descendants. The ranking barely survives, but one additional perturbation would break it. Our signature maintains Gap-$Z \approx +53$ across all conditions.
+AUROC alone understates the difference: weight cosine's Gap-$Z$ collapses from $+76$ to $+2$ under permutation (Appendix~\ref{app:laundering-gapz}), while our signature maintains Gap-$Z \approx +53$ across all conditions.
 
 We replicate on public checkpoints from four 7B-scale model families (Table~\ref{tab:laundering-llm}): LLaMA-2~\citep{touvron2023llama}, LLaMA-3~\citep{grattafiori2024llama3}, Mistral~\citep{jiang2023mistral}, and Qwen2.5~\citep{yang2024qwen2}. For each base model and its fine-tuned derivative, we shuffle hidden units in the derivative's MLP layers and measure how much the lineage scores change. Our score is unaffected ($\Delta\mathcal{L} < 10^{-7}$); weight cosine loses ${\sim}95\%$ of its signal.
 
@@ -118,10 +117,10 @@ We replicate on public checkpoints from four 7B-scale model families (Table~\ref
 \toprule
 Base & Suspect & Relation & $\Delta$W.cos \\
 \midrule
-LLaMA-2 7B & chat & derivative & 0.993 \\
-LLaMA-3 8B & Inst & derivative & 0.949 \\
-Mistral 7B & Inst & derivative & 0.934 \\
-Qwen2.5 7B & Inst & derivative & 0.948 \\
+LLaMA-2 7B & Chat & derivative & 0.993 \\
+LLaMA-3 8B & Instruction-tuned & derivative & 0.949 \\
+Mistral 7B & Instruction-tuned & derivative & 0.934 \\
+Qwen2.5 7B & Instruction-tuned & derivative & 0.948 \\
 \midrule
 LLaMA-2 7B & OpenLLaMA & independent & (0.089)$^\dagger$ \\
 LLaMA-3 8B & Mistral 7B & independent & (0.158)$^\dagger$ \\
@@ -162,6 +161,5 @@ Transformation & $n$ & Mean $\mathcal{L}$ & Min $\mathcal{L}$ \\
 
 Table~\ref{tab:gpt2-survival} reports GPT-2 lineage scores on the same benchmark (Section~\ref{sec:exp-baselines}), broken down by transformation type. Quantization and LoRA preserve the signal almost perfectly ($\mathcal{L}{\geq}0.996$); fine-tuning and pruning degrade it but remain well above the null ($\mathcal{L}{\geq}0.855$). Both distilled students and independently trained models score near zero. The $200\times$ gap between minimum descendant and maximum non-descendant scores yields AUROC$=$1.0 with perfect separation.
 
-\paragraph{Behavioral similarity does not imply weight ancestry.}
-A key question is whether output agreement implies weight-level lineage. Distillation increases teacher--student agreement modestly (+1.4 points top-1 accuracy over independent training, 79.0\% vs 77.6\%) while producing no weight ancestry signal ($\mathcal{L} \approx 0.002$). Models trained on the same architecture and corpus already exhibit high agreement; distillation raises this slightly, yet neither independently trained nor distilled models show weight lineage. This confirms that our method detects shared parameters, not behavioral mimicry.
+Behavioral similarity does not imply weight ancestry: distillation increases teacher--student agreement (+1.4 points top-1) while producing no ancestry signal ($\mathcal{L} \approx 0.002$), confirming our method detects shared parameters, not behavioral mimicry (Appendix~\ref{app:gpt2-benchmark}).
 

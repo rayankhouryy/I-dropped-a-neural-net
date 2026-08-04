@@ -397,13 +397,15 @@ def create_appendix_methods_figure():
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    # Legend
-    ax.legend(loc='center right', fontsize=11, frameon=True)
+    # Legend - outside underneath the graph
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.12),
+              fontsize=11, frameon=True, ncol=3)
 
     ax.set_title('Block Pairing Accuracy Across GPT-2 Scales',
                  fontsize=13, fontweight='bold', pad=12)
 
     plt.tight_layout()
+    plt.subplots_adjust(bottom=0.2)
     fig_b.savefig('fig2_appendix_methods_slope.png', dpi=150, bbox_inches='tight',
                   facecolor='white', edgecolor='none')
     fig_b.savefig('fig2_appendix_methods_slope.pdf', bbox_inches='tight',

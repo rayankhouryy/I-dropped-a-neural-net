@@ -1,0 +1,19 @@
+{
+  "n_pairs": 17,
+  "n_seeds": 3,
+  "n_results": 51,
+  "auroc_original": 1.0,
+  "auroc_after_Q_rotation": 0.2354497354497354,
+  "gap_original": 0.9674012699907604,
+  "gap_after_Q_rotation": -0.0008521294276018455,
+  "mean_desc_score_orig": 0.9696730677569593,
+  "mean_desc_score_rot": 0.0020706206182246312,
+  "mean_nondesc_score_orig": 0.002271797766198873,
+  "mean_nondesc_score_rot": 0.0029227500458264767,
+  "signature_cosine_mean": -0.00010720972228661486,
+  "signature_cosine_min": -0.004917086730632599,
+  "signature_cosine_max": 0.0038946612535516434,
+  "validation_pass_rate": 0.0,
+  "mean_max_logit_diff": 0.554827000580582,
+  "wall_seconds": 78.02746391296387
+}

@@ -1,0 +1,24 @@
+{
+  "benchmark_dir": "results/lineage_benchmark_gpt2_paper_v2",
+  "checkpoint_dir": "results/lineage_benchmark_gpt2_paper_v2/checkpoints",
+  "output_dir": "results/lineage_benchmark_gpt2_paper_v2/laundering_P-SUSPECT",
+  "conditions": [
+    "P-SUSPECT"
+  ],
+  "n_perm_seeds": 5,
+  "pft_steps": 1000,
+  "pft_lr": 2e-05,
+  "n_validation_seqs": 128,
+  "seed_base": 8000,
+  "test_root_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "smoke": false
+}

@@ -1,8 +1,9 @@
-"""GPT-2 checkpoint laundering operators (permutation only).
+"""GPT-2 checkpoint laundering operators (permutation and Q-rotation).
 
 GELU is NOT positively homogeneous, so rescaling operators from the MLP
-benchmark cannot be used without approximation. This module focuses on
-EXACT function-preserving permutation only.
+benchmark cannot be used without approximation. This module focuses on:
+1. EXACT function-preserving permutation
+2. APPROXIMATE function-preserving Q-rotation (exact for RMSNorm, approximate for LayerNorm)
 
 GPT-2 Conv1D weight conventions:
     c_fc.weight:   (d_model, d_ff) - input projection

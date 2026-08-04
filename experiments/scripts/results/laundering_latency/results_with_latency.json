@@ -1,0 +1,333 @@
+{
+  "config": {
+    "n_refs": 2,
+    "n_per_descendant_type": 3,
+    "n_same_arch_diff_seed": 8,
+    "n_distilled": 3,
+    "depth": 16,
+    "hidden": 48,
+    "in_dim": 16,
+    "epochs": 120,
+    "ft_epochs": 30,
+    "pdft_epochs": 5,
+    "variants": "none,P,D-mild,D-strong,PD,PDFT",
+    "seed_base": 7000,
+    "workers": 1,
+    "out": "results/laundering_latency/"
+  },
+  "variants": [
+    "none",
+    "P",
+    "D-mild",
+    "D-strong",
+    "PD",
+    "PDFT"
+  ],
+  "methods": [
+    "diagonal_dominance",
+    "raw_aligned_frobenius",
+    "raw_singular_value_dist",
+    "raw_weight_cosine",
+    "rebasin_scale_frobenius"
+  ],
+  "summary": {
+    "none": {
+      "diagonal_dominance": {
+        "AUROC": 1.0,
+        "mean_related": 0.37129710773649877,
+        "min_related": 0.20934630290728284,
+        "mean_unrelated": 0.029582419479043023,
+        "max_unrelated": 0.04272708876565773,
+        "n_pairs": 52
+      },
+      "raw_aligned_frobenius": {
+        "AUROC": 1.0,
+        "mean_related": -0.06381568477964975,
+        "min_related": -0.1557113668458549,
+        "mean_unrelated": -1.3707063989506505,
+        "max_unrelated": -1.3562835193045863,
+        "n_pairs": 52
+      },
+      "raw_singular_value_dist": {
+        "AUROC": 1.0,
+        "mean_related": -0.0049134339488989594,
+        "min_related": -0.011438160288589658,
+        "mean_unrelated": -0.021866452948808814,
+        "max_unrelated": -0.020270383819985735,
+        "n_pairs": 52
+      },
+      "raw_weight_cosine": {
+        "AUROC": 1.0,
+        "mean_related": 0.9960391245675022,
+        "min_related": 0.987774585759523,
+        "mean_unrelated": 0.05492224553398217,
+        "max_unrelated": 0.05979093747386672,
+        "n_pairs": 52
+      },
+      "rebasin_scale_frobenius": {
+        "AUROC": 1.0,
+        "mean_related": -0.06286593836616648,
+        "min_related": -0.15620979784092803,
+        "mean_unrelated": -2.0094766001872424,
+        "max_unrelated": -1.5599259549402724,
+        "n_pairs": 52
+      }
+    },
+    "P": {
+      "diagonal_dominance": {
+        "AUROC": 1.0,
+        "mean_related": 0.3712971080760575,
+        "min_related": 0.20934628838520103,
+        "mean_unrelated": 0.029582419479043023,
+        "max_unrelated": 0.04272708876565773,
+        "n_pairs": 52
+      },
+      "raw_aligned_frobenius": {
+        "AUROC": 0.4954545454545454,
+        "mean_related": -1.3710441124984605,
+        "min_related": -1.3796983820635185,
+        "mean_unrelated": -1.3707063989506505,
+        "max_unrelated": -1.3562835193045863,
+        "n_pairs": 52
+      },
+      "raw_singular_value_dist": {
+        "AUROC": 1.0,
+        "mean_related": -0.004913433948898957,
+        "min_related": -0.011438160288589665,
+        "mean_unrelated": -0.021866452948808814,
+        "max_unrelated": -0.020270383819985735,
+        "n_pairs": 52
+      },
+      "raw_weight_cosine": {
+        "AUROC": 0.856060606060606,
+        "mean_related": 0.05958870315680732,
+        "min_related": 0.055098738038029046,
+        "mean_unrelated": 0.05492224553398217,
+        "max_unrelated": 0.05979093747386672,
+        "n_pairs": 52
+      },
+      "rebasin_scale_frobenius": {
+        "AUROC": 1.0,
+        "mean_related": -0.06286593836616648,
+        "min_related": -0.15620979784092803,
+        "mean_unrelated": -2.0094766001872424,
+        "max_unrelated": -1.5599259549402724,
+        "n_pairs": 52
+      }
+    },
+    "D-mild": {
+      "diagonal_dominance": {
+        "AUROC": 1.0,
+        "mean_related": 0.37129710640311225,
+        "min_related": 0.20934629978936592,
+        "mean_unrelated": 0.029582419479043023,
+        "max_unrelated": 0.04272708876565773,
+        "n_pairs": 52
+      },
+      "raw_aligned_frobenius": {
+        "AUROC": 1.0,
+        "mean_related": -0.4382625742615266,
+        "min_related": -0.4607855873189383,
+        "mean_unrelated": -1.3707063989506505,
+        "max_unrelated": -1.3562835193045863,
+        "n_pairs": 52
+      },
+      "raw_singular_value_dist": {
+        "AUROC": 0.0,
+        "mean_related": -0.08630609331273961,
+        "min_related": -0.09397795747457406,
+        "mean_unrelated": -0.021866452948808814,
+        "max_unrelated": -0.020270383819985735,
+        "n_pairs": 52
+      },
+      "raw_weight_cosine": {
+        "AUROC": 1.0,
+        "mean_related": 0.9288224942121948,
+        "min_related": 0.9189638391656207,
+        "mean_unrelated": 0.05492224553398217,
+        "max_unrelated": 0.05979093747386672,
+        "n_pairs": 52
+      },
+      "rebasin_scale_frobenius": {
+        "AUROC": 1.0,
+        "mean_related": -0.0628659387517982,
+        "min_related": -0.15620979784092803,
+        "mean_unrelated": -2.0094766001872424,
+        "max_unrelated": -1.5599259549402724,
+        "n_pairs": 52
+      }
+    },
+    "D-strong": {
+      "diagonal_dominance": {
+        "AUROC": 1.0,
+        "mean_related": 0.3712971064950695,
+        "min_related": 0.20934629115780803,
+        "mean_unrelated": 0.029582419479043023,
+        "max_unrelated": 0.04272708876565773,
+        "n_pairs": 52
+      },
+      "raw_aligned_frobenius": {
+        "AUROC": 0.0,
+        "mean_related": -2.6853017559479233,
+        "min_related": -2.8026144629338354,
+        "mean_unrelated": -1.3707063989506505,
+        "max_unrelated": -1.3562835193045863,
+        "n_pairs": 52
+      },
+      "raw_singular_value_dist": {
+        "AUROC": 0.0,
+        "mean_related": -1.0892758425722824,
+        "min_related": -1.1568850509919315,
+        "mean_unrelated": -0.021866452948808814,
+        "max_unrelated": -0.020270383819985735,
+        "n_pairs": 52
+      },
+      "raw_weight_cosine": {
+        "AUROC": 1.0,
+        "mean_related": 0.6553850003437774,
+        "min_related": 0.6470456265687046,
+        "mean_unrelated": 0.05492224553398217,
+        "max_unrelated": 0.05979093747386672,
+        "n_pairs": 52
+      },
+      "rebasin_scale_frobenius": {
+        "AUROC": 1.0,
+        "mean_related": -0.06286593873391373,
+        "min_related": -0.15620979784092803,
+        "mean_unrelated": -2.0094766001872424,
+        "max_unrelated": -1.5599259549402724,
+        "n_pairs": 52
+      }
+    },
+    "PD": {
+      "diagonal_dominance": {
+        "AUROC": 1.0,
+        "mean_related": 0.37129710935294885,
+        "min_related": 0.2093463013025732,
+        "mean_unrelated": 0.029582419479043023,
+        "max_unrelated": 0.04272708876565773,
+        "n_pairs": 52
+      },
+      "raw_aligned_frobenius": {
+        "AUROC": 0.0,
+        "mean_related": -3.3299915467213648,
+        "min_related": -3.4596802538178006,
+        "mean_unrelated": -1.3707063989506505,
+        "max_unrelated": -1.3562835193045863,
+        "n_pairs": 52
+      },
+      "raw_singular_value_dist": {
+        "AUROC": 0.0,
+        "mean_related": -1.092140295284158,
+        "min_related": -1.1599538424069302,
+        "mean_unrelated": -0.021866452948808814,
+        "max_unrelated": -0.020270383819985735,
+        "n_pairs": 52
+      },
+      "raw_weight_cosine": {
+        "AUROC": 0.8045454545454546,
+        "mean_related": 0.058988704142232055,
+        "min_related": 0.05178997500656874,
+        "mean_unrelated": 0.05492224553398217,
+        "max_unrelated": 0.05979093747386672,
+        "n_pairs": 52
+      },
+      "rebasin_scale_frobenius": {
+        "AUROC": 1.0,
+        "mean_related": -0.0628659386048016,
+        "min_related": -0.15620979784092803,
+        "mean_unrelated": -2.0094766001872424,
+        "max_unrelated": -1.5599259549402724,
+        "n_pairs": 52
+      }
+    },
+    "PDFT": {
+      "diagonal_dominance": {
+        "AUROC": 1.0,
+        "mean_related": 0.36691886444008237,
+        "min_related": 0.20834927876391854,
+        "mean_unrelated": 0.029582419479043023,
+        "max_unrelated": 0.04272708876565773,
+        "n_pairs": 52
+      },
+      "raw_aligned_frobenius": {
+        "AUROC": 0.0,
+        "mean_related": -3.329849625709378,
+        "min_related": -3.4595286420494364,
+        "mean_unrelated": -1.3707063989506505,
+        "max_unrelated": -1.3562835193045863,
+        "n_pairs": 52
+      },
+      "raw_singular_value_dist": {
+        "AUROC": 0.0,
+        "mean_related": -1.0921190256513236,
+        "min_related": -1.1599043911864284,
+        "mean_unrelated": -0.021866452948808814,
+        "max_unrelated": -0.020270383819985735,
+        "n_pairs": 52
+      },
+      "raw_weight_cosine": {
+        "AUROC": 0.8045454545454546,
+        "mean_related": 0.058996621557126476,
+        "min_related": 0.0517823746839763,
+        "mean_unrelated": 0.05492224553398217,
+        "max_unrelated": 0.05979093747386672,
+        "n_pairs": 52
+      },
+      "rebasin_scale_frobenius": {
+        "AUROC": 1.0,
+        "mean_related": -0.07432261707829825,
+        "min_related": -0.16526038508088176,
+        "mean_unrelated": -2.0094766001872424,
+        "max_unrelated": -1.5599259549402724,
+        "n_pairs": 52
+      }
+    }
+  },
+  "latency_stats": {
+    "diagonal_dominance": {
+      "mean_ms": 0.4138598269491922,
+      "std_ms": 0.03140415606510334,
+      "min_ms": 0.3681250018416904,
+      "max_ms": 0.588916998822242,
+      "n_calls": 52
+    },
+    "raw_aligned_frobenius": {
+      "mean_ms": 1.317317327168264,
+      "std_ms": 0.06763269915382206,
+      "min_ms": 1.2189169974590186,
+      "max_ms": 1.4772920003451873,
+      "n_calls": 52
+    },
+    "raw_singular_value_dist": {
+      "mean_ms": 2.6497347502859507,
+      "std_ms": 0.2786047837545556,
+      "min_ms": 2.4196249978558626,
+      "max_ms": 4.466792001039721,
+      "n_calls": 52
+    },
+    "raw_weight_cosine": {
+      "mean_ms": 1.5344670963223996,
+      "std_ms": 0.06324854535300337,
+      "min_ms": 1.4144999986456241,
+      "max_ms": 1.657542001339607,
+      "n_calls": 52
+    },
+    "rebasin_scale_frobenius": {
+      "mean_ms": 0.7962427886153679,
+      "std_ms": 0.30562521525562886,
+      "min_ms": 0.5037080009060446,
+      "max_ms": 1.4242500001273584,
+      "n_calls": 52
+    }
+  },
+  "gate_max_deviation": {
+    "none": 0.0,
+    "P": 4.76837158203125e-06,
+    "D-mild": 5.7220458984375e-06,
+    "D-strong": 4.76837158203125e-06,
+    "PD": 4.291534423828125e-06,
+    "PDFT": 4.291534423828125e-06
+  },
+  "wall_seconds": 46.79244589805603
+}
