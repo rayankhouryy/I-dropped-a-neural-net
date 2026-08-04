@@ -123,6 +123,9 @@ def _shard_map(repo: str) -> tuple[Path, dict, str]:
     return local_dir, {n: "pytorch_model.bin" for n in state.keys()}, "pytorch"
 
 
+_pytorch_cache = {}  # shard_path -> state_dict (cache for .bin files)
+
+
 def get_tensor(local_dir: Path, shard_of: dict, name: str,
                fmt: str = "safetensors") -> torch.Tensor:
     shard = local_dir / shard_of[name]
@@ -130,8 +133,17 @@ def get_tensor(local_dir: Path, shard_of: dict, name: str,
         with safe_open(str(shard), framework="pt") as f:
             return f.get_tensor(name)
     else:
-        state = torch.load(str(shard), map_location="cpu", weights_only=True)
-        return state[name]
+        shard_str = str(shard)
+        if shard_str not in _pytorch_cache:
+            print(f"    loading shard {shard.name}...")
+            _pytorch_cache[shard_str] = torch.load(
+                shard_str, map_location="cpu", weights_only=True)
+        return _pytorch_cache[shard_str][name]
+
+
+def clear_pytorch_cache():
+    """Clear cached pytorch shards to free memory."""
+    _pytorch_cache.clear()
 
 
 def predownload(repo: str):
@@ -196,6 +208,8 @@ def extract(tag: str, repo: str, device: str = "cpu", cleanup: bool = True):
     SIG_DIR.mkdir(exist_ok=True)
     np.savez_compressed(out, phi=np.stack(phis), s=np.array(scores))
     print(f"\n  -> saved {out}  (mean s = {np.mean(scores):.4f})")
+
+    clear_pytorch_cache()  # free memory from .bin shards
 
     if cleanup:
         print("\nCleaning up downloaded weights...")
