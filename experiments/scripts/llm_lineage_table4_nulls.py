@@ -123,7 +123,7 @@ def _shard_map(repo: str) -> tuple[Path, dict, str]:
     return local_dir, {n: "pytorch_model.bin" for n in state.keys()}, "pytorch"
 
 
-_pytorch_cache = {}  # shard_path -> state_dict (cache for .bin files)
+_pytorch_cache = {}  # shard_path -> state_dict (keep only ONE shard at a time)
 
 
 def get_tensor(local_dir: Path, shard_of: dict, name: str,
@@ -135,6 +135,8 @@ def get_tensor(local_dir: Path, shard_of: dict, name: str,
     else:
         shard_str = str(shard)
         if shard_str not in _pytorch_cache:
+            # Clear previous shard to avoid OOM (keep only one shard in memory)
+            _pytorch_cache.clear()
             print(f"    loading shard {shard.name}...")
             _pytorch_cache[shard_str] = torch.load(
                 shard_str, map_location="cpu", weights_only=True)
