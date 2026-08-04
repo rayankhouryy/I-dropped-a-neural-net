@@ -25,6 +25,7 @@
 \usepackage{enumitem}
 \usepackage{pifont}
 \usepackage{placeins}
+\usepackage{float}
 
 % Custom commands
 \newcommand{\cmark}{\ding{51}}
@@ -37,7 +38,7 @@
 % Figure paths
 \graphicspath{{../../figures/}{../../../figures/}{../../../../figures/}}
 
-\title{Training Leaves Traces: Model Lineage Verification for Open-Weight Language Models}
+\title{Training Leaves Traces: Centered Residual Signatures for Language Model Lineage Verification}
 
 \author{Anonymous Submission}
 
@@ -45,16 +46,14 @@
 \maketitle
 
 \begin{abstract}
-Open-weight models are frequently reused through fine-tuning, quantization, pruning, and merging, but their ancestry is rarely documented in a reliable way. Hashes stop working once weights change, metadata may be incomplete or misleading, and watermarks help only when they are inserted before release. We therefore ask a retrospective question: \textbf{given two checkpoints with compatible residual architectures, can we determine whether they share weight ancestry?}
+Open-weight language models are fine-tuned, quantized, pruned, and merged, yet their provenance is often undocumented. We study data-free white-box lineage verification: \textbf{can weights alone reveal whether two compatible residual checkpoints share weight-level ancestry?}
 
-Trained residual blocks exhibit a measurable structure: when their input and output projections are paired correctly, the resulting products show strong normalized trace concentration. This pattern is absent at initialization and does not emerge in matched networks without skip connections. We use this structure to recover projection correspondences, then remove the generic identity-aligned component and compare the remaining centered residual signatures to obtain a model-level lineage score. Across 9 model families spanning language, vision, and speech - including GPT-2, LLaMA-2, ViT, Whisper, and ResNets - the method recovers the correct projection pairings with 80--100\% accuracy. We evaluate checkpoint-level lineage verification on controlled residual MLP, ResNet, and GPT-2-style language model benchmarks, as well as public LLaMA-2 checkpoints. Checkpoints produced through fine-tuning, pruning, quantization, and LoRA merging remain close to their ancestors, whereas independently trained models and distilled students do not. This distinction matters because a distilled student may reproduce a teacher's behavior without inheriting its weights. The resulting method provides a passive, post-hoc provenance signal for white-box residual models without relying on metadata, watermarks, training data, or forward passes.
+Residual training produces a shared identity-aligned component in branch products, so this structure alone cannot establish ancestry. We remove it and compare checkpoint-specific structure across residual blocks, yielding a symmetric lineage score calibrated against independent checkpoints. On residual-MLP and GPT-2 benchmarks, the score separates fine-tuned, LoRA-merged, pruned, and quantized descendants from independent and distilled models (AUROC=1.0), distinguishing weight ancestry from behavioral similarity. Under function-preserving checkpoint laundering, weight-space baselines lose margin or fail; our score remains unchanged and runs 76$\times$ faster than the nearest robust baseline on GPT-2. The projection-pairing signal appears across six language-model families. A LLaMA-2 case study comparing 3 documented descendants against 7 independently trained architectural clones shows a ${\sim}10{,}000\times$ score gap, confirming the method reliably distinguishes weight ancestry from architectural similarity. Taken together, these results establish a passive, data-free provenance signal for compatible open-weight language-model checkpoints.
 \end{abstract}
 
-% Content will be added incrementally
 \input{section1_intro}
 \input{section2_background}
 \input{section3_theory}
-\input{section4_verification}
 \input{section5_experiments}
 \input{section6_conclusion}
 

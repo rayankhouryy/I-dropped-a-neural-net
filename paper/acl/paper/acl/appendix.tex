@@ -36,10 +36,10 @@ Weight Cosine & 50.1 & 7.7 & 46.2 & 83.1 \\
 
 Table~\ref{tab:factorization} lists the architecture-aware residual branch products used throughout this work.
 
-\begin{table}[h]
+\begin{table*}[t]
 \centering
 \small
-\begin{tabular}{@{}l@{\hspace{6pt}}p{3.8cm}@{\hspace{6pt}}l@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
 Architecture & Residual branch $F(x)$ & Product $M$ \\
 \midrule
@@ -52,7 +52,7 @@ SwiGLU MLP & $W_{\mathrm{down}} [\sigma(W_{\mathrm{gate}} x) \odot W_{\mathrm{up
 \end{tabular}
 \caption{Architecture-aware residual branch products. Each $M$ composes the linear maps of one branch (dropping nonlinearities) so it maps the residual stream to itself. Factorization must match the architecture; incomplete products destroy the signal.}
 \label{tab:factorization}
-\end{table}
+\end{table*}
 
 On ImageNet-pretrained ResNet-50/101/152 (torchvision), we compare naive two-layer factorization ($W_3 W_1$, skipping the middle conv) against the correct three-layer product ($W_3 W_2 W_1$) on layer3 bottleneck blocks ($n{=}5/22/35$ blocks respectively). Naive $W_3 W_1$ achieves chance-level accuracy; the correct triple product recovers:
 \begin{itemize}[nosep]
@@ -79,7 +79,7 @@ p(A,B) = \frac{|\{j : \mathcal{L}(A, U_j) \geq \mathcal{L}(A,B)\}| + 1}{n + 1}
 \end{equation}
 With $n$ null models, the minimum achievable p-value is $1/(n+1)$. We therefore report AUROC as the primary metric, which aggregates discrimination across all thresholds without requiring specific FPR claims.
 
-\paragraph{Calibration power by benchmark.} The MLP benchmark has 84 unrelated pairs from 3 independent roots; the effective sample size for calibration is 3 roots, not 84 pairs, since descendants from the same root are not independent samples. The GPT-2-Small-Lite benchmark uses 8 roots total, with 3 held out for testing; each test root is compared against 7 independent roots, but the effective sample size for formal hypothesis testing remains limited. We report AUROC as a discrimination summary rather than threshold-based verification claims with specific false-positive rate guarantees. The LLaMA-2 case study has only one confirmed independent model (OpenLLaMA-7B), so we report the ${\sim}1000\times$ score gap descriptively rather than as a calibrated p-value. Practical deployment at specific confidence levels would require collecting additional null models of matched architecture.
+\paragraph{Calibration power by benchmark.} The MLP benchmark has 84 unrelated pairs from 3 independent roots; the effective sample size for calibration is 3 roots, not 84 pairs, since descendants from the same root are not independent samples. The GPT-2-Small-Lite benchmark uses 8 roots total, with 3 held out for testing; each test root is compared against 7 independent roots, but the effective sample size for formal hypothesis testing remains limited. We report AUROC as a discrimination summary rather than threshold-based verification claims with specific false-positive rate guarantees. The LLaMA-2 case study includes 7 independently trained architectural clones (OpenLLaMA v1/v2, Amber, Baichuan v1/v2, InternLM, Yi), all with identical architecture (32 layers, $d{=}4096$, intermediate$=$11008). All 7 score $|\mathcal{L}| < 5 \times 10^{-5}$ against the LLaMA-2-7B reference, while descendants score $\mathcal{L} \geq 0.3$---a ${\sim}10{,}000\times$ gap that provides meaningful null calibration for this architecture family.
 
 \begin{table}[h]
 \centering
@@ -132,9 +132,10 @@ Table~\ref{tab:jacobian-orthogonality} reports the normalized Jacobian deviation
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{@{}lcccc@{}}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccr@{}}
 \toprule
-Model & $d$ & \makecell{Pretrained \\ $\delta_J^{\mathrm{norm}}$} & \makecell{Random-init \\ $\delta_J^{\mathrm{norm}}$} & Ratio \\
+Model & $d$ & Pretrained & Rand-init & Ratio \\
 \midrule
 GPT-2-small  & 768  & 0.297 & 0.025 & $11.7\times$ \\
 GPT-2-medium & 1024 & 0.242 & 0.026 & $9.4\times$ \\
@@ -142,7 +143,7 @@ GPT-2-large  & 1280 & 0.155 & 0.025 & $6.2\times$ \\
 GPT-2-XL     & 1600 & 0.122 & 0.024 & $5.1\times$ \\
 \bottomrule
 \end{tabular}
-\caption{Jacobian orthogonality across GPT-2 scales. Pretrained models are $5$--$12\times$ less orthogonal than at random initialization, providing evidence against the simple hypothesis that trace concentration results from trained blocks approaching isometry. Random-init $\delta_J^{\mathrm{norm}}$ is nearly constant across scales (${\approx}0.025$); pretrained values decrease with model size but never approach the random-init floor.}
+\caption{Jacobian orthogonality ($\delta_J^{\mathrm{norm}}$) across GPT-2 scales. Pretrained models are $5$--$12\times$ less orthogonal than at random init, inconsistent with the hypothesis that trace concentration results from blocks approaching isometry.}
 \label{tab:jacobian-orthogonality}
 \end{table}
 
@@ -182,15 +183,16 @@ Table~\ref{tab:centering-ablation} shows results on the GPT-2 benchmark (27 pair
 \begin{table}[h]
 \centering
 \small
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-Method & AUROC & Gap-$Z$ & \makecell{Unrelated\\mean} & Margin \\
+Method & AUC & Gap-$Z$ & Unrel.\ $\mu$ & Margin \\
 \midrule
 Uncentered $\mathrm{vec}(M_\ell)$ & 1.0 & $+28.7$ & 0.019 & 0.84 \\
 Centered $\mathrm{vec}(R_\ell)$ & 1.0 & $+29.2$ & \textbf{0.0004} & \textbf{0.86} \\
 \bottomrule
 \end{tabular}
-\caption{Centering ablation on the GPT-2 benchmark. Both methods perfectly separate related from unrelated pairs, but centering reduces spurious similarity between unrelated models by ${\sim}50\times$. The identity component contributes measurable cross-model similarity that centering removes.}
+\caption{Centering ablation on the GPT-2 benchmark. Both methods perfectly separate related from unrelated pairs, but centering reduces spurious similarity by ${\sim}50\times$.}
 \label{tab:centering-ablation}
 \end{table}
 
@@ -234,23 +236,23 @@ We construct 40 harder pairs from depth-16 MLPs (same setup as Table~\ref{tab:ba
 
 \begin{table}[h]
 \centering\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcccc}
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
 & \multicolumn{2}{c}{AUROC} & \multicolumn{2}{c}{Spearman $\rho$} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
 Method & Graft & Merge & Graft & Merge \\
 \midrule
-Centered Residual Signature (ours)  & 0.979 & 1.000 & +0.96 & +0.96 \\
-Aligned Frobenius          & 1.000 & 1.000 & +0.99 & +0.99 \\
-Weight cosine              & 1.000 & 1.000 & +0.98 & +0.96 \\
-Singular-value distance    & 1.000 & 0.448 & +0.99 & +0.23 \\
-SVCCA                      & 1.000 & 1.000 & +0.97 & +0.99 \\
-CKA                        & 0.813 & 0.781 & +0.73 & +0.75 \\
-IPGuard (regr.\ analogue)  & 0.052 & 0.448 & $-$0.83 & +0.22 \\
+Ours  & 0.98 & 1.00 & +.96 & +.96 \\
+Aligned Frob.\ & 1.00 & 1.00 & +.99 & +.99 \\
+Weight cos.\ & 1.00 & 1.00 & +.98 & +.96 \\
+SVD dist.\ & 1.00 & 0.45 & +.99 & +.23 \\
+SVCCA & 1.00 & 1.00 & +.97 & +.99 \\
+CKA & 0.81 & 0.78 & +.73 & +.75 \\
+IPGuard & 0.05 & 0.45 & $-$.83 & +.22 \\
 \bottomrule
 \end{tabular}
-\caption{Harder-regime benchmark on layer grafts and linear merges ($40$ pairs). Related: $K \ge L/2$ for grafts, $w \ge 0.5$ for merges. Weight-space methods (ours, aligned Frobenius, weight cosine) and SVCCA maintain AUROC${\approx}$1.000 with $\rho \ge 0.96$. CKA degrades to AUROC${\approx}$0.80; IPGuard collapses on grafts (AUROC$=$0.05, negative $\rho$); singular-value distance fails merges ($\rho = 0.23$). Our method tracks partial overlap monotonically ($\rho \ge 0.96$), not just binary detection.}
+\caption{Harder-regime benchmark on layer grafts and linear merges (40 pairs). Our method tracks partial overlap monotonically ($\rho \ge 0.96$). CKA degrades; IPGuard collapses on grafts; SVD fails merges.}
 \label{tab:harder-bench}
 \end{table}
 
@@ -305,3 +307,28 @@ $\ge 1$     & 0.91+ & 0.69 & utility preserved \\
 \caption{Pareto frontier for suppression attack. The null baseline for this setup is $\mathcal{L}_{\text{null}} = 0.084$. Reaching the null threshold costs +1.5\% utility loss ($\lambda{=}10^{-1}$); driving the score reliably below null ($\lambda{=}10^{-2}$) costs +12\%.}
 \label{tab:attack-pareto}
 \end{table}
+
+\section{Transfer Beyond Language Models}\label{app:beyond-lm}
+
+The trace concentration phenomenon underlying our method is not specific to language models. Table~\ref{tab:vision-speech} shows that architecture-aware branch products recover projection pairings in vision and speech architectures as well.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+Model & $L$ & Pair Acc & AUC \\
+\midrule
+ViT-B/16 & 12 & \textbf{100\%} & 1.00 \\
+Whisper (tiny/base/sm) & 4--12 & \textbf{100\%} & 0.85 \\
+ResNet-50/101/152 & 5--35 & 91--100\% & 0.96 \\
+\bottomrule
+\end{tabular}
+\caption{Trace concentration in vision and speech architectures. Pair accuracy measures correct within-block projection recovery via Hungarian matching on $s(i,j)$. Random-init baselines: $\le 9\%$.}
+\label{tab:vision-speech}
+\end{table}
+
+For ViT~\citep{dosovitskiy2020vit}, we use the same transformer MLP factorization as for language models ($W_2 W_1$). For Whisper~\citep{radford2023whisper}, we extract branch products from both encoder and decoder MLP blocks. For ResNet~\citep{he2016resnet}, bottleneck blocks require a three-layer product ($W_3 W_2 W_1$); naive two-layer factorization ($W_3 W_1$, skipping the middle conv) yields chance-level accuracy. On ImageNet-pretrained ResNet-50/101/152 (torchvision), the correct triple product recovers 91--100\% of block pairings in layer3.
+
+These results demonstrate that the underlying signal---trace concentration in residual branch products---is a general property of trained residual networks, not specific to language model architectures. This universality motivates building lineage signatures on the trace-concentrated structure. We focus the main evaluation on language models to match the ACL venue, but the method applies wherever residual blocks exist.

@@ -10,10 +10,9 @@ Individual factors $W_k$ are rectangular and do not share an input--output basis
 
 Under the Frobenius inner product $\langle A, B \rangle = \mathrm{tr}(A^\top B)$, the identity matrix and the traceless matrices span orthogonal subspaces of $\mathbb{R}^{d \times d}$. Any branch product therefore splits into a component along the identity, with coefficient $\langle M_\ell, I \rangle / \langle I, I \rangle = \mathrm{tr}(M_\ell)/d$, and an orthogonal traceless remainder:
 \begin{equation}\label{eq:decomp}
-M_\ell = -\varepsilon_\ell I + E_\ell
+M_\ell = \tfrac{\mathrm{tr}(M_\ell)}{d} I + E_\ell
 \end{equation}
-where $\varepsilon_\ell = -\mathrm{tr}(M_\ell)/d$ and $\mathrm{tr}(E_\ell) = 0$.
-Traces are predominantly negative (Appendix~\ref{app:gpt2-details}), so $\varepsilon_\ell$ is typically positive; the score uses magnitude.
+where $\mathrm{tr}(E_\ell) = 0$. Traces are predominantly negative (Appendix~\ref{app:gpt2-details}); the score uses magnitude.
 
 The \emph{normalized trace concentration}~\citep{park2026idroppedneuralnet} measures this identity alignment:
 \begin{equation}\label{eq:dd-score}
@@ -35,16 +34,13 @@ LLaMA-2-7B & 32 & \textbf{100\%} & 1.00 \\
 Mistral-7B & 32 & \textbf{100\%} & 0.96 \\
 Qwen2.5-7B & 28 & 80\% & 0.93 \\
 DeepSeek-R1 & 32 & 80\% & 0.93 \\
-ViT-B/16 & 12 & \textbf{100\%} & 1.00 \\
-Whisper (tiny/base/sm) & 4--12 & \textbf{100\%} & 0.85 \\
-ResNet-50/101/152 & 5--35 & 91--100\% & 0.96 \\
 \bottomrule
 \end{tabular}
-\caption{Trace concentration across 9 architecture families. Pair accuracy measures correct within-block projection recovery via Hungarian matching on $s(i,j)$. Random-init baselines: $\le 9\%$. See Figure~\ref{fig:gpt2-methods} for accuracy vs.\ scale.}
+\caption{Trace concentration across language model families. Pair accuracy measures correct within-block projection recovery via Hungarian matching on $s(i,j)$. Random-init baselines: $\le 9\%$. See Figure~\ref{fig:gpt2-methods} for accuracy vs.\ scale.}
 \label{tab:transformer-family}
 \end{table}
 
-This trace concentration is not specific to MLPs. Table~\ref{tab:transformer-family} shows that the phenomenon appears across 9 architecture families spanning language, vision, and speech models. We extract architecture-aware branch products (Appendix~\ref{app:factorization}) from public checkpoints and apply Hungarian matching on the score matrix $s(i,j)$. Block-pairing accuracy reaches 80--100\% across all families, against random-initialization baselines of at most 9\%. The extraction transfers across GELU~\citep{hendrycks2016gelu} and SwiGLU~\citep{shazeer2020swiglu} activations with no per-family tuning; only the factorization changes. This universality motivates building lineage signatures on the trace-concentrated structure.
+This trace concentration is not specific to MLPs. Table~\ref{tab:transformer-family} shows that the phenomenon appears across six language model families. We extract architecture-aware branch products (Appendix~\ref{app:factorization}) from public checkpoints and apply Hungarian matching on the score matrix $s(i,j)$. Block-pairing accuracy reaches 80--100\% across all families, against random-initialization baselines of at most 9\%. The extraction transfers across GELU~\citep{hendrycks2016gelu} and SwiGLU~\citep{shazeer2020swiglu} activations with no per-family tuning; only the factorization changes. The phenomenon also transfers to vision (ViT, ResNet) and speech (Whisper) architectures (Appendix~\ref{app:beyond-lm}). This universality motivates building lineage signatures on the trace-concentrated structure.
 
 \subsection{A Coupling-Based Account of Identity Alignment}\label{sec:mechanism}
 
@@ -97,11 +93,8 @@ Diagonal dominance certifies trained residual structure, not ancestry: a verifie
 \end{equation}
 Each term is a cosine similarity, so $\mathcal{L} \in [-1,1]$ with $\mathcal{L}(A,A) = 1$. In practice, all observed scores are non-negative: related checkpoints score near 1, unrelated ones near 0, since independently initialized weights produce uncorrelated $E_\ell$. The score is symmetric.
 
-We calibrate against an empirical null distribution $\mathcal{N}_A = \{\mathcal{L}(A, U_j)\}$ from independently trained models $U_j$. The protocol returns \textsc{Related} if $\mathcal{L}(A,B)$ exceeds the maximum null score, and \textsc{Unrelated} otherwise:
+We calibrate against an empirical null distribution $\mathcal{N}_A = \{\mathcal{L}(A, U_j)\}$ from independently trained models $U_j$. The protocol returns \textsc{Related} if $\mathcal{L}(A,B)$ exceeds the maximum null score, and \textsc{Unrelated} otherwise. Let $\tau = \max_j \mathcal{L}(A, U_j)$:
 \begin{equation}\label{eq:verdict}
-V(A,B) = \begin{cases}
-\textsc{Related} & \text{if } \mathcal{L}(A,B) > \max_{U_j} \mathcal{L}(A, U_j) \\
-\textsc{Unrelated} & \text{otherwise}
-\end{cases}
+V(A,B) = \textsc{Related} \;\Leftrightarrow\; \mathcal{L}(A,B) > \tau
 \end{equation}
-With $n$ null models drawn exchangeably from the same independent-root distribution, this empirical threshold yields a conformal p-value of at most $1/(n+1)$. The guarantee requires exchangeability: descendants from the same root are not independent samples for calibration purposes---the effective sample size is governed by the number of independent roots, not the number of pairwise comparisons. We report AUROC as the primary metric, which summarizes discrimination across thresholds without requiring specific false-positive rate claims. Compatibility (same $L$ and $d$) is checked before scoring; the protocol returns \textsc{Incompatible} otherwise. Memory: $O(L^2 + d^2)$ beyond the checkpoints.
+With $n$ null models, this yields a conformal p-value $\leq 1/(n+1)$. The guarantee requires exchangeability: descendants from the same root are not independent samples for calibration purposes---the effective sample size is governed by the number of independent roots, not the number of pairwise comparisons. We report AUROC as the primary metric, which summarizes discrimination across thresholds without requiring specific false-positive rate claims. Compatibility (same $L$ and $d$) is checked before scoring; the protocol returns \textsc{Incompatible} otherwise. Memory: $O(L^2 + d^2)$ beyond the checkpoints.
