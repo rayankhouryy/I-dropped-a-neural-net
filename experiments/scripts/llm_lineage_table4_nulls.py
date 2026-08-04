@@ -56,8 +56,8 @@ DESCENDANTS = [
 ]
 
 # New null models: exact architectural clones, trained from scratch
+# Note: openllama-7b (v1) already in paper Table 4, so excluded here
 NULL_MODELS = [
-    ("openllama-7b", "openlm-research/open_llama_7b", "OpenLLaMA v1"),
     ("openllama-7b-v2", "openlm-research/open_llama_7b_v2", "OpenLLaMA v2"),
     ("amber-7b", "LLM360/Amber", "LLM360 Amber"),
     ("baichuan-7b", "baichuan-inc/Baichuan-7B", "Baichuan v1"),
