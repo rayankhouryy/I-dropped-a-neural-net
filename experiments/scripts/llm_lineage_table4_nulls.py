@@ -304,33 +304,40 @@ def main():
     sub = p.add_subparsers(dest="cmd", required=True)
 
     pe = sub.add_parser("extract", help="Extract signatures for a model")
-    pe.add_argument("--model", required=True,
+    pe.add_argument("--model",
                     choices=[REF_TAG] + [t for t, _, _ in NULL_MODELS] + [t for t, _, _ in DESCENDANTS],
-                    help="Model tag to extract")
+                    help="Model tag to extract (or use --all)")
+    pe.add_argument("--all", action="store_true", help="Extract reference + all null models sequentially")
     pe.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     pe.add_argument("--no-cleanup", action="store_true", help="Keep downloaded weights")
 
-    ps = sub.add_parser("score", help="Compute scores from extracted signatures")
-
-    pl = sub.add_parser("list", help="List all models and their status")
+    sub.add_parser("score", help="Compute scores from extracted signatures")
+    sub.add_parser("list", help="List all models and their status")
 
     args = p.parse_args()
 
     if args.cmd == "extract":
-        # Find the repo for this tag
-        tag = args.model
-        repo = None
-        if tag == REF_TAG:
-            repo = REF_REPO
+        if args.all:
+            # Run reference + all null models sequentially
+            todo = [(REF_TAG, REF_REPO)] + [(t, r) for t, r, _ in NULL_MODELS]
+            for tag, repo in todo:
+                extract(tag, repo, args.device, cleanup=not args.no_cleanup)
+            print("\n[all done] Run 'python llm_lineage_table4_nulls.py score'")
+        elif args.model:
+            tag = args.model
+            repo = None
+            if tag == REF_TAG:
+                repo = REF_REPO
+            else:
+                for t, r, _ in NULL_MODELS + DESCENDANTS:
+                    if t == tag:
+                        repo = r
+                        break
+            if not repo:
+                sys.exit(f"Unknown model tag: {tag}")
+            extract(tag, repo, args.device, cleanup=not args.no_cleanup)
         else:
-            for t, r, _ in NULL_MODELS + DESCENDANTS:
-                if t == tag:
-                    repo = r
-                    break
-        if not repo:
-            sys.exit(f"Unknown model tag: {tag}")
-
-        extract(tag, repo, device=args.device, cleanup=not args.no_cleanup)
+            sys.exit("Specify --model <tag> or --all")
 
     elif args.cmd == "score":
         score_all()
