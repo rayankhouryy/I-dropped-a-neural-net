@@ -116,11 +116,15 @@ def _shard_map(repo: str) -> tuple[Path, dict, str]:
     except Exception:
         pass
 
-    # Try single pytorch file
+    # Try single pytorch file - don't load it, just build expected key map
     pt_path = hf_hub_download(repo, "pytorch_model.bin")
     local_dir = Path(pt_path).parent
-    state = torch.load(pt_path, map_location="cpu", weights_only=True)
-    return local_dir, {n: "pytorch_model.bin" for n in state.keys()}, "pytorch"
+    # All our target models have 32 layers with standard naming
+    keys = []
+    for i in range(N_LAYERS):
+        keys.append(f"model.layers.{i}.mlp.up_proj.weight")
+        keys.append(f"model.layers.{i}.mlp.down_proj.weight")
+    return local_dir, {k: "pytorch_model.bin" for k in keys}, "pytorch"
 
 
 _pytorch_cache = {}  # shard_path -> state_dict (keep only ONE shard at a time)
@@ -138,9 +142,11 @@ def get_tensor(local_dir: Path, shard_of: dict, name: str,
             # Clear previous shard to avoid OOM (keep only one shard in memory)
             _pytorch_cache.clear()
             print(f"    loading shard {shard.name}...")
+            # Use mmap to avoid loading entire file into RAM
             _pytorch_cache[shard_str] = torch.load(
-                shard_str, map_location="cpu", weights_only=True)
-        return _pytorch_cache[shard_str][name]
+                shard_str, map_location="cpu", weights_only=True,
+                mmap=True)
+        return _pytorch_cache[shard_str][name].clone()
 
 
 def clear_pytorch_cache():
