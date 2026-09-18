@@ -1,0 +1,233 @@
+{
+  "config": {
+    "seeds": 5,
+    "seed_base": 9000,
+    "n_refs": 2,
+    "n_per_descendant_type": 3,
+    "n_same_arch_diff_seed": 8,
+    "n_distilled": 3,
+    "depth": 16,
+    "hidden": 48,
+    "in_dim": 16,
+    "epochs": 120,
+    "ft_epochs": 30,
+    "out": "/local/home/amanzing/workspace/I-dropped-a-neural-net/results/laundering/e1_global_perm/mlp"
+  },
+  "benchmark": "MLP 52-pair (depth=16, hidden=48, in_dim=16)",
+  "seeds": {
+    "bank": 0,
+    "perm_base": 9000,
+    "perm_formula": "seed_base + 1000*s + desc_idx",
+    "probes": 12345
+  },
+  "conditions": [
+    "clean",
+    "global_p",
+    "global_p_recovery"
+  ],
+  "methods": [
+    "ours",
+    "rebasin_scale",
+    "raw_aligned_frobenius",
+    "raw_singular_value_dist",
+    "raw_weight_cosine"
+  ],
+  "tau_s": 0.5,
+  "gate_threshold": 0.0001,
+  "gate_max_deviation": 4.76837158203125e-06,
+  "gate_mean_deviation": 2.8777122497558594e-06,
+  "auroc_per_seed": {
+    "clean": {
+      "ours": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "rebasin_scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "raw_aligned_frobenius": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "raw_singular_value_dist": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "raw_weight_cosine": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "global_p": {
+      "ours": [
+        0.43333333333333335,
+        0.3939393939393939,
+        0.4348484848484849,
+        0.4575757575757575,
+        0.37878787878787884
+      ],
+      "rebasin_scale": [
+        0.5954545454545456,
+        0.6303030303030304,
+        0.5651515151515152,
+        0.6075757575757575,
+        0.5666666666666667
+      ],
+      "raw_aligned_frobenius": [
+        0.8424242424242424,
+        0.8742424242424243,
+        0.8515151515151516,
+        0.8818181818181818,
+        0.8272727272727273
+      ],
+      "raw_singular_value_dist": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "raw_weight_cosine": [
+        0.9606060606060607,
+        1.0,
+        0.9863636363636363,
+        0.9939393939393939,
+        0.9606060606060606
+      ]
+    },
+    "global_p_recovery": {
+      "ours": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "rebasin_scale": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "raw_aligned_frobenius": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "raw_singular_value_dist": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "raw_weight_cosine": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "auroc_mean_std": {
+    "clean": {
+      "ours": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "rebasin_scale": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "raw_aligned_frobenius": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "raw_singular_value_dist": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "raw_weight_cosine": {
+        "mean": 1.0,
+        "std": 0.0
+      }
+    },
+    "global_p": {
+      "ours": {
+        "mean": 0.41969696969696973,
+        "std": 0.028938997300153486
+      },
+      "rebasin_scale": {
+        "mean": 0.5930303030303031,
+        "std": 0.024815203136452423
+      },
+      "raw_aligned_frobenius": {
+        "mean": 0.8554545454545455,
+        "std": 0.020137269970710494
+      },
+      "raw_singular_value_dist": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "raw_weight_cosine": {
+        "mean": 0.9803030303030305,
+        "std": 0.016652886865495844
+      }
+    },
+    "global_p_recovery": {
+      "ours": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "rebasin_scale": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "raw_aligned_frobenius": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "raw_singular_value_dist": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "raw_weight_cosine": {
+        "mean": 1.0,
+        "std": 0.0
+      }
+    }
+  },
+  "recovery": {
+    "exact_coord_fraction_mean": 1.0,
+    "exact_coord_fraction_min": 1.0,
+    "n_descendants": 30,
+    "n_desc_exactly_recovered_per_seed": [
+      30,
+      30,
+      30,
+      30,
+      30
+    ]
+  },
+  "wall_seconds": 235.5176601409912
+}
