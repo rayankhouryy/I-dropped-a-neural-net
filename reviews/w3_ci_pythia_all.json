@@ -1,0 +1,50 @@
+{
+  "benchmark": "pythia-160m seed suite (null-only, subset=all)",
+  "roots_used": [
+    "pythia-160m",
+    "pythia-160m-alldropout",
+    "pythia-160m-attndropout",
+    "pythia-160m-data-seed1",
+    "pythia-160m-data-seed2",
+    "pythia-160m-data-seed3",
+    "pythia-160m-deduped",
+    "pythia-160m-deduped-v0",
+    "pythia-160m-hiddendropout",
+    "pythia-160m-seed1",
+    "pythia-160m-seed2",
+    "pythia-160m-seed3",
+    "pythia-160m-seed4",
+    "pythia-160m-seed5",
+    "pythia-160m-seed6",
+    "pythia-160m-seed7",
+    "pythia-160m-seed8",
+    "pythia-160m-seed9",
+    "pythia-160m-v0",
+    "pythia-160m-weight-seed1",
+    "pythia-160m-weight-seed2",
+    "pythia-160m-weight-seed3"
+  ],
+  "n_roots": 22,
+  "n_pairs": 231,
+  "auroc": "N/A (no descendants / positives)",
+  "max_null": 0.3613068163394928,
+  "mean_null": 0.05471115363528919,
+  "conformal_p_floor": 0.043478260869565216,
+  "max_null_ci_pair_level": [
+    0.2604687213897705,
+    0.3613068163394928
+  ],
+  "max_null_ci_root_clustered": [
+    0.23896096646785736,
+    0.3613068163394928
+  ],
+  "mean_null_ci_pair_level": [
+    0.04385529147297979,
+    0.06626296981168353
+  ],
+  "mean_null_ci_root_clustered": [
+    0.020780474819854396,
+    0.10130600634341805
+  ],
+  "n_boot": 10000
+}

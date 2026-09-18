@@ -1,0 +1,19 @@
+{
+  "benchmark": "laundering_NONE_v2",
+  "n_roots": 8,
+  "n_pos": 56,
+  "n_neg": 36,
+  "auroc": 1.0,
+  "max_negative": 0.002575269284340603,
+  "min_positive": 0.8552961589095208,
+  "gap_z_distilled": 793.5637315517272,
+  "ci_pair_level": [
+    1.0,
+    1.0
+  ],
+  "ci_root_clustered": [
+    1.0,
+    1.0
+  ],
+  "n_boot": 10000
+}

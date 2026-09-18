@@ -1,0 +1,100 @@
+{
+  "subsets": [
+    {
+      "label": "fully-independent (main + seed1-9)",
+      "roots": [
+        "pythia-160m",
+        "pythia-160m-seed1",
+        "pythia-160m-seed2",
+        "pythia-160m-seed3",
+        "pythia-160m-seed4",
+        "pythia-160m-seed5",
+        "pythia-160m-seed6",
+        "pythia-160m-seed7",
+        "pythia-160m-seed8",
+        "pythia-160m-seed9"
+      ],
+      "N": 10,
+      "n_pairs": 45,
+      "max": 0.0008964833687059581,
+      "mean": 7.330868162082677e-05,
+      "sd": 0.00035814464813597313,
+      "conformal_floor": 0.09090909090909091
+    },
+    {
+      "label": "seed1-9 only",
+      "roots": [
+        "pythia-160m-seed1",
+        "pythia-160m-seed2",
+        "pythia-160m-seed3",
+        "pythia-160m-seed4",
+        "pythia-160m-seed5",
+        "pythia-160m-seed6",
+        "pythia-160m-seed7",
+        "pythia-160m-seed8",
+        "pythia-160m-seed9"
+      ],
+      "N": 9,
+      "n_pairs": 36,
+      "max": 0.0007589620654471219,
+      "mean": 1.1496268564472859e-05,
+      "sd": 0.00035489978317567963,
+      "conformal_floor": 0.1
+    },
+    {
+      "label": "main + seed1-9 + deduped",
+      "roots": [
+        "pythia-160m",
+        "pythia-160m-seed1",
+        "pythia-160m-seed2",
+        "pythia-160m-seed3",
+        "pythia-160m-seed4",
+        "pythia-160m-seed5",
+        "pythia-160m-seed6",
+        "pythia-160m-seed7",
+        "pythia-160m-seed8",
+        "pythia-160m-seed9",
+        "pythia-160m-deduped"
+      ],
+      "N": 11,
+      "n_pairs": 55,
+      "max": 0.1886991262435913,
+      "mean": 0.0035645870380351012,
+      "sd": 0.025428851048782085,
+      "conformal_floor": 0.08333333333333333
+    },
+    {
+      "label": "ALL 22 (incl. partial-independence variants)",
+      "roots": [
+        "pythia-160m",
+        "pythia-160m-alldropout",
+        "pythia-160m-attndropout",
+        "pythia-160m-data-seed1",
+        "pythia-160m-data-seed2",
+        "pythia-160m-data-seed3",
+        "pythia-160m-deduped",
+        "pythia-160m-deduped-v0",
+        "pythia-160m-hiddendropout",
+        "pythia-160m-seed1",
+        "pythia-160m-seed2",
+        "pythia-160m-seed3",
+        "pythia-160m-seed4",
+        "pythia-160m-seed5",
+        "pythia-160m-seed6",
+        "pythia-160m-seed7",
+        "pythia-160m-seed8",
+        "pythia-160m-seed9",
+        "pythia-160m-v0",
+        "pythia-160m-weight-seed1",
+        "pythia-160m-weight-seed2",
+        "pythia-160m-weight-seed3"
+      ],
+      "N": 22,
+      "n_pairs": 231,
+      "max": 0.3613068163394928,
+      "mean": 0.05471115363528919,
+      "sd": 0.08624085405376979,
+      "conformal_floor": 0.043478260869565216
+    }
+  ]
+}

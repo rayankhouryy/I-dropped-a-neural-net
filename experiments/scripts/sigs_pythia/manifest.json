@@ -1,0 +1,266 @@
+{
+  "pythia-160m": {
+    "repo": "EleutherAI/pythia-160m",
+    "sha": "50f5173d932e8e61f858120bcb800b97af589f46",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "st"
+  },
+  "pythia-160m-alldropout": {
+    "repo": "EleutherAI/pythia-160m-alldropout",
+    "sha": "e1f99534134cadf146e000d6b566fa4fb1067269",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-attndropout": {
+    "repo": "EleutherAI/pythia-160m-attndropout",
+    "sha": "470601514d82f0d06859c8d1398d833cfc4c1346",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-data-seed1": {
+    "repo": "EleutherAI/pythia-160m-data-seed1",
+    "sha": "dfa32dc674e75495f4046a721de7025d6610109c",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-data-seed2": {
+    "repo": "EleutherAI/pythia-160m-data-seed2",
+    "sha": "3b725b0a0f47ca8acdb9bd4d496ac13a52ccab7a",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-data-seed3": {
+    "repo": "EleutherAI/pythia-160m-data-seed3",
+    "sha": "c8baaae0f5e9c59fe8e2c54c9e5b4ad4534871ab",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-deduped": {
+    "repo": "EleutherAI/pythia-160m-deduped",
+    "sha": "582159a2dfe3e712a8d47ae83dec95ae3bde8e7e",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "st"
+  },
+  "pythia-160m-deduped-v0": {
+    "repo": "EleutherAI/pythia-160m-deduped-v0",
+    "sha": "26b9eeef106f66faf9b45930f92430a8a77c8799",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "st"
+  },
+  "pythia-160m-hiddendropout": {
+    "repo": "EleutherAI/pythia-160m-hiddendropout",
+    "sha": "47ffaf06fd50b5325718c72061bc6523930118b4",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-seed1": {
+    "repo": "EleutherAI/pythia-160m-seed1",
+    "sha": "5ed55222b3092e69edcfa5fa646b7aac0b7e03d9",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "st"
+  },
+  "pythia-160m-seed2": {
+    "repo": "EleutherAI/pythia-160m-seed2",
+    "sha": "6e9b9f6270d1d624f9d7188c1e8909600c4efae2",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "st"
+  },
+  "pythia-160m-seed3": {
+    "repo": "EleutherAI/pythia-160m-seed3",
+    "sha": "a74886a25b5f4ffb3b9a0fa80bd02750f13461bd",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "st"
+  },
+  "pythia-160m-seed4": {
+    "repo": "EleutherAI/pythia-160m-seed4",
+    "sha": "c7a7ebcc54c75407bfd8cdea09c5cfa2c7961b4d",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-seed5": {
+    "repo": "EleutherAI/pythia-160m-seed5",
+    "sha": "7682ee9da4d8d399d3ecc3ad468500b3e99cddf3",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-seed6": {
+    "repo": "EleutherAI/pythia-160m-seed6",
+    "sha": "78e11a97c628c5716c07a277de902f76b99695a7",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-seed7": {
+    "repo": "EleutherAI/pythia-160m-seed7",
+    "sha": "11b513c3f630f59d0d61cfc0163fc05426f30c07",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-seed8": {
+    "repo": "EleutherAI/pythia-160m-seed8",
+    "sha": "2149b1efc141db551191f87f778d1f6979ded3e9",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-seed9": {
+    "repo": "EleutherAI/pythia-160m-seed9",
+    "sha": "08020a8fabd0f0b44d45db35910b9c312b9ade3a",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-v0": {
+    "repo": "EleutherAI/pythia-160m-v0",
+    "sha": "3ef0c8cc72344bf3f6691d73c1a952892f8d1618",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "st"
+  },
+  "pythia-160m-weight-seed1": {
+    "repo": "EleutherAI/pythia-160m-weight-seed1",
+    "sha": "fe3e1d29ca2b321c686a0b43d22bf6ed1c3ba6a2",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-weight-seed2": {
+    "repo": "EleutherAI/pythia-160m-weight-seed2",
+    "sha": "e93e68ff086ab6a5e8b86c129d55e7b5e9c66ea0",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  },
+  "pythia-160m-weight-seed3": {
+    "repo": "EleutherAI/pythia-160m-weight-seed3",
+    "sha": "0e6423cce79da02daa7975ceb71d6d8d1d77a305",
+    "L": 12,
+    "d": 768,
+    "ff": 3072,
+    "model_type": "gpt_neox",
+    "architectures": [
+      "GPTNeoXForCausalLM"
+    ],
+    "fmt": "bin"
+  }
+}
