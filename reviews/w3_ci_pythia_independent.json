@@ -1,0 +1,38 @@
+{
+  "benchmark": "pythia-160m seed suite (null-only, subset=independent)",
+  "roots_used": [
+    "pythia-160m",
+    "pythia-160m-seed1",
+    "pythia-160m-seed2",
+    "pythia-160m-seed3",
+    "pythia-160m-seed4",
+    "pythia-160m-seed5",
+    "pythia-160m-seed6",
+    "pythia-160m-seed7",
+    "pythia-160m-seed8",
+    "pythia-160m-seed9"
+  ],
+  "n_roots": 10,
+  "n_pairs": 45,
+  "auroc": "N/A (no descendants / positives)",
+  "max_null": 0.0008964833687059581,
+  "mean_null": 7.330868162082677e-05,
+  "conformal_p_floor": 0.09090909090909091,
+  "max_null_ci_pair_level": [
+    0.0005479814135469496,
+    0.0008964833687059581
+  ],
+  "max_null_ci_root_clustered": [
+    0.0003928285732399672,
+    0.0008964833687059581
+  ],
+  "mean_null_ci_pair_level": [
+    -3.0392433778164077e-05,
+    0.00017571150137386994
+  ],
+  "mean_null_ci_root_clustered": [
+    -9.072867118992652e-05,
+    0.00024003476231754543
+  ],
+  "n_boot": 10000
+}
